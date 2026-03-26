@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from news.models import Story
+from news.sources_config import LANGUAGE_FEEDS
 
 logger = logging.getLogger('news.fetch')
 logger.setLevel(logging.INFO)
@@ -18,45 +19,14 @@ logger.addHandler(handler)
 class Command(BaseCommand):
     help = 'Fetch latest news from wire services'
 
-    FEEDS = [
-        ('Reuters', 'https://news.google.com/rss/search?q=site:reuters.com&hl=en-US&gl=US&ceid=US:en'),
-        ('AP', 'https://news.google.com/rss/search?q=site:apnews.com&hl=en-US&gl=US&ceid=US:en'),
-        ('BBC', 'https://feeds.bbci.co.uk/news/rss.xml'),
-        ('CBS News', 'https://news.google.com/rss/search?q=site:cbsnews.com&hl=en-US&gl=US&ceid=US:en'),
-        ('ABC News', 'https://news.google.com/rss/search?q=site:abcnews.com&hl=en-US&gl=US&ceid=US:en'),
-        ('NBC News', 'https://news.google.com/rss/search?q=site:nbcnews.com&hl=en-US&gl=US&ceid=US:en'),
-        ('Sky News', 'https://news.google.com/rss/search?q=site:news.sky.com&hl=en-US&gl=US&ceid=US:en'),
-        ('CNN', 'https://news.google.com/rss/search?q=site:cnn.com&hl=en-US&gl=US&ceid=US:en'),
-        ('Bloomberg', 'https://news.google.com/rss/search?q=site:bloomberg.com&hl=en-US&gl=US&ceid=US:en'),
-        ('Forbes', 'https://news.google.com/rss/search?q=site:forbes.com&hl=en-US&gl=US&ceid=US:en'),
-        ('Yahoo News', 'https://news.google.com/rss/search?q=site:news.yahoo.com&hl=en-US&gl=US&ceid=US:en'),
-        ('Newsweek', 'https://news.google.com/rss/search?q=site:newsweek.com&hl=en-US&gl=US&ceid=US:en'),
-        ('Time', 'https://news.google.com/rss/search?q=site:time.com&hl=en-US&gl=US&ceid=US:en'),
-        ('Free Press', 'https://www.thefp.com/feed'),
-        ('NPR', 'https://feeds.npr.org/1001/rss.xml'),
-        ('France 24', 'https://www.france24.com/en/rss'),
-        ('Deutsche Welle', 'https://rss.dw.com/xml/rss-en-all'),
-        ('Al Jazeera', 'https://www.aljazeera.com/xml/rss/all.xml'),
-        ('New York Post', 'https://nypost.com/feed/'),
-        ('Washington Examiner', 'https://www.washingtonexaminer.com/feed'),
-        ('Daily Caller', 'https://dailycaller.com/feed/'),
-        ('The Federalist', 'https://thefederalist.com/feed/'),
-        ('National Review', 'https://www.nationalreview.com/feed/'),
-        ('Daily Wire', 'https://news.google.com/rss/search?q=site:dailywire.com&hl=en-US&gl=US&ceid=US:en'),
-        ('Epoch Times', 'https://news.google.com/rss/search?q=site:theepochtimes.com&hl=en-US&gl=US&ceid=US:en'),
-        ('Townhall', 'https://townhall.com/feed'),
-        ('RedState', 'https://redstate.com/feed/'),
-        ('Mother Jones', 'https://www.motherjones.com/feed/'),
-        ('HuffPost', 'https://news.google.com/rss/search?q=site:huffpost.com&hl=en-US&gl=US&ceid=US:en'),
-        ('The Nation', 'https://news.google.com/rss/search?q=site:thenation.com&hl=en-US&gl=US&ceid=US:en'),
-        ('Salon', 'https://www.salon.com/feed'),
-        ('Jacobin', 'https://jacobin.com/feed'),
-        ('The Intercept', 'https://theintercept.com/feed/'),
-        ('Democracy Now', 'https://news.google.com/rss/search?q=site:democracynow.org&hl=en-US&gl=US&ceid=US:en'),
-        ('Common Dreams', 'https://www.commondreams.org/rss.xml'),
-        ('Truthout', 'https://truthout.org/rss.xml'),
-        ('Vox', 'https://news.google.com/rss/search?q=site:vox.com&hl=en-US&gl=US&ceid=US:en'),
-    ]
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--language',
+            type=str,
+            default='all',
+            choices=['all', 'en', 'es'],
+            help='Language to fetch (all, en, es)'
+        )
 
     def fetch_feed(self, url):
         ctx = ssl.create_default_context()
@@ -107,23 +77,20 @@ class Command(BaseCommand):
             pass
         return ''
 
-    def handle(self, *args, **options):
-        logger.info('Starting news fetch')
+    def fetch_language(self, language):
+        feeds = LANGUAGE_FEEDS.get(language, [])
+        logger.info(f'Fetching {language} news from {len(feeds)} sources')
+        self.stdout.write(f"\nFetching {language} news...")
         
         cutoff = timezone.now() - timedelta(hours=24)
-        
-        deleted = Story.objects.filter(published__lt=cutoff).delete()
-        logger.info(f'Cleaned old stories: {deleted[0]} removed')
-        self.stdout.write(f"Cleaned old stories: {deleted[0]} removed")
-        
-        seen_urls = set(Story.objects.values_list('url', flat=True))
+        seen_urls = set(Story.objects.filter(language=language).values_list('url', flat=True))
         total_new = 0
         total_dupes = 0
         meta_fetched = 0
         
-        for source_name, feed_url in self.FEEDS:
-            self.stdout.write(f"Fetching from {source_name}...", ending=" ")
-            logger.info(f'Fetching from {source_name}')
+        for source_name, feed_url in feeds:
+            self.stdout.write(f"  {source_name}...", ending=" ")
+            logger.info(f'Fetching {source_name} ({language})')
             
             feed = self.fetch_feed(feed_url)
             
@@ -171,6 +138,7 @@ class Command(BaseCommand):
                             excerpt=excerpt,
                             url=entry.link,
                             source=source_name,
+                            language=language,
                             category='world',
                             published=pub_time,
                         )
@@ -184,6 +152,33 @@ class Command(BaseCommand):
             
             logger.info(f'{source_name}: {source_count} stories')
             self.stdout.write(f"OK ({source_count} new)")
+        
+        return total_new, total_dupes, meta_fetched
+
+    def handle(self, *args, **options):
+        language = options['language']
+        logger.info(f'Starting news fetch (language: {language})')
+        
+        cutoff = timezone.now() - timedelta(hours=24)
+        
+        deleted = Story.objects.filter(published__lt=cutoff).delete()
+        logger.info(f'Cleaned old stories: {deleted[0]} removed')
+        self.stdout.write(f"Cleaned old stories: {deleted[0]} removed")
+        
+        total_new = 0
+        total_dupes = 0
+        meta_fetched = 0
+        
+        if language == 'all':
+            languages = LANGUAGE_FEEDS.keys()
+        else:
+            languages = [language]
+        
+        for lang in languages:
+            new, dupes, meta = self.fetch_language(lang)
+            total_new += new
+            total_dupes += dupes
+            meta_fetched += meta
         
         logger.info(f'Fetch complete: {total_new} new, {total_dupes} dupes, {meta_fetched} meta')
         self.stdout.write(self.style.SUCCESS(f"\nFetch complete: {total_new} new stories ({total_dupes} duplicates skipped, {meta_fetched} with meta descriptions)"))

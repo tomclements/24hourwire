@@ -13,10 +13,16 @@ class Story(models.Model):
         ('sports', 'Sports'),
     ]
 
+    LANGUAGE_CHOICES = [
+        ('en', 'English'),
+        ('es', 'Español'),
+    ]
+
     source = models.CharField(max_length=50)
     title = models.CharField(max_length=500)
     excerpt = models.TextField(blank=True)
     url = models.URLField(unique=True)
+    language = models.CharField(max_length=5, choices=LANGUAGE_CHOICES, default='en')
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='world')
     published = models.DateTimeField()
     fetched_at = models.DateTimeField(auto_now_add=True)

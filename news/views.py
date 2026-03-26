@@ -5,92 +5,20 @@ from collections import OrderedDict
 from django.http import HttpResponse
 from django.core.management import call_command
 import threading
+import re
 from .models import Story
+from .sources_config import LANGUAGE_SOURCE_INFO, DEFAULT_SOURCES, SOURCES, LANGUAGE_NAMES
 
-
-SOURCE_BIAS = {
-    'Reuters': ('Center', '#666', 'https://mediabiasfactcheck.com/reuters/'),
-    'AP': ('Center', '#666', 'https://mediabiasfactcheck.com/associated-press/'),
-    'BBC': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/bbc/'),
-    'NPR': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/npr/'),
-    'France 24': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/france-24/'),
-    'Deutsche Welle': ('Center', '#666', 'https://mediabiasfactcheck.com/deutsche-welle/'),
-    'Al Jazeera': ('Left', '#999', 'https://mediabiasfactcheck.com/al-jazeera/'),
-    'CBS News': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/cbs-news/'),
-    'ABC News': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/abc-news/'),
-    'NBC News': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/nbc-news/'),
-    'Fox News': ('Right', '#666', 'https://mediabiasfactcheck.com/fox-news/'),
-    'CNN': ('Left', '#999', 'https://mediabiasfactcheck.com/cnn/'),
-    'Sky News': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/sky-news/'),
-    'Bloomberg': ('Center', '#666', 'https://mediabiasfactcheck.com/bloomberg/'),
-    'Forbes': ('Center', '#666', 'https://mediabiasfactcheck.com/forbes/'),
-    'Yahoo News': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/yahoo-news/'),
-    'Newsweek': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/newsweek/'),
-    'Time': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/time/'),
-    'Free Press': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
-    'New York Post': ('Right', '#666', 'https://mediabiasfactcheck.com/new-york-post/'),
-    'Washington Examiner': ('Right-Center', '#777', 'https://mediabiasfactcheck.com/washington-examiner/'),
-    'Daily Caller': ('Right', '#666', 'https://mediabiasfactcheck.com/daily-caller/'),
-    'The Federalist': ('Right', '#666', 'https://mediabiasfactcheck.com/the-federalist/'),
-    'National Review': ('Right', '#666', 'https://mediabiasfactcheck.com/national-review/'),
-    'Daily Wire': ('Right', '#666', 'https://mediabiasfactcheck.com/daily-wire/'),
-    'Epoch Times': ('Right', '#666', 'https://mediabiasfactcheck.com/epoch-times/'),
-    'Townhall': ('Right', '#666', 'https://mediabiasfactcheck.com/townhall/'),
-    'RedState': ('Right', '#666', 'https://mediabiasfactcheck.com/redstate/'),
-}
-
-DEFAULT_SOURCES = ['Reuters', 'AP', 'Deutsche Welle', 'Bloomberg', 'Forbes', 'Free Press']
-
-SOURCES = [
-    ('Reuters', 'Center'),
-    ('AP', 'Center'),
-    ('Deutsche Welle', 'Center'),
-    ('Bloomberg', 'Center'),
-    ('Forbes', 'Center'),
-    ('Free Press', 'Center'),
-    ('BBC', 'Left-Center'),
-    ('CBS News', 'Left-Center'),
-    ('ABC News', 'Left-Center'),
-    ('NBC News', 'Left-Center'),
-    ('Sky News', 'Left-Center'),
-    ('NPR', 'Left-Center'),
-    ('France 24', 'Left-Center'),
-    ('Yahoo News', 'Left-Center'),
-    ('Newsweek', 'Left-Center'),
-    ('Time', 'Left-Center'),
-    ('CNN', 'Left'),
-    ('Al Jazeera', 'Left'),
-    ('Mother Jones', 'Left'),
-    ('HuffPost', 'Left'),
-    ('The Nation', 'Left'),
-    ('Salon', 'Left'),
-    ('Jacobin', 'Left'),
-    ('The Intercept', 'Left'),
-    ('Democracy Now', 'Left'),
-    ('Common Dreams', 'Left'),
-    ('Truthout', 'Left'),
-    ('Vox', 'Left'),
-    ('Washington Examiner', 'Right-Center'),
-    ('Townhall', 'Right'),
-    ('New York Post', 'Right'),
-    ('Daily Caller', 'Right'),
-    ('RedState', 'Right'),
-    ('The Federalist', 'Right'),
-    ('National Review', 'Right'),
-    ('Daily Wire', 'Right'),
-    ('Epoch Times', 'Right'),
-    ('Fox News', 'Right'),
-]
 
 CATEGORY_KEYWORDS = {
-    'politics': ['trump', 'biden', 'congress', 'senate', 'election', 'vote', 'voting', 'campaign', 'republican', 'democrat', 'president', 'administration', 'governor', 'lawmaker', 'legislation', 'democratic', 'political', 'parliament', 'impeach', 'supreme court', 'ruling', 'policy', 'white house', 'cabinet', 'secretary', 'convention', 'primary', 'ballot', 'midterm', 'senator', 'representative'],
-    'business': ['stock market', 'economy', 'economic', 'trade', 'tariff', 'inflation', 'federal reserve', 'gdp', 'recession', 'unemployment', 'jobs report', 'earnings', 'revenue', 'profit', 'bank', 'finance', 'financial', 'investment', 'wall street', 'ceo', 'opec', 'crypto', 'bitcoin', 'bond', 'investor', 'shares', 'commodity', 'crude oil'],
-    'technology': ['tech', 'ai ', 'artificial intelligence', 'software', 'startup', 'silicon valley', 'cyberattack', 'hacker', 'data breach', 'digital', 'robot', 'elon musk', 'iphone', 'android', 'chip', 'semiconductor', 'cloud computing', 'openai', 'nvidia', 'meta ', 'google ', 'microsoft', 'apple ', 'amazon ', 'facebook'],
-    'science': ['nasa', 'spacex', 'space', 'mars', 'climate change', 'earthquake', 'volcano', 'researcher', 'laboratory', 'experiment', 'discovery', 'species', 'genetic', 'cosmos', 'astronomy'],
-    'health': ['hospital', 'doctor', 'medical', 'medicine', 'drug', 'fda ', 'vaccine', 'pandemic', 'cancer', 'diabetes', 'heart disease', 'brain ', 'treatment', 'therapy', 'surgery', 'patient', 'outbreak', 'virus', 'covid', 'epidemic', 'healthcare', 'clinic', 'nurse', 'physician', 'mental health', 'depression', 'anxiety', 'stroke'],
-    'sports': ['nba', 'nfl', 'mlb', 'nhl', 'championship', 'playoffs', 'super bowl', 'world cup', 'olympics', 'marathon', 'tennis', 'golf', 'soccer', 'basketball', 'baseball', 'football', 'coach', 'injury', 'tournament', 'athlete', 'score', 'draft', 'trade'],
+    'politics': ['trump', 'biden', 'congress', 'senate', 'election', 'vote', 'voting', 'campaign', 'republican', 'democrat', 'president', 'administration', 'governor', 'lawmaker', 'legislation', 'democratic', 'political', 'parliament', 'impeach', 'supreme court', 'ruling', 'policy', 'white house', 'cabinet', 'secretary', 'convention', 'primary', 'ballot', 'midterm', 'senator', 'representative', 'elecciones', 'gobierno', 'presidente', 'congreso', 'senado', 'voto', 'campaña', 'partido', 'política', 'ministro', 'ley'],
+    'business': ['stock market', 'economy', 'economic', 'trade', 'tariff', 'inflation', 'federal reserve', 'gdp', 'recession', 'unemployment', 'jobs report', 'earnings', 'revenue', 'profit', 'bank', 'finance', 'financial', 'investment', 'wall street', 'ceo', 'opec', 'crypto', 'bitcoin', 'bond', 'investor', 'shares', 'commodity', 'crude oil', 'bolsa', 'economía', 'mercado', 'empresa', 'negocio', 'banco', 'finanzas', 'inversión'],
+    'technology': ['tech', 'ai ', 'artificial intelligence', 'software', 'startup', 'silicon valley', 'cyberattack', 'hacker', 'data breach', 'digital', 'robot', 'elon musk', 'iphone', 'android', 'chip', 'semiconductor', 'cloud computing', 'openai', 'nvidia', 'meta ', 'google ', 'microsoft', 'apple ', 'amazon ', 'facebook', 'tecnología', 'inteligencia artificial', 'software', 'ciberataque', 'digital', 'robot'],
+    'science': ['nasa', 'spacex', 'space', 'mars', 'climate change', 'earthquake', 'volcano', 'researcher', 'laboratory', 'experiment', 'discovery', 'species', 'genetic', 'cosmos', 'astronomy', 'ciencia', 'investigación', 'descubrimiento', 'especie', 'genético', 'clima', 'terremoto', 'volcán'],
+    'health': ['hospital', 'doctor', 'medical', 'medicine', 'drug', 'fda ', 'vaccine', 'pandemic', 'cancer', 'diabetes', 'heart disease', 'brain ', 'treatment', 'therapy', 'surgery', 'patient', 'outbreak', 'virus', 'covid', 'epidemic', 'healthcare', 'clinic', 'nurse', 'physician', 'mental health', 'depression', 'anxiety', 'stroke', 'hospital', 'médico', 'medicina', 'vacuna', 'pandemia', 'salud', 'enfermedad', 'tratamiento', 'virus'],
+    'sports': ['nba', 'nfl', 'mlb', 'nhl', 'championship', 'playoffs', 'super bowl', 'world cup', 'olympics', 'marathon', 'tennis', 'golf', 'soccer', 'basketball', 'baseball', 'football', 'coach', 'injury', 'tournament', 'athlete', 'score', 'draft', 'trade', 'fútbol', 'liga', 'champions', 'copa', 'mundial', 'olimpiadas', 'deporte', 'equipo', 'jugador', 'partido', 'gol'],
     'us': ['california', 'texas', 'florida', 'new york', 'washington', 'chicago', 'los angeles', 'miami', 'seattle', 'boston', 'atlanta', 'houston', 'dallas', 'phoenix', 'denver', 'detroit', 'portland', 'philadelphia', 'san francisco', 'san diego', 'austin', 'nashville', 'memphis', 'las vegas', 'sacramento', 'orlando', 'tampa', 'raleigh', 'pittsburgh', 'cleveland', 'cincinnati', 'milwaukee', 'minneapolis', 'indianapolis', 'columbus', 'charlotte', 'kansas city', 'st. louis', 'new orleans', 'baltimore', 'maryland', 'virginia', 'nevada', 'arizona', 'georgia', 'north carolina', 'pennsylvania', 'ohio', 'michigan', 'illinois'],
-    'world': ['ukraine', 'russia', 'china', 'iran', 'israel', 'gaza', 'middle east', 'europe', 'asia', 'africa', 'latin america', 'european union', 'nato', 'war', 'ceasefire', 'diplomat', 'summit', 'border', 'immigration', 'refugee', 'global', 'international'],
+    'world': ['ukraine', 'russia', 'china', 'iran', 'israel', 'gaza', 'middle east', 'europe', 'asia', 'africa', 'latin america', 'european union', 'nato', 'war', 'ceasefire', 'diplomat', 'summit', 'border', 'immigration', 'refugee', 'global', 'international', 'ucrania', 'rusia', 'china', 'irán', 'israel', 'gaza', 'medio oriente', 'europa', 'asia', 'áfrica', 'américa latina', 'guerra', 'diplomático', 'inmigración', 'refugiado', 'mundial'],
 }
 
 CATEGORY_NAMES = OrderedDict([
@@ -104,6 +32,19 @@ CATEGORY_NAMES = OrderedDict([
     ('science', 'Science'),
     ('health', 'Health'),
     ('sports', 'Sports'),
+])
+
+CATEGORY_NAMES_ES = OrderedDict([
+    ('all', 'Todo'),
+    ('most_covered', 'Más Cubierto'),
+    ('world', 'Mundo'),
+    ('us', 'EE.UU.'),
+    ('politics', 'Política'),
+    ('business', 'Negocios'),
+    ('technology', 'Tecnología'),
+    ('science', 'Ciencia'),
+    ('health', 'Salud'),
+    ('sports', 'Deportes'),
 ])
 
 
@@ -198,30 +139,41 @@ def get_story_categories(title):
 def home(request):
     cutoff = timezone.now() - timedelta(hours=24)
     
+    # Get language from request
+    language = request.GET.get('lang', 'en')
+    if language not in SOURCES:
+        language = 'en'
+    
+    # Get sources for this language
+    lang_sources = SOURCES.get(language, SOURCES['en'])
+    lang_default_sources = DEFAULT_SOURCES.get(language, DEFAULT_SOURCES['en'])
+    lang_source_info = LANGUAGE_SOURCE_INFO.get(language, LANGUAGE_SOURCE_INFO['en'])
+    category_names = CATEGORY_NAMES_ES if language == 'es' else CATEGORY_NAMES
+    
     selected_sources_param = request.GET.get('sources')
     
     if selected_sources_param == 'all':
-        selected_sources = [s[0] for s in SOURCES]
+        selected_sources = [s[0] for s in lang_sources]
     elif selected_sources_param == 'center':
-        selected_sources = [s[0] for s in SOURCES if s[1] == 'Center']
+        selected_sources = [s[0] for s in lang_sources if s[1] == 'Center']
     elif selected_sources_param == 'left-center':
-        selected_sources = [s[0] for s in SOURCES if s[1] == 'Left-Center']
+        selected_sources = [s[0] for s in lang_sources if s[1] == 'Left-Center']
     elif selected_sources_param == 'left':
-        selected_sources = [s[0] for s in SOURCES if s[1] == 'Left']
+        selected_sources = [s[0] for s in lang_sources if s[1] == 'Left']
     elif selected_sources_param == 'right':
-        selected_sources = [s[0] for s in SOURCES if s[1] == 'Right']
+        selected_sources = [s[0] for s in lang_sources if s[1] == 'Right']
     elif selected_sources_param == 'clear' or selected_sources_param == '':
         selected_sources = []
     elif selected_sources_param:
         selected_sources = selected_sources_param.split(',')
     else:
-        selected_sources = DEFAULT_SOURCES
+        selected_sources = lang_default_sources
     
-    all_stories = list(Story.objects.filter(published__gte=cutoff))
+    all_stories = list(Story.objects.filter(published__gte=cutoff, language=language))
     
     for story in all_stories:
         story.story_categories = get_story_categories(story.title)
-        bias_info = SOURCE_BIAS.get(story.source, ('Unknown', '#999', 'https://mediabiasfactcheck.com/'))
+        bias_info = lang_source_info.get(story.source, ('Unknown', '#999', 'https://mediabiasfactcheck.com/'))
         story.bias_label = bias_info[0]
         story.bias_color = bias_info[1]
         story.bias_link = bias_info[2]
@@ -233,7 +185,6 @@ def home(request):
     
     for story in stories:
         # Normalize title for matching: lowercase, remove punctuation, take first 70 chars
-        import re
         normalized = re.sub(r'[^\w\s]', '', story.title.lower())[:70]
         
         # Try to find a matching group
@@ -265,7 +216,7 @@ def home(request):
     most_covered_stories = most_covered_stories[:20]
     
     grouped = {}
-    for cat_id, cat_name in CATEGORY_NAMES.items():
+    for cat_id, cat_name in category_names.items():
         if cat_id == 'all':
             cat_stories = list(stories)
         elif cat_id == 'most_covered':
@@ -279,9 +230,11 @@ def home(request):
     
     return render(request, 'home.html', {
         'grouped': grouped,
-        'sources': SOURCES,
+        'sources': lang_sources,
         'selected_sources': selected_sources,
-        'default_sources': DEFAULT_SOURCES
+        'default_sources': lang_default_sources,
+        'language': language,
+        'language_names': LANGUAGE_NAMES,
     })
 
 
