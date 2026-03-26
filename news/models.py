@@ -54,6 +54,15 @@ class Story(models.Model):
         generic = ['comprehensive up-to-date news coverage', 'aggregated from', 'click here for more']
         if any(g in text.lower() for g in generic):
             return ''
+        # Filter out if too similar to title
+        title_lower = self.title.lower()
+        text_lower = text.lower()
+        if text_lower == title_lower:
+            return ''
+        if len(text) > 10 and text_lower in title_lower:
+            return ''
+        if len(title_lower) > 10 and title_lower in text_lower:
+            return ''
         # Only return if meaningful content
         if len(text) > 30:
             return text

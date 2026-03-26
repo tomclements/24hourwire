@@ -232,13 +232,27 @@ def home(request):
     story_groups = {}
     
     for story in stories:
-        normalized_title = story.title.lower()[:150]
-        key_words = set(normalized_title.split()) - {'the', 'a', 'an', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'and', 'or', 'is', 'are', 'was', 'were', 'be', 'been', 'has', 'have', 'had', 'it', 'its', 'this', 'that', 'from', 'as', 'but', 'not', 'no', 'so', 'if', 'or', 'when', 'what', 'which', 'who', 'how', 'than', 'then', 'them', 'they', 'their', 'there', 'here', 'will', 'would', 'can', 'could', 'should', 'may', 'might', 'must'}
-        key = ' '.join(sorted(key_words))[:100]
+        # Normalize title for matching: lowercase, remove punctuation, take first 70 chars
+        import re
+        normalized = re.sub(r'[^\w\s]', '', story.title.lower())[:70]
         
-        if key not in story_groups:
-            story_groups[key] = []
-        story_groups[key].append(story)
+        # Try to find a matching group
+        matched_key = None
+        for existing_key in story_groups:
+            # Compare word overlap - if 60%+ words match, consider it the same story
+            words1 = set(existing_key.split())
+            words2 = set(normalized.split())
+            if not words1 or not words2:
+                continue
+            overlap = len(words1 & words2) / max(len(words1), len(words2))
+            if overlap >= 0.6:
+                matched_key = existing_key
+                break
+        
+        if matched_key:
+            story_groups[matched_key].append(story)
+        else:
+            story_groups[normalized] = [story]
     
     for key, title_stories in story_groups.items():
         if len(title_stories) >= 2:
