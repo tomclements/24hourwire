@@ -132,9 +132,15 @@ class Command(BaseCommand):
                     excerpt = rss_excerpt
 
                 try:
+                    # Handle title encoding
+                    try:
+                        title = entry.title[:500].encode('utf-8', 'ignore').decode('utf-8')
+                    except:
+                        title = str(entry.title[:500])
+                    
                     if not Story.objects.filter(url=entry.link).exists():
                         Story.objects.create(
-                            title=entry.title[:500],
+                            title=title,
                             excerpt=excerpt,
                             url=entry.link,
                             source=source_name,
