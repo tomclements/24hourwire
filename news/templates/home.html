@@ -23,6 +23,7 @@
         .story h3 a:hover { text-decoration: underline; }
         .meta { font-size: 0.8rem; color: #888; }
         .source { display: inline-block; background: #f0f0f0; padding: 2px 8px; border-radius: 3px; margin-right: 8px; font-weight: 500; }
+        .paywall { color: #e65100; font-size: 0.7rem; margin-left: 3px; cursor: help; }
         .time { color: #888; }
         .excerpt { margin: 8px 0; color: #444; font-size: 0.95rem; }
         .links a { font-size: 0.8rem; margin-right: 12px; color: #0066cc; text-decoration: none; }
@@ -131,7 +132,7 @@
             <div class="story {% if forloop.counter > 20 %}extra-story" style="display: none;"{% else %}"{% endif %}>
                 <h3><a href="{{ story.url }}" target="_blank">{{ story.title }}</a></h3>
                 <p class="meta">
-                    <span class="source">{{ story.source }}</span>
+                    <span class="source">{{ story.source }}{% if story.is_paywalled %}<span class="paywall" title="{% if language == 'es' %}Sitio con muro de pago{% else %}Paywalled site{% endif %}">$</span>{% endif %}</span>
                     {% if story.covered_by_count %}
                     <span class="covered-by" style="background: #e8f0e8; padding: 2px 6px; border-radius: 3px; font-size: 0.75rem; color: #2e7d32;">{{ story.covered_by_count }} {% if language == 'es' %}fuentes{% else %}sources{% endif %}</span>
                     {% endif %}

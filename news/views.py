@@ -7,7 +7,7 @@ from django.core.management import call_command
 import threading
 import re
 from .models import Story
-from .sources_config import LANGUAGE_SOURCE_INFO, DEFAULT_SOURCES, SOURCES, LANGUAGE_NAMES
+from .sources_config import LANGUAGE_SOURCE_INFO, DEFAULT_SOURCES, SOURCES, LANGUAGE_NAMES, PAYWALLED_SOURCES
 
 
 CATEGORY_KEYWORDS = {
@@ -315,6 +315,7 @@ def home(request):
         story.bias_label = bias_info[0]
         story.bias_color = bias_info[1]
         story.bias_link = bias_info[2]
+        story.is_paywalled = story.source in PAYWALLED_SOURCES
     
     stories = [s for s in all_stories if s.source in selected_sources]
     

@@ -1,5 +1,27 @@
 # News sources configuration by language
 
+PAYWALLED_SOURCES = {
+    # English
+    'New York Post',
+    'Bloomberg',
+    'National Review',
+    'The Atlantic',
+    'Economist',
+    'Financial Times',
+    'Wall Street Journal',
+    'New York Times',
+    'Washington Post',
+    'The New Yorker',
+    # Spanish
+    'El País',
+    'El Mundo',
+    'Expansión',
+    'Cinco Días',
+    'El Mercurio CL',
+    'Clarín',
+    'La Nación AR',
+}
+
 ENGLISH_FEEDS = [
     ('Reuters', 'https://news.google.com/rss/search?q=site:reuters.com&hl=en-US&gl=US&ceid=US:en'),
     ('AP', 'https://news.google.com/rss/search?q=site:apnews.com&hl=en-US&gl=US&ceid=US:en'),
