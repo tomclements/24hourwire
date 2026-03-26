@@ -29,7 +29,7 @@
    - Click "New" → "Web Service"
    - Connect your GitHub repository
    - Configure:
-     - Name: `24hourwire`
+     - Name: `two4hourwire` (or `24hourwire` if available)
      - Region: Choose closest to you
      - Branch: `main`
      - Runtime: `Python 3`
@@ -40,7 +40,7 @@
    ```
    SECRET_KEY=<generate-a-new-secret-key>
    DEBUG=False
-   ALLOWED_HOSTS=your-app-name.onrender.com
+   ALLOWED_HOSTS=two4hourwire.onrender.com
    DATABASE_ENGINE=django.db.backends.postgresql
    DATABASE_URL=<your-postgresql-external-url>
    ```
@@ -51,11 +51,16 @@
 
 ### Cron Job for Auto-Fetch
 
-To fetch news every 15 minutes:
-1. Go to your web service dashboard
-2. Add a Cron Job:
-   - Schedule: `*/15 * * * *`
-   - Command: `python manage.py fetch_news`
+To fetch news every 15 minutes, use a free external cron service:
+
+1. Go to [cron-job.org](https://cron-job.org) (free)
+2. Create account
+3. Add new cron job:
+   - URL: `https://two4hourwire.onrender.com/fetch/`
+   - Schedule: Every 15 minutes (cron: `*/15 * * * *`)
+4. Enable the job
+
+The `/fetch/` endpoint will start the news fetch in the background and return immediately.
 
 ## Railway Deployment
 
