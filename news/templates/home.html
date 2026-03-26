@@ -6,12 +6,12 @@
     <title>24HourWire</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 1000px; margin: 0 auto; padding: 20px; }
         header { border-bottom: 2px solid #333; padding: 20px 0; margin-bottom: 20px; }
         h1 { font-size: 1.8rem; }
         .subtitle { color: #666; font-size: 0.9rem; margin-top: 5px; }
-        .tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
-        .tab { padding: 8px 16px; background: #f5f5f5; border: none; border-radius: 20px; cursor: pointer; font-size: 0.9rem; text-decoration: none; color: #666; }
+        .tabs { display: flex; flex-wrap: nowrap; gap: 5px; margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 15px; overflow-x: auto; }
+        .tab { padding: 8px 16px; background: #f5f5f5; border: none; border-radius: 20px; cursor: pointer; font-size: 0.9rem; text-decoration: none; color: #666; white-space: nowrap; flex-shrink: 0; }
         .tab:hover { background: #eee; }
         .tab.active { background: #333; color: #fff; }
         .category { margin-bottom: 35px; }
@@ -55,11 +55,14 @@
         </p>
         <p class="subtitle" style="font-size: 0.85rem;">
             {% if language == 'es' %}
-                Mostrando: {{ selected_sources|join:", " }} · <a href="/about/" style="color: #0066cc;">Cómo funciona</a>
+                <a href="/about/" style="color: #0066cc;">Cómo funciona</a> · <span id="source-count" style="cursor: pointer; color: #888;" onclick="toggleSourceList()">{{ selected_sources|length }} fuentes ▾</span>
             {% else %}
-                Currently showing: {{ selected_sources|join:", " }} · <a href="/about/" style="color: #0066cc;">How it works</a>
+                <a href="/about/" style="color: #0066cc;">How it works</a> · <span id="source-count" style="cursor: pointer; color: #888;" onclick="toggleSourceList()">{{ selected_sources|length }} sources ▾</span>
             {% endif %}
         </p>
+        <div id="source-list" style="display: none; font-size: 0.8rem; color: #888; margin-top: 5px; padding: 8px; background: #f9f9f9; border-radius: 4px;">
+            {{ selected_sources|join:", " }}
+        </div>
     </header>
     
     <div id="cookie-banner" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #f5f5f5; color: #333; padding: 15px 20px; z-index: 1000; font-size: 0.85rem; box-shadow: 0 -2px 10px rgba(0,0,0,0.1);">
@@ -166,9 +169,9 @@
         <p>&copy; 2026 24HourWire. {% if language == 'es' %}Contenido de noticias © respectivos editores. Titulares y resúmenes utilizados bajo uso justo con fines informativos.{% else %}News content &copy; respective publishers. Headlines and summaries used under fair use for informational purposes.{% endif %}</p>
         <p>
             {% if language == 'es' %}
-                Fuentes: {% for source, _ in sources %}{% if forloop.last %}y {% endif %}{{ source }}{% if not forloop.last %}, {% endif %}{% endfor %} | <a href="{% url 'terms' %}">Términos</a> | <a href="{% url 'privacy' %}">Privacidad</a>
+                Fuentes: {% for source, _ in sources %}{% if forloop.last %}y {% endif %}{{ source }}{% if not forloop.last %}, {% endif %}{% endfor %} | <a href="/terms/?lang=es">Términos</a> | <a href="/privacy/?lang=es">Privacidad</a> | <a href="/about/">Acerca de</a>
             {% else %}
-                Sources: {% for source, _ in sources %}{% if forloop.last %}and {% endif %}{{ source }}{% if not forloop.last %}, {% endif %}{% endfor %} | <a href="{% url 'terms' %}">Terms</a> | <a href="{% url 'privacy' %}">Privacy</a>
+                Sources: {% for source, _ in sources %}{% if forloop.last %}and {% endif %}{{ source }}{% if not forloop.last %}, {% endif %}{% endfor %} | <a href="/terms/?lang=en">Terms</a> | <a href="/privacy/?lang=en">Privacy</a> | <a href="/about/">About</a>
             {% endif %}
         </p>
     </footer>
@@ -212,6 +215,18 @@
         
         document.querySelectorAll('.category').forEach(el => el.style.display = 'none');
         document.querySelectorAll('.category')[0].style.display = 'block';
+        
+        function toggleSourceList() {
+            const list = document.getElementById('source-list');
+            const count = document.getElementById('source-count');
+            if (list.style.display === 'none') {
+                list.style.display = 'block';
+                count.textContent = count.textContent.replace('▸', '▾');
+            } else {
+                list.style.display = 'none';
+                count.textContent = count.textContent.replace('▾', '▸');
+            }
+        }
     </script>
 </body>
 </html>

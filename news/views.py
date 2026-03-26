@@ -11,14 +11,116 @@ from .sources_config import LANGUAGE_SOURCE_INFO, DEFAULT_SOURCES, SOURCES, LANG
 
 
 CATEGORY_KEYWORDS = {
-    'politics': ['trump', 'biden', 'congress', 'senate', 'election', 'vote', 'voting', 'campaign', 'republican', 'democrat', 'president', 'administration', 'governor', 'lawmaker', 'legislation', 'democratic', 'political', 'parliament', 'impeach', 'supreme court', 'ruling', 'policy', 'white house', 'cabinet', 'secretary', 'convention', 'primary', 'ballot', 'midterm', 'senator', 'representative', 'elecciones', 'gobierno', 'presidente', 'congreso', 'senado', 'voto', 'campaña', 'partido', 'política', 'ministro', 'ley'],
-    'business': ['stock market', 'economy', 'economic', 'trade', 'tariff', 'inflation', 'federal reserve', 'gdp', 'recession', 'unemployment', 'jobs report', 'earnings', 'revenue', 'profit', 'bank', 'finance', 'financial', 'investment', 'wall street', 'ceo', 'opec', 'crypto', 'bitcoin', 'bond', 'investor', 'shares', 'commodity', 'crude oil', 'bolsa', 'economía', 'mercado', 'empresa', 'negocio', 'banco', 'finanzas', 'inversión'],
-    'technology': ['tech', 'ai ', 'artificial intelligence', 'software', 'startup', 'silicon valley', 'cyberattack', 'hacker', 'data breach', 'digital', 'robot', 'elon musk', 'iphone', 'android', 'chip', 'semiconductor', 'cloud computing', 'openai', 'nvidia', 'meta ', 'google ', 'microsoft', 'apple ', 'amazon ', 'facebook', 'tecnología', 'inteligencia artificial', 'software', 'ciberataque', 'digital', 'robot'],
-    'science': ['nasa', 'spacex', 'space', 'mars', 'climate change', 'earthquake', 'volcano', 'researcher', 'laboratory', 'experiment', 'discovery', 'species', 'genetic', 'cosmos', 'astronomy', 'ciencia', 'investigación', 'descubrimiento', 'especie', 'genético', 'clima', 'terremoto', 'volcán'],
-    'health': ['hospital', 'doctor', 'medical', 'medicine', 'drug', 'fda ', 'vaccine', 'pandemic', 'cancer', 'diabetes', 'heart disease', 'brain ', 'treatment', 'therapy', 'surgery', 'patient', 'outbreak', 'virus', 'covid', 'epidemic', 'healthcare', 'clinic', 'nurse', 'physician', 'mental health', 'depression', 'anxiety', 'stroke', 'hospital', 'médico', 'medicina', 'vacuna', 'pandemia', 'salud', 'enfermedad', 'tratamiento', 'virus'],
-    'sports': ['nba', 'nfl', 'mlb', 'nhl', 'championship', 'playoffs', 'super bowl', 'world cup', 'olympics', 'marathon', 'tennis', 'golf', 'soccer', 'basketball', 'baseball', 'football', 'coach', 'injury', 'tournament', 'athlete', 'score', 'draft', 'trade', 'fútbol', 'liga', 'champions', 'copa', 'mundial', 'olimpiadas', 'deporte', 'equipo', 'jugador', 'partido', 'gol'],
-    'us': ['california', 'texas', 'florida', 'new york', 'washington', 'chicago', 'los angeles', 'miami', 'seattle', 'boston', 'atlanta', 'houston', 'dallas', 'phoenix', 'denver', 'detroit', 'portland', 'philadelphia', 'san francisco', 'san diego', 'austin', 'nashville', 'memphis', 'las vegas', 'sacramento', 'orlando', 'tampa', 'raleigh', 'pittsburgh', 'cleveland', 'cincinnati', 'milwaukee', 'minneapolis', 'indianapolis', 'columbus', 'charlotte', 'kansas city', 'st. louis', 'new orleans', 'baltimore', 'maryland', 'virginia', 'nevada', 'arizona', 'georgia', 'north carolina', 'pennsylvania', 'ohio', 'michigan', 'illinois'],
-    'world': ['ukraine', 'russia', 'china', 'iran', 'israel', 'gaza', 'middle east', 'europe', 'asia', 'africa', 'latin america', 'european union', 'nato', 'war', 'ceasefire', 'diplomat', 'summit', 'border', 'immigration', 'refugee', 'global', 'international', 'ucrania', 'rusia', 'china', 'irán', 'israel', 'gaza', 'medio oriente', 'europa', 'asia', 'áfrica', 'américa latina', 'guerra', 'diplomático', 'inmigración', 'refugiado', 'mundial'],
+    'politics': [
+        'trump', 'biden', 'congress', 'senate', 'election', 'vote', 'voting', 'campaign',
+        'republican', 'democrat', 'president', 'administration', 'governor', 'lawmaker',
+        'legislation', 'democratic', 'political', 'parliament', 'impeach', 'supreme court',
+        'ruling', 'policy', 'white house', 'cabinet', 'secretary', 'convention', 'primary',
+        'ballot', 'midterm', 'senator', 'representative', 'gop', 'dnc', 'rnc', 'capitol',
+        'partisan', 'bipartisan', 'filibuster', 'veto', 'executive order', 'federal',
+        # Spanish
+        'elecciones', 'gobierno', 'presidente', 'congreso', 'senado', 'voto', 'campaña',
+        'partido', 'política', 'ministro', 'ley', 'diputado', 'alcalde', 'gobernador',
+        'elección', 'parlamento', 'constitución', 'reforma', 'oposición'
+    ],
+    'business': [
+        'stock market', 'economy', 'economic', 'trade', 'tariff', 'inflation', 'federal reserve',
+        'gdp', 'recession', 'unemployment', 'jobs report', 'earnings', 'revenue', 'profit',
+        'bank', 'finance', 'financial', 'investment', 'wall street', 'ceo', 'opec', 'crypto',
+        'bitcoin', 'bond', 'investor', 'shares', 'commodity', 'crude oil', 'dow jones',
+        'nasdaq', 's&p', 'ipo', 'merger', 'acquisition', 'quarterly', 'fiscal',
+        'interest rate', 'treasury', 'market', 'business', 'corporate', 'startup',
+        # Spanish
+        'bolsa', 'economía', 'mercado', 'empresa', 'negocio', 'banco', 'finanzas',
+        'inversión', 'dólar', 'peso', ' euro ', 'inflación', 'desempleo', 'pib',
+        'acciones', 'divisa', 'crédito', 'deuda', 'exportación', 'importación'
+    ],
+    'technology': [
+        'tech', 'ai ', 'artificial intelligence', 'software', 'startup', 'silicon valley',
+        'cyberattack', 'hacker', 'data breach', 'digital', 'robot', 'elon musk', 'iphone',
+        'android', 'chip', 'semiconductor', 'cloud computing', 'openai', 'nvidia', 'meta ',
+        'google ', 'microsoft', 'apple ', 'amazon ', 'facebook', 'twitter', 'x ', 'tesla',
+        'cybersecurity', 'blockchain', 'cryptocurrency', 'app ', 'algorithm', 'machine learning',
+        'deep learning', 'chatgpt', 'neural', 'quantum computing', '5g', 'iot',
+        # Spanish
+        'tecnología', 'inteligencia artificial', 'software', 'ciberataque', 'digital',
+        'robot', 'aplicación', 'smartphone', 'internet', 'computación', 'datos',
+        'ciberseguridad', 'algoritmo', 'plataforma', 'redes sociales'
+    ],
+    'science': [
+        'nasa', 'spacex', 'space', 'mars', 'climate change', 'earthquake', 'volcano',
+        'researcher', 'laboratory', 'experiment', 'discovery', 'species', 'genetic',
+        'cosmos', 'astronomy', 'physics', 'chemistry', 'biology', 'geology', 'ocean',
+        'arctic', 'antarctic', 'fossil', 'dinosaur', 'evolution', 'ecosystem', 'biodiversity',
+        'telescope', 'satellite', 'rocket', 'asteroid', 'comet', 'solar', 'lunar',
+        'planet', 'galaxy', 'universe', 'quantum', 'molecule', 'atom', 'nuclear',
+        # Spanish
+        'ciencia', 'investigación', 'descubrimiento', 'especie', 'genético', 'clima',
+        'terremoto', 'volcán', 'planeta', 'espacio', 'universo', 'física', 'química',
+        'biología', 'laboratorio', 'estudio', 'científico', 'nasa', 'astronáutica'
+    ],
+    'health': [
+        'hospital', 'doctor', 'medical', 'medicine', 'drug', 'fda ', 'vaccine', 'pandemic',
+        'cancer', 'diabetes', 'heart disease', 'brain ', 'treatment', 'therapy', 'surgery',
+        'patient', 'outbreak', 'virus', 'covid', 'epidemic', 'healthcare', 'clinic', 'nurse',
+        'physician', 'mental health', 'depression', 'anxiety', 'stroke', 'symptom', 'diagnosis',
+        'clinical trial', 'pharmaceutical', 'opioid', 'obesity', 'nutrition', 'fitness',
+        'exercise', 'sleep', 'stress', 'immunity', 'infection', 'antibiotic', 'chronic',
+        'acute', 'emergency', 'pediatric', 'geriatric', 'oncology', 'cardiology',
+        # Spanish
+        'hospital', 'médico', 'medicina', 'vacuna', 'pandemia', 'salud', 'enfermedad',
+        'tratamiento', 'virus', 'clínica', 'paciente', 'cirugía', 'terapia', 'síntoma',
+        'diagnóstico', 'farmacéutico', 'nutrición', 'ejercicio', 'bienestar', 'covid'
+    ],
+    'sports': [
+        'nba', 'nfl', 'mlb', 'nhl', 'championship', 'playoffs', 'super bowl', 'world cup',
+        'olympics', 'marathon', 'tennis', 'golf', 'soccer', 'basketball', 'baseball',
+        'football', 'coach', 'injury', 'tournament', 'athlete', 'score', 'draft', 'trade',
+        'fifa', 'uefa', 'premier league', 'la liga', 'serie a', ' bundesliga', 'ligue 1',
+        'champions league', 'world series', 'grand slam', 'wimbledon', 'masters',
+        'quarterback', 'pitcher', 'striker', 'midfielder', 'goalkeeper', 'referee',
+        'stadium', 'arena', 'league', 'division', 'conference', 'wild card', 'mvp',
+        'all-star', 'rookie', 'veteran', 'retirement', 'contract', 'free agent',
+        # Spanish
+        'fútbol', 'liga', 'champions', 'copa', 'mundial', 'olimpiadas', 'deporte',
+        'equipo', 'jugador', 'partido', 'gol', 'tenis', 'baloncesto', 'béisbol',
+        'entrenador', 'estadio', 'torneo', 'campeonato', 'selección', 'árbitro',
+        'clásico', 'derby', 'ascenso', 'descenso', 'tabla', 'posiciones'
+    ],
+    'us': [
+        'california', 'texas', 'florida', 'new york', 'washington', 'chicago', 'los angeles',
+        'miami', 'seattle', 'boston', 'atlanta', 'houston', 'dallas', 'phoenix', 'denver',
+        'detroit', 'portland', 'philadelphia', 'san francisco', 'san diego', 'austin',
+        'nashville', 'memphis', 'las vegas', 'sacramento', 'orlando', 'tampa', 'raleigh',
+        'pittsburgh', 'cleveland', 'cincinnati', 'milwaukee', 'minneapolis', 'indianapolis',
+        'columbus', 'charlotte', 'kansas city', 'st. louis', 'new orleans', 'baltimore',
+        'maryland', 'virginia', 'nevada', 'arizona', 'georgia', 'north carolina',
+        'pennsylvania', 'ohio', 'michigan', 'illinois', 'new jersey', 'massachusetts',
+        'connecticut', 'colorado', 'oregon', 'washington state', 'idaho', 'utah',
+        'alabama', 'south carolina', 'tennessee', 'kentucky', 'indiana', 'wisconsin',
+        'iowa', 'nebraska', 'kansas', 'oklahoma', 'missouri', 'arkansas', 'louisiana',
+        'mississippi', 'alaska', 'hawaii', 'fbi', 'cia', 'pentagon', 'capitol hill',
+        'american', 'americans', 'u.s.', 'united states', 'america', 'midwest', 'south',
+        'northeast', 'west coast', 'east coast', 'gulf', 'great lakes',
+        # Spanish (US-related)
+        'estados unidos', 'ee.uu.', 'norteamérica', 'florida', 'texas', 'california',
+        'nueva york', 'miami', 'los ángeles', 'chicago', 'washington'
+    ],
+    'world': [
+        'ukraine', 'russia', 'china', 'iran', 'israel', 'gaza', 'middle east', 'europe',
+        'asia', 'africa', 'latin america', 'european union', 'nato', 'war', 'ceasefire',
+        'diplomat', 'summit', 'border', 'immigration', 'refugee', 'global', 'international',
+        'united nations', 'un ', 'who ', 'brexit', 'sanctions', 'embassy', 'foreign',
+        'treaty', 'alliance', 'conflict', 'military', 'army', 'navy', 'air force',
+        'missile', 'nuclear', 'weapon', 'terror', 'extremist', 'rebel', 'insurgent',
+        'peacekeeping', 'humanitarian', 'crisis', 'disaster', 'famine', 'drought',
+        'flood', 'hurricane', 'typhoon', 'earthquake', 'tsunami', 'volcano',
+        # Spanish
+        'ucrania', 'rusia', 'china', 'irán', 'israel', 'gaza', 'medio oriente', 'europa',
+        'asia', 'áfrica', 'américa latina', 'guerra', 'diplomático', 'inmigración',
+        'refugiado', 'mundial', 'internacional', 'onu', 'otan', 'conflicto', 'crisis',
+        'militar', 'ejército', 'paz', 'acuerdo', 'tratado', 'sanciones'
+    ],
 }
 
 CATEGORY_NAMES = OrderedDict([
@@ -90,46 +192,82 @@ def get_story_categories(title):
     title_lower = title.lower()
     categories = []
     
-    for keyword in CATEGORY_KEYWORDS['politics']:
-        if keyword in title_lower:
-            categories.append('politics')
-            break
+    # Check each category - story can be in multiple categories
+    # Order matters: more specific categories first
     
-    for keyword in CATEGORY_KEYWORDS['business']:
-        if keyword in title_lower:
-            categories.append('business')
-            break
-    
-    for keyword in CATEGORY_KEYWORDS['technology']:
-        if keyword in title_lower:
-            categories.append('technology')
-            break
-    
-    for keyword in CATEGORY_KEYWORDS['science']:
-        if keyword in title_lower:
-            categories.append('science')
-            break
-    
-    for keyword in CATEGORY_KEYWORDS['health']:
-        if keyword in title_lower:
-            categories.append('health')
-            break
-    
+    # Sports (very specific keywords)
+    sports_matches = 0
     for keyword in CATEGORY_KEYWORDS['sports']:
         if keyword in title_lower:
-            categories.append('sports')
-            break
+            sports_matches += 1
+            if sports_matches >= 1:
+                categories.append('sports')
+                break
     
+    # Health (specific)
+    health_matches = 0
+    for keyword in CATEGORY_KEYWORDS['health']:
+        if keyword in title_lower:
+            health_matches += 1
+            if health_matches >= 1:
+                categories.append('health')
+                break
+    
+    # Technology (specific)
+    tech_matches = 0
+    for keyword in CATEGORY_KEYWORDS['technology']:
+        if keyword in title_lower:
+            tech_matches += 1
+            if tech_matches >= 1:
+                categories.append('technology')
+                break
+    
+    # Science (specific)
+    science_matches = 0
+    for keyword in CATEGORY_KEYWORDS['science']:
+        if keyword in title_lower:
+            science_matches += 1
+            if science_matches >= 1:
+                categories.append('science')
+                break
+    
+    # Business (specific)
+    business_matches = 0
+    for keyword in CATEGORY_KEYWORDS['business']:
+        if keyword in title_lower:
+            business_matches += 1
+            if business_matches >= 1:
+                categories.append('business')
+                break
+    
+    # Politics (specific)
+    politics_matches = 0
+    for keyword in CATEGORY_KEYWORDS['politics']:
+        if keyword in title_lower:
+            politics_matches += 1
+            if politics_matches >= 1:
+                categories.append('politics')
+                break
+    
+    # US (very broad, check after more specific categories)
+    us_matches = 0
     for keyword in CATEGORY_KEYWORDS['us']:
         if keyword in title_lower:
-            categories.append('us')
-            break
+            us_matches += 1
+            if us_matches >= 1:
+                categories.append('us')
+                break
     
+    # World (broad, check last)
+    world_matches = 0
     for keyword in CATEGORY_KEYWORDS['world']:
         if keyword in title_lower:
-            categories.append('world')
-            break
+            world_matches += 1
+            if world_matches >= 1:
+                categories.append('world')
+                break
     
+    # Default to 'world' if no categories matched
     if not categories:
         categories = ['world']
     
@@ -248,3 +386,17 @@ def fetch_news_trigger(request):
     thread = threading.Thread(target=run_fetch)
     thread.start()
     return HttpResponse('Fetch started.')
+
+
+def terms_view(request):
+    language = request.GET.get('lang', 'en')
+    if language == 'es':
+        return render(request, 'terms_es.html')
+    return render(request, 'terms.html')
+
+
+def privacy_view(request):
+    language = request.GET.get('lang', 'en')
+    if language == 'es':
+        return render(request, 'privacy_es.html')
+    return render(request, 'privacy.html')
