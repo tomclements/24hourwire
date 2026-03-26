@@ -2,6 +2,8 @@ from django.shortcuts import render
 from django.utils import timezone
 from datetime import timedelta
 from collections import OrderedDict
+from django.http import HttpResponse
+from django.core.management import call_command
 from .models import Story
 
 
@@ -266,3 +268,8 @@ def home(request):
         'selected_sources': selected_sources,
         'default_sources': DEFAULT_SOURCES
     })
+
+
+def fetch_news_trigger(request):
+    call_command('fetch_news')
+    return HttpResponse('News fetched successfully.')
