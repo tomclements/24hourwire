@@ -46,7 +46,7 @@
     <header>
         <h1>24HourWire</h1>
         <p class="subtitle">Choose your bias | Wire services and other feeds | Last 24 hours</p>
-        <p class="subtitle" style="font-size: 0.85rem;">Currently showing: {{ selected_sources|join:", " }}</p>
+        <p class="subtitle" style="font-size: 0.85rem;">Currently showing: {{ selected_sources|join:", " }} · <a href="/about/" style="color: #0066cc;">How it works</a></p>
     </header>
     
     <div id="cookie-banner" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #f5f5f5; color: #333; padding: 15px 20px; z-index: 1000; font-size: 0.85rem; box-shadow: 0 -2px 10px rgba(0,0,0,0.1);">
@@ -93,6 +93,9 @@
     {% for cat_id, cat_data in grouped.items %}
     <div id="{{ cat_id }}" class="category" data-count="{{ cat_data.stories|length }}">
         <h2>{{ cat_data.name }} <span style="font-weight: normal; color: #888; font-size: 0.9rem;">({{ cat_data.stories|length }})</span></h2>
+        {% if cat_id == "most_covered" %}
+            <p style="color: #666; font-size: 0.85rem; margin-bottom: 15px;">Stories covered by 2 or more sources</p>
+        {% endif %}
         {% if cat_data.stories %}
             {% for story in cat_data.stories %}
             <div class="story {% if forloop.counter > 20 %}extra-story" style="display: none;"{% else %}"{% endif %}>
@@ -112,7 +115,7 @@
                 {% endwith %}
                 <div class="links">
                     <a href="{{ story.url }}" target="_blank">Read full story ↗</a>
-                    <a href="https://www.bing.com/news/search?q={{ story.get_search_terms }}" target="_blank">Bing News</a>
+                    <a href="https://www.bing.com/news/search?q={{ story.get_search_terms }}" target="_blank" title="Search Bing News for related coverage of this story">Find coverage ↗</a>
                     <a href="{{ story.bias_link }}" target="_blank">Bias rating</a>
                 </div>
             </div>
