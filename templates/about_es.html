@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acerca de - 24HourWire</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
+        header { border-bottom: 2px solid #333; padding: 20px 0; margin-bottom: 30px; }
+        h1 { font-size: 1.8rem; }
+        h2 { font-size: 1.4rem; margin: 30px 0 15px 0; padding-bottom: 8px; border-bottom: 1px solid #eee; }
+        p { margin-bottom: 15px; }
+        ul { margin: 15px 0 15px 30px; }
+        li { margin-bottom: 8px; }
+        .back-link { display: inline-block; margin-bottom: 20px; color: #0066cc; text-decoration: none; font-size: 0.9rem; }
+        .back-link:hover { text-decoration: underline; }
+        .highlight { background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 0.8rem; text-align: center; }
+        footer a { color: #666; text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <a href="/?lang=es" class="back-link">← Volver a noticias</a>
+    
+    <header>
+        <h1>Acerca de 24HourWire</h1>
+        <p style="color: #666;">Noticias desde múltiples perspectivas</p>
+    </header>
+    
+    <h2>¿Qué es 24HourWire?</h2>
+    <p>24HourWire agrega titulares de noticias de fuentes a través del espectro político, en múltiples idiomas. Te mostramos las mismas historias de diferentes medios para que puedas ver cómo la cobertura varía según el sesgo de la fuente.</p>
+    
+    <p>Solo mantenemos historias de las últimas 24 horas para mantener el contenido fresco y relevante.</p>
+    
+    <h2>Idiomas</h2>
+    <p>24HourWire admite múltiples idiomas. Usa los enlaces de idioma en el encabezado para cambiar entre ellos. Cada idioma tiene su propio conjunto de fuentes del panorama mediático de ese idioma.</p>
+    
+    <h2>Entender las calificaciones de sesgo</h2>
+    <p>Cada fuente tiene una calificación de sesgo de <a href="https://mediabiasfactcheck.com/" target="_blank">Media Bias/Fact Check</a>:</p>
+    <ul>
+        {% for bias, sources_list in bias_groups.items %}
+        <li><strong>{{ bias }}</strong> - {{ sources_list|join:", " }}</li>
+        {% endfor %}
+    </ul>
+    
+    <h2>Entender los enlaces</h2>
+    
+    <div class="highlight">
+        <p><strong>"Leer historia completa ↗"</strong> - Te lleva directamente al artículo original en el sitio web del editor.</p>
+    </div>
+    
+    <div class="highlight">
+        <p><strong>"Encontrar cobertura ↗"</strong> - Busca en Bing News cobertura relacionada de la misma historia. Esto te ayuda a encontrar cómo otros medios están reportando el mismo evento. Haz clic para comparar la cobertura entre diferentes fuentes.</p>
+    </div>
+    
+    <div class="highlight">
+        <p><strong>"Calificación de sesgo"</strong> - Enlaza a la página de Media Bias/Fact Check para esa fuente, mostrando su análisis detallado de sesgo.</p>
+    </div>
+    
+    <h2>La pestaña "Más Cubierto"</h2>
+    <p>Esta pestaña muestra historias que aparecen en 2 o más de tus fuentes seleccionadas. El número mostrado (ej., "3 fuentes") indica cuántos medios están cubriendo esa historia en particular.</p>
+    
+    <p>Agrupamos historias comparando sus titulares. Las palabras comunes (como "el", "la", "en") se filtran para que la coincidencia se basen en palabras clave significativas. Si el 60% o más de las palabras restantes se superponen, las historias se agrupan juntas.</p>
+    
+    <h2>Categorías de fuentes</h2>
+    <p>Usa el menú desplegable para filtrar por categoría de sesgo:</p>
+    <ul>
+        <li><strong>Fuentes centrales (predeterminado)</strong> - Muestra solo agencias de noticias y medios neutrales</li>
+        <li><strong>Todas las fuentes</strong> - Muestra todo</li>
+        <li><strong>Solo centro/centro-izquierda/izquierda/derecha</strong> - Filtra por categorías de sesgo específicas</li>
+        <li><strong>Borrar todo</strong> - Oculta todas las fuentes (útil si quieres seleccionar individualmente)</li>
+    </ul>
+    <p>Haz clic en el conteo de fuentes junto al menú desplegable para ver exactamente qué fuentes están seleccionadas actualmente.</p>
+    
+    <h2>Cómo nos mantenemos legales</h2>
+    <p>Respetamos los derechos de autor y el uso justo:</p>
+    <ul>
+        <li>Mostramos solo titulares y resúmenes breves (no artículos completos)</li>
+        <li>Enlazamos directamente al editor original</li>
+        <li>Atribuimos cada historia a su fuente</li>
+        <li>Usamos anuncios no personalizados (sin cookies de rastreo)</li>
+    </ul>
+    
+    <h2>Actualizaciones automáticas</h2>
+    <p>Las noticias se obtienen automáticamente cada 15 minutos de todas las fuentes. No necesitas actualizar - solo visita el sitio para ver los últimos titulares.</p>
+    
+    <footer>
+        <p>&copy; 2026 24HourWire. Contenido de noticias © respectivos editores.</p>
+        <p><a href="/?lang=es">Inicio</a> | <a href="/terms/?lang=es">Términos</a> | <a href="/privacy/?lang=es">Privacidad</a></p>
+    </footer>
+</body>
+</html>

@@ -254,6 +254,32 @@ SOURCES = {
     ],
 }
 
+LANGUAGE_STOP_WORDS = {
+    'en': {
+        'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
+        'of', 'with', 'by', 'from', 'is', 'are', 'was', 'were', 'be', 'been',
+        'has', 'have', 'had', 'do', 'does', 'did', 'will', 'would', 'could',
+        'should', 'may', 'might', 'can', 'shall', 'not', 'no', 'its', 'it',
+        'as', 'that', 'this', 'these', 'those', 'he', 'she', 'they', 'we',
+        'him', 'her', 'them', 'their', 'our', 'my', 'your', 'his', 'i',
+        'up', 'out', 'about', 'into', 'over', 'after', 'before', 'between',
+        'under', 'above', 'so', 'than', 'too', 'very', 'just', 'also', 'more',
+        'new', 'says', 'said', 'say',
+    },
+    'es': {
+        'el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'pero',
+        'en', 'de', 'del', 'al', 'a', 'para', 'por', 'con', 'sin', 'sobre',
+        'es', 'son', 'era', 'eran', 'fue', 'ser', 'estar', 'está', 'están',
+        'ha', 'he', 'han', 'hay', 'haber', 'que', 'cual', 'quien', 'como',
+        'este', 'esta', 'estos', 'estas', 'ese', 'esa', 'esos', 'esas',
+        'él', 'ella', 'ellos', 'ellas', 'su', 'sus', 'mi', 'tu', 'nos',
+        'yo', 'me', 'te', 'se', 'lo', 'le', 'les', 'nos', 'más', 'muy',
+        'ya', 'no', 'si', 'sí', 'ni', 'también', 'así', 'entre', 'hasta',
+        'desde', 'cuando', 'donde', 'todo', 'cada', 'otro', 'otra', 'otros',
+        'nuevo', 'nueva', 'nuevos', 'nuevas', 'dice', 'dijo', 'según',
+    },
+}
+
 LANGUAGE_NAMES = {
     'en': 'English',
     'es': 'Español',

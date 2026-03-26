@@ -29,17 +29,19 @@
     </header>
     
     <h2>What is 24HourWire?</h2>
-    <p>24HourWire aggregates news headlines from 37 sources across the political spectrum. We show you the same stories from different outlets so you can see how coverage varies based on source bias.</p>
+    <p>24HourWire aggregates news headlines from sources across the political spectrum, in multiple languages. We show you the same stories from different outlets so you can see how coverage varies based on source bias.</p>
     
     <p>We only keep stories from the last 24 hours to keep things fresh and relevant.</p>
+    
+    <h2>Languages</h2>
+    <p>24HourWire supports multiple languages. Use the language links in the header to switch between them. Each language has its own set of sources from that language's media landscape.</p>
     
     <h2>Understanding Bias Ratings</h2>
     <p>Each source has a bias rating from <a href="https://mediabiasfactcheck.com/" target="_blank">Media Bias/Fact Check</a>:</p>
     <ul>
-        <li><strong>Center</strong> - Reuters, AP, Deutsche Welle, Bloomberg, Forbes</li>
-        <li><strong>Left-Center</strong> - BBC, NPR, CBS News, ABC News, NBC News</li>
-        <li><strong>Left</strong> - CNN, Al Jazeera, Mother Jones, HuffPost</li>
-        <li><strong>Right</strong> - Fox News, New York Post, Daily Wire, National Review</li>
+        {% for bias, sources_list in bias_groups.items %}
+        <li><strong>{{ bias }}</strong> - {{ sources_list|join:", " }}</li>
+        {% endfor %}
     </ul>
     
     <h2>Understanding the Links</h2>
@@ -49,7 +51,7 @@
     </div>
     
     <div class="highlight">
-        <p><strong>"Bing News"</strong> - Searches Bing News for related coverage of the same story. This helps you find how other outlets are reporting the same event. Click this to compare coverage across different sources.</p>
+        <p><strong>"Find coverage ↗"</strong> - Searches Bing News for related coverage of the same story. This helps you find how other outlets are reporting the same event. Click this to compare coverage across different sources.</p>
     </div>
     
     <div class="highlight">
@@ -59,13 +61,17 @@
     <h2>The "Most Covered" Tab</h2>
     <p>This tab shows stories that appear across 2 or more of your selected sources. The number shown (e.g., "3 sources") indicates how many outlets are covering that particular story.</p>
     
+    <p>We group stories by comparing their headlines. Common words (like "the", "a", "in") are filtered out so matching is based on meaningful keywords. If 60% or more of the remaining words overlap, the stories are grouped together.</p>
+    
     <h2>Source Categories</h2>
     <p>Use the dropdown to filter by bias category:</p>
     <ul>
         <li><strong>Center sources (default)</strong> - Shows only wire services and neutral outlets</li>
         <li><strong>All sources</strong> - Shows everything</li>
         <li><strong>Center/Left-Center/Left/Right only</strong> - Filter to specific bias categories</li>
+        <li><strong>Clear all</strong> - Hides all sources (useful if you want to pick individual ones)</li>
     </ul>
+    <p>Click the source count next to the dropdown to see exactly which sources are currently selected.</p>
     
     <h2>How We Stay Legal</h2>
     <p>We respect copyright and fair use:</p>

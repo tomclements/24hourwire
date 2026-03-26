@@ -7,7 +7,7 @@ from django.core.management import call_command
 import threading
 import re
 from .models import Story
-from .sources_config import LANGUAGE_SOURCE_INFO, DEFAULT_SOURCES, SOURCES, LANGUAGE_NAMES, PAYWALLED_SOURCES
+from .sources_config import LANGUAGE_SOURCE_INFO, DEFAULT_SOURCES, SOURCES, LANGUAGE_NAMES, PAYWALLED_SOURCES, LANGUAGE_STOP_WORDS
 
 
 CATEGORY_KEYWORDS = {
@@ -274,6 +274,8 @@ def get_story_categories(title):
     return categories
 
 
+
+
 def home(request):
     cutoff = timezone.now() - timedelta(hours=24)
     
@@ -323,18 +325,20 @@ def home(request):
     story_groups = {}
     
     for story in stories:
-        # Normalize title for matching: lowercase, remove punctuation, take first 70 chars
-        normalized = re.sub(r'[^\w\s]', '', story.title.lower())[:70]
-        
+        # Normalize title for matching: lowercase, remove punctuation, filter stop words
+        normalized = re.sub(r'[^\w\s]', '', story.title.lower())
+        stop_words = LANGUAGE_STOP_WORDS.get(language, LANGUAGE_STOP_WORDS['en'])
+        normalized_words = set(normalized.split()) - stop_words
+        normalized_key = ' '.join(sorted(normalized_words))
+
         # Try to find a matching group
         matched_key = None
         for existing_key in story_groups:
             # Compare word overlap - if 60%+ words match, consider it the same story
-            words1 = set(existing_key.split())
-            words2 = set(normalized.split())
-            if not words1 or not words2:
+            existing_words = set(existing_key.split())
+            if not existing_words or not normalized_words:
                 continue
-            overlap = len(words1 & words2) / max(len(words1), len(words2))
+            overlap = len(existing_words & normalized_words) / max(len(existing_words), len(normalized_words))
             if overlap >= 0.6:
                 matched_key = existing_key
                 break
@@ -342,7 +346,7 @@ def home(request):
         if matched_key:
             story_groups[matched_key].append(story)
         else:
-            story_groups[normalized] = [story]
+            story_groups[normalized_key] = [story]
     
     for key, title_stories in story_groups.items():
         if len(title_stories) >= 2:
@@ -387,6 +391,30 @@ def fetch_news_trigger(request):
     thread = threading.Thread(target=run_fetch)
     thread.start()
     return HttpResponse('Fetch started.')
+
+
+def about_view(request):
+    language = request.GET.get('lang', 'en')
+    if language not in SOURCES:
+        language = 'en'
+
+    lang_sources = SOURCES.get(language, SOURCES['en'])
+    lang_source_info = LANGUAGE_SOURCE_INFO.get(language, LANGUAGE_SOURCE_INFO['en'])
+
+    # Group sources by bias for display
+    bias_groups = {}
+    for source_name, bias in lang_sources:
+        if bias not in bias_groups:
+            bias_groups[bias] = []
+        bias_groups[bias].append(source_name)
+
+    template = 'about_es.html' if language == 'es' else 'about.html'
+    return render(request, template, {
+        'language': language,
+        'sources': lang_sources,
+        'source_info': lang_source_info,
+        'bias_groups': bias_groups,
+    })
 
 
 def terms_view(request):
