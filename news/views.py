@@ -4,6 +4,7 @@ from datetime import timedelta
 from collections import OrderedDict
 from django.http import HttpResponse
 from django.core.management import call_command
+import threading
 from .models import Story
 
 
@@ -271,5 +272,12 @@ def home(request):
 
 
 def fetch_news_trigger(request):
-    call_command('fetch_news')
-    return HttpResponse('News fetched successfully.')
+    def run_fetch():
+        try:
+            call_command('fetch_news')
+        except Exception as e:
+            print(f"Fetch error: {e}")
+    
+    thread = threading.Thread(target=run_fetch)
+    thread.start()
+    return HttpResponse('Fetch started.')
