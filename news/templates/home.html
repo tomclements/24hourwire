@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ language }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -47,7 +47,7 @@
     <header>
         <h1>24HourWire</h1>
         <p class="subtitle">
-            Choose your bias | Wire services and other feeds | Last 24 hours
+            {{ t.subtitle }}
             {% if language == 'es' %}
                 | <a href="/?lang=en" style="color: #0066cc;">English</a> | <strong>Español</strong>
             {% else %}
@@ -55,29 +55,21 @@
             {% endif %}
         </p>
         <p class="subtitle" style="font-size: 0.85rem;">
-            {% if language == 'es' %}
-                <a href="/about/" style="color: #0066cc;">Cómo funciona</a>
-            {% else %}
-                <a href="/about/" style="color: #0066cc;">How it works</a>
-            {% endif %}
+            <a href="/about/?lang={{ language }}" style="color: #0066cc;">{{ t.how_it_works }}</a>
         </p>
     </header>
-    
+
     <div id="cookie-banner" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #f5f5f5; color: #333; padding: 15px 20px; z-index: 1000; font-size: 0.85rem; box-shadow: 0 -2px 10px rgba(0,0,0,0.1);">
         <div style="max-width: 800px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
             <span style="flex: 1; min-width: 200px;">
-                {% if language == 'es' %}
-                    Respetamos tu privacidad. Este sitio usa anuncios contextuales (sin cookies de rastreo) y muestra titulares/resúmenes bajo uso justo. <a href="{% url 'privacy' %}" style="color: #0066cc;">Política de privacidad</a>
-                {% else %}
-                    We respect your privacy. This site uses contextual ads (no tracking cookies) and shows headlines/summaries under fair use. <a href="{% url 'privacy' %}" style="color: #0066cc;">Privacy Policy</a>
-                {% endif %}
+                {{ t.privacy_text }} <a href="{% url 'privacy' %}?lang={{ language }}" style="color: #0066cc;">{{ t.privacy_link }}</a>
             </span>
             <button onclick="acceptCookies()" style="background: #0066cc; color: white; border: none; padding: 8px 16px; cursor: pointer; border-radius: 4px; font-size: 0.85rem;">
-                {% if language == 'es' %}Entendido{% else %}Got it{% endif %}
+                {{ t.got_it }}
             </button>
         </div>
     </div>
-    
+
     <script>
         function getCookie(name) {
             const value = `; ${document.cookie}`;
@@ -90,44 +82,40 @@
         }
         document.getElementById('cookie-banner').style.display = 'block';
     </script>
-    
+
     <div class="source-filter">
         <label>
-            <strong>{% if language == 'es' %}Fuentes:{% else %}Sources:{% endif %}</strong>
+            <strong>{{ t.sources }}</strong>
             <select id="source-select" onchange="updateSources(this.value)" style="margin-left: 10px; padding: 5px 10px; border-radius: 4px; border: 1px solid #ddd;">
-                <option value="default">{% if language == 'es' %}Fuentes centrales (predeterminado){% else %}Center sources (default){% endif %}</option>
-                <option value="all">{% if language == 'es' %}Todas las fuentes{% else %}All sources{% endif %}</option>
-                <option value="center">{% if language == 'es' %}Solo centro{% else %}Center only{% endif %}</option>
-                <option value="left-center">{% if language == 'es' %}Solo centro-izquierda{% else %}Left-Center only{% endif %}</option>
-                <option value="left">{% if language == 'es' %}Solo izquierda{% else %}Left only{% endif %}</option>
-                <option value="right">{% if language == 'es' %}Solo derecha{% else %}Right only{% endif %}</option>
-                <option value="clear">{% if language == 'es' %}Borrar todo{% else %}Clear all{% endif %}</option>
+                <option value="default">{{ t.center_default }}</option>
+                <option value="all">{{ t.all_sources }}</option>
+                <option value="center">{{ t.center_only }}</option>
+                <option value="left-center">{{ t.left_center_only }}</option>
+                <option value="left">{{ t.left_only }}</option>
+                <option value="right">{{ t.right_only }}</option>
+                <option value="clear">{{ t.clear_all }}</option>
             </select>
         </label>
         <span id="source-count" style="cursor: pointer; color: #888; font-size: 0.9rem; margin-left: 15px;" onclick="toggleSourceList()">
-            {% if language == 'es' %}{{ selected_sources|length }} fuentes ▾{% else %}{{ selected_sources|length }} sources ▾{% endif %}
+            {{ selected_sources|length }} {{ t.sources_suffix }} ▾
         </span>
         <div id="source-list" style="display: none; font-size: 0.8rem; color: #888; margin-top: 5px; padding: 8px; background: #f0f0f0; border-radius: 4px; width: 100%;">
             {{ selected_sources|join:", " }}
         </div>
     </div>
-    
+
     <div class="tabs">
         {% for cat_id, cat_data in grouped.items %}
             <a href="#{{ cat_id }}" class="tab {% if forloop.first %}active{% endif %}" onclick="showCategory('{{ cat_id }}'); return false;">{{ cat_data.name }}</a>
         {% endfor %}
     </div>
-    
+
     {% for cat_id, cat_data in grouped.items %}
     <div id="{{ cat_id }}" class="category" data-count="{{ cat_data.stories|length }}">
         <h2>{{ cat_data.name }} <span style="font-weight: normal; color: #888; font-size: 0.9rem;">({{ cat_data.stories|length }})</span></h2>
         {% if cat_id == "most_covered" %}
             <p style="color: #666; font-size: 0.85rem; margin-bottom: 15px;">
-                {% if language == 'es' %}
-                    Historias cubiertas por 2 o más fuentes
-                {% else %}
-                    Stories covered by 2 or more sources
-                {% endif %}
+                {{ t.covered_by_2 }}
             </p>
         {% endif %}
         {% if cat_data.stories %}
@@ -135,12 +123,12 @@
             <div class="story {% if forloop.counter > 20 %}extra-story" style="display: none;"{% else %}"{% endif %}>
                 <h3><a href="{{ story.url }}" target="_blank">{{ story.title }}</a></h3>
                 <p class="meta">
-                    <span class="source">{{ story.source }}{% if story.is_paywalled %}<span class="paywall" title="{% if language == 'es' %}Sitio con muro de pago{% else %}Paywalled site{% endif %}">$</span>{% endif %}</span>
+                    <span class="source">{{ story.source }}{% if story.is_paywalled %}<span class="paywall" title="{{ t.paywall_title }}">$</span>{% endif %}</span>
                     {% if story.covered_by_count %}
-                    <span class="covered-by" style="background: #e8f0e8; padding: 2px 6px; border-radius: 3px; font-size: 0.75rem; color: #2e7d32;">{{ story.covered_by_count }} {% if language == 'es' %}fuentes{% else %}sources{% endif %}</span>
+                    <span class="covered-by" style="background: #e8f0e8; padding: 2px 6px; border-radius: 3px; font-size: 0.75rem; color: #2e7d32;">{{ story.covered_by_count }} {{ t.sources_label }}</span>
                     {% endif %}
                     <a href="{{ story.bias_link }}" target="_blank" class="bias" style="color: {{ story.bias_color }}; font-size: 0.75rem; text-decoration: none;">{{ story.bias_label }}</a>
-                    <span class="time">{{ story.published|timesince }} {% if language == 'es' %}ago{% else %}ago{% endif %}</span>
+                    <span class="time">{{ story.published|timesince }} {{ t.ago }}</span>
                 </p>
                 {% with story.get_clean_excerpt as clean_excerpt %}
                 {% if clean_excerpt %}
@@ -148,38 +136,30 @@
                 {% endif %}
                 {% endwith %}
                 <div class="links">
-                    <a href="{{ story.url }}" target="_blank">{% if language == 'es' %}Leer historia completa{% else %}Read full story{% endif %} ↗</a>
-                    <a href="https://www.bing.com/news/search?q={{ story.get_search_terms }}" target="_blank" title="{% if language == 'es' %}Buscar cobertura relacionada{% else %}Search for related coverage{% endif %}">{% if language == 'es' %}Encontrar cobertura{% else %}Find coverage{% endif %} ↗</a>
-                    <a href="{{ story.bias_link }}" target="_blank">{% if language == 'es' %}Calificación de sesgo{% else %}Bias rating{% endif %}</a>
+                    <a href="{{ story.url }}" target="_blank">{{ t.read_full }} ↗</a>
+                    <a href="https://www.bing.com/news/search?q={{ story.get_search_terms }}" target="_blank" title="{{ t.search_related }}">{{ t.find_coverage }} ↗</a>
+                    <a href="{{ story.bias_link }}" target="_blank">{{ t.bias_rating }}</a>
                 </div>
             </div>
             {% endfor %}
             {% if cat_data.stories|length > 20 %}
             <button class="load-more" onclick="loadMore(this)" style="width: 100%; padding: 12px; background: #f5f5f5; border: 1px solid #ddd; cursor: pointer; border-radius: 4px; margin-top: 15px;">
-                {% if language == 'es' %}
-                    Mostrar {{ cat_data.stories|length }} historias
-                {% else %}
-                    Show {{ cat_data.stories|length }} stories
-                {% endif %}
+                {{ t.show_stories }} {{ cat_data.stories|length }} {{ t.stories }}
             </button>
             {% endif %}
         {% else %}
-            <p class="empty">{% if language == 'es' %}No hay historias en esta categoría{% else %}No stories in this category{% endif %}</p>
+            <p class="empty">{{ t.no_stories }}</p>
         {% endif %}
     </div>
     {% endfor %}
-    
+
     <footer>
-        <p>&copy; 2026 24HourWire. {% if language == 'es' %}Contenido de noticias © respectivos editores. Titulares y resúmenes utilizados bajo uso justo con fines informativos.{% else %}News content &copy; respective publishers. Headlines and summaries used under fair use for informational purposes.{% endif %}</p>
+        <p>&copy; 2026 24HourWire. {{ t.footer_copy }}</p>
         <p>
-            {% if language == 'es' %}
-                Fuentes: {% for source, _ in sources %}{% if forloop.last %}y {% endif %}{{ source }}{% if not forloop.last %}, {% endif %}{% endfor %} | <a href="/terms/?lang=es">Términos</a> | <a href="/privacy/?lang=es">Privacidad</a> | <a href="/about/">Acerca de</a>
-            {% else %}
-                Sources: {% for source, _ in sources %}{% if forloop.last %}and {% endif %}{{ source }}{% if not forloop.last %}, {% endif %}{% endfor %} | <a href="/terms/?lang=en">Terms</a> | <a href="/privacy/?lang=en">Privacy</a> | <a href="/about/">About</a>
-            {% endif %}
+            {{ t.footer_sources }} {% for source, _ in sources %}{% if forloop.last %}{{ t.footer_and }} {% endif %}{{ source }}{% if not forloop.last %}, {% endif %}{% endfor %} | <a href="/terms/?lang={{ language }}">{{ t.footer_terms }}</a> | <a href="/privacy/?lang={{ language }}">{{ t.footer_privacy }}</a> | <a href="/about/?lang={{ language }}">{{ t.footer_about }}</a>
         </p>
     </footer>
-    
+
     <!-- Google AdSense placeholder - Replace with your actual ad code -->
     <!--
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
@@ -192,13 +172,13 @@
             document.getElementById(catId).style.display = 'block';
             document.querySelector(`.tab[href="#${catId}"]`).classList.add('active');
         }
-        
+
         function loadMore(btn) {
             const category = btn.closest('.category');
             category.querySelectorAll('.extra-story').forEach(el => el.style.display = 'block');
             btn.style.display = 'none';
         }
-        
+
         function updateSources(value) {
             const url = new URL(window.location);
             const lang = url.searchParams.get('lang') || 'en';
@@ -216,10 +196,10 @@
             }
             window.location.href = url.toString();
         }
-        
+
         document.querySelectorAll('.category').forEach(el => el.style.display = 'none');
         document.querySelectorAll('.category')[0].style.display = 'block';
-        
+
         function toggleSourceList() {
             const list = document.getElementById('source-list');
             const count = document.getElementById('source-count');

@@ -6,7 +6,7 @@ import logging
 from datetime import datetime, timedelta
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from news.models import Story, normalize_url, title_fingerprint
+from news.models import Story, normalize_url, title_fingerprint, build_clusters
 from news.sources_config import LANGUAGE_FEEDS
 
 logger = logging.getLogger('news.fetch')
@@ -175,6 +175,11 @@ class Command(BaseCommand):
             total_dupes += dupes
             url_dupes += u_dupes
             title_dupes += t_dupes
+
+        # Build story clusters for "Most Covered" tab
+        for lang in languages:
+            cluster_count = build_clusters(lang)
+            self.stdout.write(f"Built {cluster_count} clusters for {lang}")
 
         logger.info(f'Fetch complete: {total_new} new, {total_dupes} dupes ({url_dupes} url, {title_dupes} title)')
         self.stdout.write(self.style.SUCCESS(
