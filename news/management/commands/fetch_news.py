@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from news.models import Story, normalize_url, title_fingerprint, build_clusters
-from news.sources_config import LANGUAGE_FEEDS
+from news.sources_config import LANGUAGE_FEEDS, SUPPORTED_LANGUAGES
 
 logger = logging.getLogger('news.fetch')
 logger.setLevel(logging.INFO)
@@ -19,13 +19,20 @@ logger.addHandler(handler)
 class Command(BaseCommand):
     help = 'Fetch latest news from wire services'
 
+    def safe_write(self, msg, **kwargs):
+        """Write to stdout, falling back to ASCII-safe version on encoding errors."""
+        try:
+            self.stdout.write(msg, **kwargs)
+        except UnicodeEncodeError:
+            self.stdout.write(msg.encode('ascii', 'replace').decode('ascii'), **kwargs)
+
     def add_arguments(self, parser):
         parser.add_argument(
             '--language',
             type=str,
             default='all',
-            choices=['all', 'en', 'es'],
-            help='Language to fetch (all, en, es)'
+            choices=['all'] + sorted(SUPPORTED_LANGUAGES),
+            help=f'Language to fetch (all, {", ".join(sorted(SUPPORTED_LANGUAGES))})'
         )
 
     def fetch_feed(self, url):
@@ -48,7 +55,7 @@ class Command(BaseCommand):
     def fetch_language(self, language):
         feeds = LANGUAGE_FEEDS.get(language, [])
         logger.info(f'Fetching {language} news from {len(feeds)} sources')
-        self.stdout.write(f"\nFetching {language} news...")
+        self.safe_write(f"\nFetching {language} news...")
 
         cutoff = timezone.now() - timedelta(hours=24)
 
@@ -69,14 +76,14 @@ class Command(BaseCommand):
         to_create = []
 
         for source_name, feed_url in feeds:
-            self.stdout.write(f"  {source_name}...", ending=" ")
+            self.safe_write(f"  {source_name}...", ending=" ")
             logger.info(f'Fetching {source_name} ({language})')
 
             feed = self.fetch_feed(feed_url)
 
             if not feed.entries:
                 logger.warning(f'{source_name}: EMPTY')
-                self.stdout.write(self.style.WARNING("EMPTY"))
+                self.safe_write(self.style.WARNING("EMPTY"))
                 continue
 
             source_count = 0
@@ -141,7 +148,7 @@ class Command(BaseCommand):
                 source_count += 1
 
             logger.info(f'{source_name}: {source_count} stories')
-            self.stdout.write(f"OK ({source_count} new)")
+            self.safe_write(f"OK ({source_count} new)")
 
         # Bulk insert — single DB round-trip
         if to_create:
@@ -157,7 +164,7 @@ class Command(BaseCommand):
 
         deleted = Story.objects.filter(published__lt=cutoff).delete()
         logger.info(f'Cleaned old stories: {deleted[0]} removed')
-        self.stdout.write(f"Cleaned old stories: {deleted[0]} removed")
+        self.safe_write(f"Cleaned old stories: {deleted[0]} removed")
 
         total_new = 0
         total_dupes = 0
@@ -179,10 +186,10 @@ class Command(BaseCommand):
         # Build story clusters for "Most Covered" tab
         for lang in languages:
             cluster_count = build_clusters(lang)
-            self.stdout.write(f"Built {cluster_count} clusters for {lang}")
+            self.safe_write(f"Built {cluster_count} clusters for {lang}")
 
         logger.info(f'Fetch complete: {total_new} new, {total_dupes} dupes ({url_dupes} url, {title_dupes} title)')
-        self.stdout.write(self.style.SUCCESS(
+        self.safe_write(self.style.SUCCESS(
             f"\nFetch complete: {total_new} new stories "
             f"({total_dupes} duplicates skipped: {url_dupes} url, {title_dupes} title)"
         ))

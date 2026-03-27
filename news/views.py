@@ -4,7 +4,7 @@ from datetime import timedelta
 from .models import Story, StoryCluster
 from .sources_config import (
     LANGUAGE_SOURCE_INFO, DEFAULT_SOURCES, SOURCES, LANGUAGE_NAMES,
-    PAYWALLED_SOURCES, CATEGORY_KEYWORDS, CATEGORY_NAMES, UI_STRINGS,
+    PAYWALLED_SOURCES, CATEGORY_KEYWORDS, CATEGORY_NAMES, UI_STRINGS, LANGUAGE_NAMES,
 )
 
 
@@ -73,8 +73,8 @@ def get_story_categories(title, language='en'):
 def home(request):
     cutoff = timezone.now() - timedelta(hours=24)
     
-    # Get language from request
-    language = request.GET.get('lang', 'en')
+    # Get language from request - URL param overrides detected language
+    language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))
     if language not in SOURCES:
         language = 'en'
     
@@ -161,7 +161,7 @@ def home(request):
 
 
 def about_view(request):
-    language = request.GET.get('lang', 'en')
+    language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))
     if language not in SOURCES:
         language = 'en'
 
@@ -185,14 +185,14 @@ def about_view(request):
 
 
 def terms_view(request):
-    language = request.GET.get('lang', 'en')
+    language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))
     if language == 'es':
         return render(request, 'terms_es.html')
     return render(request, 'terms.html')
 
 
 def privacy_view(request):
-    language = request.GET.get('lang', 'en')
+    language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))
     if language == 'es':
         return render(request, 'privacy_es.html')
     return render(request, 'privacy.html')

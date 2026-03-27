@@ -48,11 +48,11 @@
         <h1>24HourWire</h1>
         <p class="subtitle">
             {{ t.subtitle }}
-            {% if language == 'es' %}
-                | <a href="/?lang=en" style="color: #0066cc;">English</a> | <strong>Español</strong>
-            {% else %}
-                | <strong>English</strong> | <a href="/?lang=es" style="color: #0066cc;">Español</a>
-            {% endif %}
+            | <select onchange="window.location.href='/?lang='+this.value+(new URL(window.location).searchParams.get('sources')?'&sources='+new URL(window.location).searchParams.get('sources'):'')" style="font-size: 0.85rem; padding: 2px 6px; border-radius: 4px; border: 1px solid #ccc;">
+                {% for code, name in language_names.items %}
+                    <option value="{{ code }}" {% if code == language %}selected{% endif %}>{{ name }}</option>
+                {% endfor %}
+            </select>
         </p>
         <p class="subtitle" style="font-size: 0.85rem;">
             <a href="/about/?lang={{ language }}" style="color: #0066cc;">{{ t.how_it_works }}</a>

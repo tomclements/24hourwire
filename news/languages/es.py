@@ -1,0 +1,223 @@
+from collections import OrderedDict
+
+CODE = 'es'
+NAME = 'Español'
+
+FEEDS = [
+    ('BBC Mundo', 'https://news.google.com/rss/search?q=site:bbc.com/mundo&hl=es&gl=ES&ceid=ES:es'),
+    ('Deutsche Welle ES', 'https://rss.dw.com/xml/rss-es-all'),
+    ('France 24 ES', 'https://www.france24.com/es/rss'),
+    ('RT Español', 'https://news.google.com/rss/search?q=site:actualidad.rt.com&hl=es&gl=ES&ceid=ES:es'),
+    ('CNN Español', 'https://news.google.com/rss/search?q=site:cnnespanol.cnn.com&hl=es&gl=ES&ceid=ES:es'),
+    ('Euronews ES', 'https://es.euronews.com/rss'),
+    ('EFE', 'https://news.google.com/rss/search?q=site:efe.com&hl=es&gl=ES&ceid=ES:es'),
+    ('El País', 'https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada'),
+    ('El Mundo', 'https://estaticos.elmundo.es/elmundo/rss/portada.xml'),
+    ('ABC ES', 'https://www.abc.es/rss/feeds/abc_Espana.xml'),
+    ('La Vanguardia', 'https://www.lavanguardia.com/rss/home.xml'),
+    ('El Confidencial', 'https://www.elconfidencial.com/rss/'),
+    ('El Diario', 'https://www.eldiario.es/rss/'),
+    ('Público', 'https://www.publico.es/rss/'),
+    ('20 Minutos', 'https://www.20minutos.es/rss/'),
+    ('Clarín', 'https://www.clarin.com/rss/'),
+    ('La Nación AR', 'https://www.lanacion.com.ar/arcio/rss/'),
+    ('El Universal MX', 'https://www.eluniversal.com.mx/rss.xml'),
+    ('El Comercio PE', 'https://www.elcomercio.pe/rss/'),
+    ('El Tiempo CO', 'https://www.eltiempo.com/rss/opinion.xml'),
+    ('El Mercurio CL', 'https://www.emol.com/rss/'),
+    ('Expansión', 'https://www.expansion.com/rss/portada.html'),
+    ('Cinco Días', 'https://cincodias.elpais.com/cincodias/rss/portada.xml'),
+    ('Marca', 'https://e00-marca.uecdn.es/rss/portada.xml'),
+    ('AS', 'https://feeds.as.com/rss/section/26h00t000p1.xml'),
+    ('Sport ES', 'https://www.sport.es/es/rss/portada/rss.xml'),
+]
+
+SOURCE_INFO = {
+    'BBC Mundo': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/bbc/'),
+    'Deutsche Welle ES': ('Center', '#666', 'https://mediabiasfactcheck.com/deutsche-welle/'),
+    'France 24 ES': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/france-24/'),
+    'RT Español': ('Right', '#666', 'https://mediabiasfactcheck.com/rt/'),
+    'CNN Español': ('Left', '#999', 'https://mediabiasfactcheck.com/cnn/'),
+    'Euronews ES': ('Center', '#666', 'https://mediabiasfactcheck.com/euronews/'),
+    'EFE': ('Center', '#666', 'https://mediabiasfactcheck.com/efe/'),
+    'El País': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/el-pais/'),
+    'El Mundo': ('Center', '#666', 'https://mediabiasfactcheck.com/el-mundo/'),
+    'ABC ES': ('Right-Center', '#777', 'https://mediabiasfactcheck.com/abc-spain/'),
+    'La Vanguardia': ('Center', '#666', 'https://mediabiasfactcheck.com/la-vanguardia/'),
+    'El Confidencial': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'El Diario': ('Left', '#999', 'https://mediabiasfactcheck.com/'),
+    'Público': ('Left', '#999', 'https://mediabiasfactcheck.com/'),
+    '20 Minutos': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'Clarín': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'La Nación AR': ('Right-Center', '#777', 'https://mediabiasfactcheck.com/'),
+    'El Universal MX': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'El Comercio PE': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'El Tiempo CO': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'El Mercurio CL': ('Right-Center', '#777', 'https://mediabiasfactcheck.com/'),
+    'Expansión': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'Cinco Días': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'Marca': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'AS': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'Sport ES': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+}
+
+DEFAULT_SOURCES = ['BBC Mundo', 'Deutsche Welle ES', 'France 24 ES', 'EFE', 'El País', 'Clarín']
+
+SOURCES = [
+    ('EFE', 'Center'),
+    ('Deutsche Welle ES', 'Center'),
+    ('Euronews ES', 'Center'),
+    ('El Mundo', 'Center'),
+    ('La Vanguardia', 'Center'),
+    ('El Confidencial', 'Center'),
+    ('20 Minutos', 'Center'),
+    ('Clarín', 'Center'),
+    ('El Universal MX', 'Center'),
+    ('El Comercio PE', 'Center'),
+    ('El Tiempo CO', 'Center'),
+    ('Expansión', 'Center'),
+    ('Cinco Días', 'Center'),
+    ('Marca', 'Center'),
+    ('AS', 'Center'),
+    ('Sport ES', 'Center'),
+    ('BBC Mundo', 'Left-Center'),
+    ('France 24 ES', 'Left-Center'),
+    ('El País', 'Left-Center'),
+    ('La Nación AR', 'Right-Center'),
+    ('ABC ES', 'Right-Center'),
+    ('El Mercurio CL', 'Right-Center'),
+    ('CNN Español', 'Left'),
+    ('El Diario', 'Left'),
+    ('Público', 'Left'),
+    ('RT Español', 'Right'),
+]
+
+CATEGORY_KEYWORDS = {
+    'politics': [
+        'elecciones', 'gobierno', 'presidente', 'congreso', 'senado', 'voto', 'campaña',
+        'partido', 'política', 'ministro', 'ley', 'diputado', 'alcalde', 'gobernador',
+        'elección', 'parlamento', 'constitución', 'reforma', 'oposición',
+    ],
+    'business': [
+        'bolsa', 'economía', 'mercado', 'empresa', 'negocio', 'banco', 'finanzas',
+        'inversión', 'dólar', 'peso', ' euro ', 'inflación', 'desempleo', 'pib',
+        'acciones', 'divisa', 'crédito', 'deuda', 'exportación', 'importación',
+    ],
+    'technology': [
+        'tecnología', 'inteligencia artificial', 'software', 'ciberataque', 'digital',
+        'robot', 'aplicación', 'smartphone', 'internet', 'computación', 'datos',
+        'ciberseguridad', 'algoritmo', 'plataforma', 'redes sociales',
+    ],
+    'science': [
+        'ciencia', 'investigación', 'descubrimiento', 'especie', 'genético', 'clima',
+        'terremoto', 'volcán', 'planeta', 'espacio', 'universo', 'física', 'química',
+        'biología', 'laboratorio', 'estudio', 'científico', 'nasa', 'astronáutica',
+    ],
+    'health': [
+        'hospital', 'médico', 'medicina', 'vacuna', 'pandemia', 'salud', 'enfermedad',
+        'tratamiento', 'virus', 'clínica', 'paciente', 'cirugía', 'terapia', 'síntoma',
+        'diagnóstico', 'farmacéutico', 'nutrición', 'ejercicio', 'bienestar', 'covid',
+    ],
+    'sports': [
+        'fútbol', 'liga', 'champions', 'copa', 'mundial', 'olimpiadas', 'deporte',
+        'equipo', 'jugador', 'partido', 'gol', 'tenis', 'baloncesto', 'béisbol',
+        'entrenador', 'estadio', 'torneo', 'campeonato', 'selección', 'árbitro',
+        'clásico', 'derby', 'ascenso', 'descenso', 'tabla', 'posiciones',
+    ],
+    'us': [
+        'estados unidos', 'ee.uu.', 'norteamérica', 'florida', 'texas', 'california',
+        'nueva york', 'miami', 'los ángeles', 'chicago', 'washington',
+    ],
+    'world': [
+        'ucrania', 'rusia', 'china', 'irán', 'israel', 'gaza', 'medio oriente', 'europa',
+        'asia', 'américa latina', 'guerra', 'diplomático', 'inmigración',
+        'refugiado', 'mundial', 'internacional', 'onu', 'otan', 'conflicto', 'crisis',
+        'militar', 'ejército', 'paz', 'acuerdo', 'tratado', 'sanciones',
+    ],
+    'entertainment': [
+        'película', 'cine', 'actor', 'actriz', 'oscar', 'grammy', 'celebridad',
+        'música', 'álbum', 'concierto', 'gira', 'netflix', 'streaming', 'taquilla',
+        'teatro', 'serie', 'temporada', 'final de temporada',
+        'cantante', 'banda', 'billboard', 'spotify',
+        'disney', 'hollywood', 'premio', 'alfombra roja',
+        'reality', 'comedia', 'drama', 'terror',
+        'videojuego', 'gaming', 'esports', 'twitch', 'youtube', 'tiktok',
+        'influencer', 'viral', 'podcast', 'bestseller', 'libro',
+        'televisión', 'tele', 'programa', 'famoso', 'famosa',
+    ],
+}
+
+STOP_WORDS = {
+    'el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'o', 'pero',
+    'en', 'de', 'del', 'al', 'a', 'para', 'por', 'con', 'sin', 'sobre',
+    'es', 'son', 'era', 'eran', 'fue', 'ser', 'estar', 'está', 'están',
+    'ha', 'he', 'han', 'hay', 'haber', 'que', 'cual', 'quien', 'como',
+    'este', 'esta', 'estos', 'estas', 'ese', 'esa', 'esos', 'esas',
+    'él', 'ella', 'ellos', 'ellas', 'su', 'sus', 'mi', 'tu', 'nos',
+    'yo', 'me', 'te', 'se', 'lo', 'le', 'les', 'nos', 'más', 'muy',
+    'ya', 'no', 'si', 'sí', 'ni', 'también', 'así', 'entre', 'hasta',
+    'desde', 'cuando', 'donde', 'todo', 'cada', 'otro', 'otra', 'otros',
+    'nuevo', 'nueva', 'nuevos', 'nuevas', 'dice', 'dijo', 'según',
+}
+
+SOURCE_ATTRIBUTION = r'\s*(BBC Mundo|Deutsche Welle|France 24|CNN|Euronews|EFE|El País|El Mundo|ABC|Clarín|La Nación|Reuters|AP)\s*$'
+
+GENERIC_TEXT = ['cobertura de noticias actualizada', 'agregado desde', 'haga clic aquí']
+
+CATEGORY_NAMES = OrderedDict([
+    ('all', 'Todo'),
+    ('most_covered', 'Más Cubierto'),
+    ('world', 'Mundo'),
+    ('us', 'EE.UU.'),
+    ('politics', 'Política'),
+    ('business', 'Negocios'),
+    ('technology', 'Tecnología'),
+    ('science', 'Ciencia'),
+    ('health', 'Salud'),
+    ('sports', 'Deportes'),
+    ('entertainment', 'Entretenimiento'),
+])
+
+UI_STRINGS = {
+    'subtitle': 'Elige tu sesgo | Servicios de cables y otros feeds | Últimas 24 horas',
+    'how_it_works': 'Cómo funciona',
+    'privacy_text': 'Respetamos tu privacidad. Este sitio usa anuncios contextuales (sin cookies de rastreo) y muestra titulares/resúmenes bajo uso justo.',
+    'privacy_link': 'Política de privacidad',
+    'got_it': 'Entendido',
+    'sources': 'Fuentes:',
+    'center_default': 'Fuentes centrales (predeterminado)',
+    'all_sources': 'Todas las fuentes',
+    'center_only': 'Solo centro',
+    'left_center_only': 'Solo centro-izquierda',
+    'left_only': 'Solo izquierda',
+    'right_only': 'Solo derecha',
+    'clear_all': 'Borrar todo',
+    'sources_suffix': 'fuentes',
+    'covered_by_2': 'Historias cubiertas por 2 o más fuentes',
+    'paywall_title': 'Sitio con muro de pago',
+    'sources_label': 'fuentes',
+    'read_full': 'Leer historia completa',
+    'find_coverage': 'Encontrar cobertura',
+    'search_related': 'Buscar cobertura relacionada',
+    'bias_rating': 'Calificación de sesgo',
+    'ago': 'ago',
+    'show_stories': 'Mostrar',
+    'stories': 'historias',
+    'no_stories': 'No hay historias en esta categoría',
+    'footer_copy': 'Contenido de noticias © respectivos editores. Titulares y resúmenes utilizados bajo uso justo con fines informativos.',
+    'footer_sources': ' Fuentes:',
+    'footer_and': 'y',
+    'footer_terms': 'Términos',
+    'footer_privacy': 'Privacidad',
+    'footer_about': 'Acerca de',
+}
+
+PAYWALLED_SOURCES = {
+    'El País',
+    'El Mundo',
+    'Expansión',
+    'Cinco Días',
+    'El Mercurio CL',
+    'Clarín',
+    'La Nación AR',
+}
