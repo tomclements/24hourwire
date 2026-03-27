@@ -87,13 +87,13 @@
         <label>
             <strong>{{ t.sources }}</strong>
             <select id="source-select" onchange="updateSources(this.value)" style="margin-left: 10px; padding: 5px 10px; border-radius: 4px; border: 1px solid #ddd;">
-                <option value="default">{{ t.center_default }}</option>
-                <option value="all">{{ t.all_sources }}</option>
-                <option value="center">{{ t.center_only }}</option>
-                <option value="left-center">{{ t.left_center_only }}</option>
-                <option value="left">{{ t.left_only }}</option>
-                <option value="right">{{ t.right_only }}</option>
-                <option value="clear">{{ t.clear_all }}</option>
+                <option value="default" {% if source_filter == 'default' %}selected{% endif %}>{{ t.center_default }}</option>
+                <option value="all" {% if source_filter == 'all' %}selected{% endif %}>{{ t.all_sources }}</option>
+                <option value="center" {% if source_filter == 'center' %}selected{% endif %}>{{ t.center_only }}</option>
+                <option value="left-center" {% if source_filter == 'left-center' %}selected{% endif %}>{{ t.left_center_only }}</option>
+                <option value="left" {% if source_filter == 'left' %}selected{% endif %}>{{ t.left_only }}</option>
+                <option value="right" {% if source_filter == 'right' %}selected{% endif %}>{{ t.right_only }}</option>
+                <option value="clear" {% if source_filter == 'clear' %}selected{% endif %}>{{ t.clear_all }}</option>
             </select>
         </label>
         <span id="source-count" style="cursor: pointer; color: #888; font-size: 0.9rem; margin-left: 15px;" onclick="toggleSourceList()">
