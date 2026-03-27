@@ -1,5 +1,5 @@
 from django.urls import path
-from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.decorators import login_required
 from . import views
 from .views_dashboard import dashboard_view
 
@@ -8,5 +8,5 @@ urlpatterns = [
     path('about/', views.about_view, name='about'),
     path('terms/', views.terms_view, name='terms'),
     path('privacy/', views.privacy_view, name='privacy'),
-    path('dashboard/', staff_member_required(dashboard_view), name='dashboard'),
+    path('dashboard/', login_required(dashboard_view), name='dashboard'),
 ]
