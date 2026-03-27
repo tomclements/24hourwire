@@ -1,11 +1,19 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.utils import timezone
 from datetime import timedelta
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib import messages
 from .models import Story, StoryCluster
 from .sources_config import (
     LANGUAGE_SOURCE_INFO, DEFAULT_SOURCES, SOURCES, LANGUAGE_NAMES,
     PAYWALLED_SOURCES, CATEGORY_KEYWORDS, CATEGORY_NAMES, UI_STRINGS, LANGUAGE_NAMES,
 )
+
+
+def is_staff_or_superuser(user):
+    """Check if user is staff or superuser."""
+    return user.is_staff or user.is_superuser
 
 
 def categorize_story(title, language='en'):
@@ -196,3 +204,33 @@ def privacy_view(request):
     if language == 'es':
         return render(request, 'privacy_es.html')
     return render(request, 'privacy.html')
+
+
+def login_view(request):
+    if request.user.is_authenticated:
+        if is_staff_or_superuser(request.user):
+            return redirect('dashboard')
+        else:
+            logout(request)
+            messages.error(request, 'Access restricted to administrators only.')
+    
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            if is_staff_or_superuser(user):
+                login(request, user)
+                next_url = request.GET.get('next', 'dashboard')
+                return redirect(next_url)
+            else:
+                messages.error(request, 'Access restricted to administrators only.')
+        else:
+            messages.error(request, 'Invalid username or password.')
+    
+    return render(request, 'login.html')
+
+
+def logout_view(request):
+    logout(request)
+    return redirect('home')

@@ -41,6 +41,12 @@
     <div class="nav">
         <a href="/">Home</a>
         <a href="/dashboard/">Dashboard</a>
+        {% if user.is_authenticated %}
+            <span style="color: #666; margin-left: 15px;">Hello, {{ user.username }}</span>
+            <a href="/logout/" style="margin-left: 15px;">Logout</a>
+        {% else %}
+            <a href="/login/" style="margin-left: 15px;">Admin Login</a>
+        {% endif %}
     </div>
 
     <h1>24HourWire Dashboard</h1>

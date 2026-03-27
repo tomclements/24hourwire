@@ -1,5 +1,5 @@
 from django.urls import path
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from . import views
 from .views_dashboard import dashboard_view
 
@@ -8,5 +8,7 @@ urlpatterns = [
     path('about/', views.about_view, name='about'),
     path('terms/', views.terms_view, name='terms'),
     path('privacy/', views.privacy_view, name='privacy'),
-    path('dashboard/', login_required(dashboard_view), name='dashboard'),
+    path('dashboard/', user_passes_test(views.is_staff_or_superuser, login_url='/login/')(dashboard_view), name='dashboard'),
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
 ]
