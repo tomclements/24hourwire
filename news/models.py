@@ -39,6 +39,7 @@ class Story(models.Model):
         ('science', 'Science'),
         ('health', 'Health'),
         ('sports', 'Sports'),
+        ('entertainment', 'Entertainment'),
     ]
 
     LANGUAGE_CHOICES = [

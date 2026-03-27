@@ -365,6 +365,16 @@ CATEGORY_KEYWORDS = {
             'peacekeeping', 'humanitarian', 'crisis', 'disaster', 'famine', 'drought',
             'flood', 'hurricane', 'typhoon', 'earthquake', 'tsunami', 'volcano',
         ],
+        'entertainment': [
+            'movie', 'film', 'actor', 'actress', 'oscar', 'grammy', 'emmy', 'celebrity',
+            'music', 'album', 'concert', 'tour', 'netflix', 'streaming', 'box office',
+            'broadway', 'theater', 'tv show', 'series', 'season premiere', 'finale',
+            'rapper', 'singer', 'band', 'album release', 'billboard', 'spotify',
+            'disney', 'marvel', 'star wars', 'hollywood', 'award show', 'red carpet',
+            'reality tv', 'sitcom', 'drama', 'comedy', 'horror', 'thriller',
+            'video game', 'gaming', 'esports', 'twitch', 'youtube', 'tiktok',
+            'influencer', 'viral', 'streamer', 'podcast', 'bestseller', 'book release',
+        ],
     },
     'es': {
         'politics': [
@@ -408,6 +418,17 @@ CATEGORY_KEYWORDS = {
             'refugiado', 'mundial', 'internacional', 'onu', 'otan', 'conflicto', 'crisis',
             'militar', 'ejército', 'paz', 'acuerdo', 'tratado', 'sanciones',
         ],
+        'entertainment': [
+            'película', 'cine', 'actor', 'actriz', 'oscar', 'grammy', 'celebridad',
+            'música', 'álbum', 'concierto', 'gira', 'netflix', 'streaming', 'taquilla',
+            'teatro', 'serie', 'temporada', 'final de temporada',
+            'cantante', 'banda', 'billboard', 'spotify',
+            'disney', 'hollywood', 'premio', 'alfombra roja',
+            'reality', 'comedia', 'drama', 'terror',
+            'videojuego', 'gaming', 'esports', 'twitch', 'youtube', 'tiktok',
+            'influencer', 'viral', 'podcast', 'bestseller', 'libro',
+            'televisión', 'tele', 'programa', 'famoso', 'famosa',
+        ],
     },
 }
 
@@ -423,6 +444,7 @@ CATEGORY_NAMES = {
         ('science', 'Science'),
         ('health', 'Health'),
         ('sports', 'Sports'),
+        ('entertainment', 'Entertainment'),
     ]),
     'es': OrderedDict([
         ('all', 'Todo'),
@@ -435,6 +457,7 @@ CATEGORY_NAMES = {
         ('science', 'Ciencia'),
         ('health', 'Salud'),
         ('sports', 'Deportes'),
+        ('entertainment', 'Entretenimiento'),
     ]),
 }
 

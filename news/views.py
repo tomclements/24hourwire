@@ -28,6 +28,10 @@ def categorize_story(title, language='en'):
         if keyword in title_lower:
             return 'science'
 
+    for keyword in keywords['entertainment']:
+        if keyword in title_lower:
+            return 'entertainment'
+
     for keyword in keywords['business']:
         if keyword in title_lower:
             return 'business'
@@ -52,7 +56,7 @@ def get_story_categories(title, language='en'):
     categories = []
     keywords = CATEGORY_KEYWORDS.get(language, CATEGORY_KEYWORDS['en'])
 
-    for cat in ['sports', 'health', 'technology', 'science', 'business', 'politics', 'us', 'world']:
+    for cat in ['sports', 'health', 'technology', 'science', 'entertainment', 'business', 'politics', 'us', 'world']:
         for keyword in keywords[cat]:
             if keyword in title_lower:
                 categories.append(cat)
