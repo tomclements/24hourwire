@@ -1,4 +1,32 @@
+import hashlib
+import re
+from urllib.parse import urlparse, parse_qs, urlencode
+
 from django.db import models
+
+
+def normalize_url(url):
+    """Normalize URL for dedup comparison - strips tracking params, normalizes scheme."""
+    parsed = urlparse(url)
+    drop_params = {'utm_source', 'utm_medium', 'utm_campaign', 'ref', 'source'}
+    params = {k: v for k, v in parse_qs(parsed.query).items()
+              if k.lower() not in drop_params}
+    normalized = parsed._replace(
+        scheme='https',
+        netloc=parsed.netloc.lower(),
+        query=urlencode(params, doseq=True),
+        fragment='',
+        path=parsed.path.rstrip('/') or '/',
+    )
+    return normalized.geturl()
+
+
+def title_fingerprint(title):
+    """Create a normalized fingerprint for same-source duplicate detection."""
+    normalized = re.sub(r'[^\w\s]', '', title.lower())
+    normalized = re.sub(r'\s+', ' ', normalized).strip()
+    words = sorted(normalized.split())
+    return hashlib.md5(' '.join(words).encode()).hexdigest()
 
 
 class Story(models.Model):
@@ -26,9 +54,15 @@ class Story(models.Model):
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='world')
     published = models.DateTimeField()
     fetched_at = models.DateTimeField(auto_now_add=True)
+    url_hash = models.CharField(max_length=64, db_index=True, default='')
+    title_fingerprint = models.CharField(max_length=32, db_index=True, default='')
 
     class Meta:
         ordering = ['-published']
+        indexes = [
+            models.Index(fields=['language', 'published']),
+            models.Index(fields=['source', 'language']),
+        ]
 
     def __str__(self):
         return f"{self.source}: {self.title[:50]}"

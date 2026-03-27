@@ -2,9 +2,6 @@ from django.shortcuts import render
 from django.utils import timezone
 from datetime import timedelta
 from collections import OrderedDict
-from django.http import HttpResponse
-from django.core.management import call_command
-import threading
 import re
 from .models import Story
 from .sources_config import LANGUAGE_SOURCE_INFO, DEFAULT_SOURCES, SOURCES, LANGUAGE_NAMES, PAYWALLED_SOURCES, LANGUAGE_STOP_WORDS
@@ -379,18 +376,6 @@ def home(request):
         'language': language,
         'language_names': LANGUAGE_NAMES,
     })
-
-
-def fetch_news_trigger(request):
-    def run_fetch():
-        try:
-            call_command('fetch_news')
-        except Exception as e:
-            print(f"Fetch error: {e}")
-    
-    thread = threading.Thread(target=run_fetch)
-    thread.start()
-    return HttpResponse('Fetch started.')
 
 
 def about_view(request):

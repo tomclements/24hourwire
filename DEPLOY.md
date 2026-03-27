@@ -4,8 +4,8 @@
 
 ### Prerequisites
 1. GitHub account
-2. Render account (free tier available)
-3. PostgreSQL database (Render provides free PostgreSQL)
+2. Render account (paid plan for cron jobs)
+3. PostgreSQL database (Render provides PostgreSQL)
 
 ### Steps
 
@@ -51,35 +51,22 @@
 
 ### Cron Job for Auto-Fetch
 
-To fetch news every 15 minutes, use a free external cron service:
+Render has built-in cron jobs (paid plans). To fetch news every 15 minutes:
 
-1. Go to [cron-job.org](https://cron-job.org) (free)
-2. Create account
-3. Add new cron job:
-   - URL: `https://two4hourwire.onrender.com/fetch/`
-   - Schedule: Every 15 minutes (cron: `*/15 * * * *`)
-4. Enable the job
+1. Go to your [Render Dashboard](https://dashboard.render.com)
+2. Click "New" → "Cron Job"
+3. Configure:
+   - **Name**: `24hourwire-fetch-news`
+   - **Region**: Same as your web service
+   - **Branch**: `main`
+   - **Runtime**: `Python 3`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Command**: `python manage.py fetch_news`
+   - **Schedule**: `*/15 * * * *` (every 15 minutes)
+4. Set the same environment variables as your web service (`DATABASE_*`, `SECRET_KEY`)
+5. Click "Create Cron Job"
 
-The `/fetch/` endpoint will start the news fetch in the background and return immediately.
-
-## Railway Deployment
-
-1. Install Railway CLI:
-   ```bash
-   npm i -g @railway/cli
-   ```
-
-2. Login and deploy:
-   ```bash
-   railway login
-   railway init
-   railway up
-   ```
-
-3. Add PostgreSQL:
-   ```bash
-   railway add postgresql
-   ```
+The cron job runs `fetch_news` directly — no web endpoint needed.
 
 ## Environment Variables
 
