@@ -17,9 +17,9 @@ Each language module exports:
 - PAYWALLED_SOURCES: set - paywalled source names
 """
 
-from news.languages import en, es, fr, de, pt, it, ar, ru, ja, zh
+from news.languages import en, es, fr, de, pt, it, ar, ru, ja, zh, ko, tr, hi
 
-LANGUAGE_MODULES = {m.CODE: m for m in [en, es, fr, de, pt, it, ar, ru, ja, zh]}
+LANGUAGE_MODULES = {m.CODE: m for m in [en, es, fr, de, pt, it, ar, ru, ja, zh, ko, tr, hi]}
 
 SUPPORTED_LANGUAGES = set(LANGUAGE_MODULES.keys())
 
