@@ -48,7 +48,7 @@
         <h1>24HourWire</h1>
         <p class="subtitle">
             {{ t.subtitle }}
-            | <select onchange="window.location.href='/?lang='+this.value+(new URL(window.location).searchParams.get('sources')?'&sources='+new URL(window.location).searchParams.get('sources'):'')" style="font-size: 0.85rem; padding: 2px 6px; border-radius: 4px; border: 1px solid #ccc;">
+            | <select id="lang-select" style="font-size: 0.85rem; padding: 2px 6px; border-radius: 4px; border: 1px solid #ccc;">
                 {% for code, name in language_names.items %}
                     <option value="{{ code }}" {% if code == language %}selected{% endif %}>{{ name }}</option>
                 {% endfor %}
@@ -163,6 +163,12 @@
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1306415581374425" crossorigin="anonymous"></script>
 
     <script>
+        document.getElementById('lang-select').addEventListener('change', function() {
+            var url = new URL(window.location);
+            url.searchParams.set('lang', this.value);
+            window.location.href = url.toString();
+        });
+
         function showCategory(catId) {
             document.querySelectorAll('.category').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
@@ -177,9 +183,7 @@
         }
 
         function updateSources(value) {
-            const url = new URL(window.location);
-            const lang = url.searchParams.get('lang') || 'en';
-            url.searchParams.set('lang', lang);
+            var url = new URL(window.location);
             if (value === 'default') {
                 url.searchParams.delete('sources');
             } else if (value === 'all') {
