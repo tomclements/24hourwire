@@ -158,3 +158,12 @@ if not DEBUG:
     SECURE_HSTS_PRELOAD = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
+
+# Email settings (for health_check command)
+# Use any SMTP provider: Gmail, SendGrid, Mailgun, etc.
+EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_FROM = os.environ.get('EMAIL_FROM', EMAIL_HOST_USER)
+HEALTH_CHECK_EMAIL = os.environ.get('HEALTH_CHECK_EMAIL', '')
