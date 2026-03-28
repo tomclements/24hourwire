@@ -11,363 +11,837 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://24hourwire.com">
     <link rel="canonical" href="https://24hourwire.com">
+    <link rel="icon" type="image/jpeg" href="{% static 'news/images/logo.jpg' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #0A2540;
+            --primary-light: #1E3A5F;
+            --accent: #0066cc;
+            --text-primary: #1a1a1a;
+            --text-secondary: #4a5568;
+            --text-muted: #718096;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f7fafc;
+            --bg-tertiary: #edf2f7;
+            --border: #e2e8f0;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            --radius: 8px;
+            --radius-lg: 12px;
+            
+            /* Bias colors */
+            --bias-left: #3b82f6;
+            --bias-left-center: #60a5fa;
+            --bias-center: #6b7280;
+            --bias-right-center: #f87171;
+            --bias-right: #ef4444;
+        }
+        
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 1000px; margin: 0 auto; padding: 20px; }
-        header { border-bottom: 2px solid #333; padding: 20px 0; margin-bottom: 20px; }
-        h1 { font-size: 1.8rem; }
-        .subtitle { color: #666; font-size: 0.9rem; margin-top: 5px; }
-        .tabs { display: flex; flex-wrap: nowrap; gap: 5px; margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 15px; overflow-x: auto; }
-        .tab { padding: 8px 16px; background: #f5f5f5; border: none; border-radius: 20px; cursor: pointer; font-size: 0.9rem; text-decoration: none; color: #666; white-space: nowrap; flex-shrink: 0; }
-        .tab:hover { background: #eee; }
-        .tab.active { background: #333; color: #fff; }
-        .category { margin-bottom: 35px; }
-        .category h2 { font-size: 1.3rem; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 1px solid #eee; }
-        .story { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f5f5f5; }
-        .story:last-child { border-bottom: none; }
-        .story h3 { font-size: 1.1rem; margin-bottom: 6px; }
-        .story h3 a { color: #1a1a1a; text-decoration: none; }
-        .story h3 a:hover { text-decoration: underline; }
-        .meta { font-size: 0.8rem; color: #888; }
-        .source { display: inline-block; background: #f0f0f0; padding: 2px 8px; border-radius: 3px; margin-right: 8px; font-weight: 500; }
-        .paywall { color: #e65100; font-size: 0.7rem; margin-left: 3px; cursor: help; }
-        .time { color: #888; }
-        .excerpt { margin: 8px 0; color: #444; font-size: 0.95rem; }
-        .links a { font-size: 0.8rem; margin-right: 12px; color: #0066cc; text-decoration: none; }
-        .links a:hover { text-decoration: underline; }
-        .share-links { margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap; }
-        .share-links a { font-size: 0.75rem; color: #666; text-decoration: none; padding: 4px 10px; background: #f5f5f5; border-radius: 12px; transition: background 0.2s; }
-        .share-links a:hover { background: #e0e0e0; text-decoration: none; }
-        .bias { margin-left: 5px; }
-        .empty { color: #888; font-size: 0.9rem; font-style: italic; padding: 20px 0; }
-        .empty-category { display: none; }
-        .source-filter { background: #f9f9f9; padding: 12px 15px; border-radius: 8px; margin-bottom: 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 15px; }
-        .source-filter strong { margin-right: 5px; }
-        .source-checkbox { cursor: pointer; font-size: 0.9rem; }
-        .source-checkbox input { margin-right: 5px; }
-        .source-checkbox.default input:checked + span { font-weight: 600; }
-        .bias-tag { font-size: 0.8rem; }
-        .source-filter select { font-size: 0.9rem; }
-        footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 0.8rem; text-align: center; }
-        footer p { margin-bottom: 8px; }
-        footer a { color: #666; text-decoration: underline; }
+        
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            line-height: 1.6; 
+            color: var(--text-primary); 
+            background: var(--bg-primary);
+            min-height: 100vh;
+        }
+        
+        /* Sticky Header */
+        .header-container {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+        
+        header {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px 24px;
+        }
+        
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .brand img {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+            border-radius: var(--radius);
+        }
+        
+        .brand-text h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: -0.02em;
+        }
+        
+        .brand-text .tagline {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        /* Search Bar */
+        .search-container {
+            position: relative;
+            flex: 1;
+            max-width: 400px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            font-size: 0.9rem;
+            background: var(--bg-secondary);
+            transition: all 0.2s;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: var(--bg-primary);
+            box-shadow: 0 0 0 3px rgba(0,102,204,0.1);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+        
+        /* Bias Filter Pills */
+        .bias-filters {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .bias-pill {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .bias-pill:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+        
+        .bias-pill.active {
+            border-color: currentColor;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .bias-pill.left { background: rgba(59,130,246,0.1); color: var(--bias-left); }
+        .bias-pill.left-center { background: rgba(96,165,250,0.1); color: var(--bias-left-center); }
+        .bias-pill.center { background: rgba(107,114,128,0.1); color: var(--bias-center); }
+        .bias-pill.right-center { background: rgba(248,113,113,0.1); color: var(--bias-right-center); }
+        .bias-pill.right { background: rgba(239,68,68,0.1); color: var(--bias-right); }
+        .bias-pill.all { background: var(--bg-tertiary); color: var(--text-secondary); }
+        
+        /* Language & Theme Toggle */
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        #lang-select {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.85rem;
+            background: var(--bg-primary);
+            cursor: pointer;
+        }
         
         .theme-toggle {
-            background: none;
-            border: 1px solid #ccc;
-            border-radius: 20px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 50%;
             cursor: pointer;
-            padding: 5px 12px;
-            font-size: 0.85rem;
-            margin-left: 10px;
+            padding: 8px;
+            font-size: 1rem;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
         }
+        
         .theme-toggle:hover {
-            background: #f0f0f0;
+            background: var(--bg-secondary);
+            transform: scale(1.05);
         }
         
+        /* Main Content */
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        /* Tabs */
+        .tabs-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--border);
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .tab {
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .tab:hover {
+            color: var(--text-primary);
+            background: var(--bg-secondary);
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+        
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .tab-count {
+            background: var(--bg-tertiary);
+            color: var(--text-muted);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin-left: 6px;
+        }
+        
+        /* Story Cards Grid */
+        .stories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .stories-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .story-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .story-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+            border-color: var(--accent);
+        }
+        
+        .story-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .story-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            line-height: 1.4;
+            color: var(--text-primary);
+            text-decoration: none;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .story-title:hover {
+            color: var(--accent);
+        }
+        
+        .story-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+            font-size: 0.8rem;
+        }
+        
+        .source-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        
+        .paywall-badge {
+            color: #e65100;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .bias-badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .bias-badge.left { background: rgba(59,130,246,0.15); color: var(--bias-left); }
+        .bias-badge.left-center { background: rgba(96,165,250,0.15); color: var(--bias-left-center); }
+        .bias-badge.center { background: rgba(107,114,128,0.15); color: var(--bias-center); }
+        .bias-badge.right-center { background: rgba(248,113,113,0.15); color: var(--bias-right-center); }
+        .bias-badge.right { background: rgba(239,68,68,0.15); color: var(--bias-right); }
+        
+        .time-badge {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+        
+        .covered-badge {
+            background: rgba(34,197,94,0.1);
+            color: #16a34a;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        
+        .story-excerpt {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 16px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            flex-grow: 1;
+        }
+        
+        .story-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+        
+        .story-links {
+            display: flex;
+            gap: 16px;
+        }
+        
+        .story-links a {
+            font-size: 0.8rem;
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .story-links a:hover {
+            text-decoration: underline;
+        }
+        
+        .share-btn {
+            background: var(--bg-tertiary);
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        
+        .share-btn:hover {
+            background: var(--bg-secondary);
+            transform: scale(1.1);
+        }
+        
+        /* Featured Section for Most Covered */
+        .featured-section {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .featured-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .featured-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .featured-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+        }
+        
+        .featured-card {
+            background: var(--bg-primary);
+            border-radius: var(--radius);
+            padding: 16px;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .featured-card:hover {
+            border-color: var(--accent);
+            box-shadow: var(--shadow-md);
+        }
+        
+        /* Category Section */
+        .category-section {
+            margin-bottom: 40px;
+        }
+        
+        .category-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+        }
+        
+        .category-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .category-count {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        /* Footer */
+        footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            margin-top: 60px;
+            padding: 40px 24px;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 32px;
+        }
+        
+        .footer-section h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .footer-section p, .footer-section a {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            line-height: 1.8;
+        }
+        
+        .footer-section a:hover {
+            color: var(--accent);
+        }
+        
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 32px auto 0;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        
+        /* Dark Mode */
         [data-theme="dark"] {
-            --bg-color: #1a1a1a;
-            --text-color: #e0e0e0;
-            --header-border: #444;
-            --subtitle-color: #aaa;
-            --tab-bg: #2a2a2a;
-            --tab-color: #ccc;
-            --tab-active-bg: #444;
-            --tab-active-color: #fff;
-            --category-border: #333;
-            --story-border: #2a2a2a;
-            --link-color: #6bb5ff;
-            --source-bg: #2a2a2a;
-            --time-color: #888;
-            --excerpt-color: #bbb;
-            --filter-bg: #2a2a2a;
-            --footer-color: #888;
-            --share-bg: #2a2a2a;
-            --share-hover: #3a3a3a;
+            --primary: #60a5fa;
+            --primary-light: #3b82f6;
+            --accent: #60a5fa;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --border: #475569;
+            --shadow: 0 1px 3px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.4);
         }
         
-        [data-theme="dark"] body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
+        [data-theme="dark"] .story-card {
+            background: var(--bg-secondary);
         }
-        [data-theme="dark"] header {
-            border-bottom-color: var(--header-border);
+        
+        [data-theme="dark"] .source-tag {
+            background: var(--bg-tertiary);
         }
-        [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3 {
-            color: var(--text-color);
+        
+        /* Cookie Banner */
+        #cookie-banner {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 16px 24px;
+            z-index: 1000;
+            box-shadow: var(--shadow-md);
         }
-        [data-theme="dark"] .subtitle {
-            color: var(--subtitle-color);
+        
+        #cookie-banner > div {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
         }
-        [data-theme="dark"] .tab {
-            background: var(--tab-bg);
-            color: var(--tab-color);
+        
+        /* Admin Link */
+        .admin-link {
+            font-size: 0.8rem;
+            color: var(--text-muted);
         }
-        [data-theme="dark"] .tab:hover {
-            background: #333;
+        
+        .admin-link a {
+            color: var(--text-muted);
+            text-decoration: none;
         }
-        [data-theme="dark"] .tab.active {
-            background: var(--tab-active-bg);
-            color: var(--tab-active-color);
-        }
-        [data-theme="dark"] .category h2 {
-            border-bottom-color: var(--category-border);
-        }
-        [data-theme="dark"] .story {
-            border-bottom-color: var(--story-border);
-        }
-        [data-theme="dark"] .story h3 a {
-            color: var(--text-color);
-        }
-        [data-theme="dark"] .links a {
-            color: var(--link-color);
-        }
-        [data-theme="dark"] .source {
-            background: var(--source-bg);
-        }
-        [data-theme="dark"] .time {
-            color: var(--time-color);
-        }
-        [data-theme="dark"] .excerpt {
-            color: var(--excerpt-color);
-        }
-        [data-theme="dark"] .source-filter {
-            background: var(--filter-bg);
-        }
-        [data-theme="dark"] footer {
-            color: var(--footer-color);
-            border-top-color: #333;
-        }
-        [data-theme="dark"] footer a {
-            color: var(--footer-color);
-        }
-        [data-theme="dark"] .share-links a {
-            background: var(--share-bg);
-            color: #ccc;
-        }
-        [data-theme="dark"] .share-links a:hover {
-            background: var(--share-hover);
-        }
-        [data-theme="dark"] .theme-toggle {
-            border-color: #555;
-            color: #ccc;
-        }
-        [data-theme="dark"] .theme-toggle:hover {
-            background: #333;
-        }
-        [data-theme="dark"] #cookie-banner {
-            background: #2a2a2a;
-            color: #ccc;
+        
+        .admin-link a:hover {
+            color: var(--accent);
         }
     </style>
 </head>
 <body>
-    <header>
-        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
-            <img src="{% static 'news/images/logo.jpg' %}" alt="24HourWire Logo" style="width: 60px; height: 60px; object-fit: contain;">
-            <h1 style="margin: 0;">24HourWire</h1>
-        </div>
-        <p class="subtitle">
-            {{ t.subtitle }}
-            | <select id="lang-select" style="font-size: 0.85rem; padding: 2px 6px; border-radius: 4px; border: 1px solid #ccc;">
-                {% for code, name in language_names.items %}
-                    <option value="{{ code }}" {% if code == language %}selected{% endif %}>{{ name }}</option>
-                {% endfor %}
-            </select>
-            | <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">🌙</button>
-        </p>
-        <p class="subtitle" style="font-size: 0.85rem;">
-            <a href="/about/?lang={{ language }}" style="color: #0066cc;">{{ t.how_it_works }}</a>
-            {% if user.is_authenticated %}
-                | <span style="color: #666;">{{ user.username }}</span>
-                | <a href="/logout/" style="color: #0066cc;">Logout</a>
-            {% else %}
-                | <a href="/login/" style="color: #0066cc;">Admin Login</a>
-            {% endif %}
-        </p>
-    </header>
+    <div class="header-container">
+        <header>
+            <div class="header-top">
+                <div class="brand">
+                    <img src="{% static 'news/images/logo.jpg' %}" alt="24HourWire Logo">
+                    <div class="brand-text">
+                        <h1>24HourWire</h1>
+                        <span class="tagline">{{ t.subtitle }}</span>
+                    </div>
+                </div>
+                
+                <div class="header-actions">
+                    <div class="search-container">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" class="search-input" placeholder="Search news..." id="search-input">
+                    </div>
+                    
+                    <div class="header-controls">
+                        <select id="lang-select">
+                            {% for code, name in language_names.items %}
+                                <option value="{{ code }}" {% if code == language %}selected{% endif %}>{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">🌙</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bias-filters">
+                <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">Filter:</span>
+                <a href="?sources=all" class="bias-pill all {% if source_filter == 'all' %}active{% endif %}">All Sources</a>
+                <a href="?sources=left" class="bias-pill left {% if source_filter == 'left' %}active{% endif %}">Left</a>
+                <a href="?sources=left-center" class="bias-pill left-center {% if source_filter == 'left-center' %}active{% endif %}">Left-Center</a>
+                <a href="?sources=center" class="bias-pill center {% if source_filter == 'center' %}active{% endif %}">Center</a>
+                <a href="?sources=right-center" class="bias-pill right-center {% if source_filter == 'right-center' %}active{% endif %}">Right-Center</a>
+                <a href="?sources=right" class="bias-pill right {% if source_filter == 'right' %}active{% endif %}">Right</a>
+            </div>
+        </header>
+    </div>
 
-    <div id="cookie-banner" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #f5f5f5; color: #333; padding: 15px 20px; z-index: 1000; font-size: 0.85rem; box-shadow: 0 -2px 10px rgba(0,0,0,0.1);">
-        <div style="max-width: 800px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-            <span style="flex: 1; min-width: 200px;">
-                {{ t.privacy_text }} <a href="{% url 'privacy' %}?lang={{ language }}" style="color: #0066cc;">{{ t.privacy_link }}</a>
-            </span>
-            <button onclick="acceptCookies()" style="background: #0066cc; color: white; border: none; padding: 8px 16px; cursor: pointer; border-radius: 4px; font-size: 0.85rem;">
+    <main>
+        <div class="tabs-container">
+            <nav class="tabs">
+                {% for cat_id, cat_data in grouped.items %}
+                    <a href="#{{ cat_id }}" class="tab {% if forloop.first %}active{% endif %}" onclick="showCategory('{{ cat_id }}'); return false;">
+                        {{ cat_data.name }}
+                        <span class="tab-count">{{ cat_data.stories|length }}</span>
+                    </a>
+                {% endfor %}
+            </nav>
+        </div>
+
+        {% for cat_id, cat_data in grouped.items %}
+        <section id="{{ cat_id }}" class="category-section" data-count="{{ cat_data.stories|length }}">
+            <div class="category-header">
+                <h2 class="category-title">{{ cat_data.name }}</h2>
+                <span class="category-count">{{ cat_data.stories|length }} stories</span>
+            </div>
+            
+            {% if cat_data.stories %}
+                <div class="stories-grid">
+                    {% for story in cat_data.stories %}
+                    <article class="story-card" data-title="{{ story.title|lower }}" data-source="{{ story.source|lower }}" itemscope itemtype="https://schema.org/NewsArticle">
+                        <div class="story-header">
+                            <a href="{{ story.url }}" target="_blank" class="story-title" itemprop="headline">{{ story.title }}</a>
+                        </div>
+                        
+                        <div class="story-meta">
+                            <span class="source-tag">{{ story.source }}{% if story.is_paywalled %}<span class="paywall-badge" title="{{ t.paywall_title }}">$</span>{% endif %}</span>
+                            
+                            {% if story.covered_by_count %}
+                            <span class="covered-badge">{{ story.covered_by_count }} sources</span>
+                            {% endif %}
+                            
+                            <span class="bias-badge {{ story.bias_class|default:'center' }}">{{ story.bias_label }}</span>
+                            
+                            <span class="time-badge" itemprop="datePublished" content="{{ story.published|date:'c' }}">{{ story.published|timesince }} {{ t.ago }}</span>
+                        </div>
+                        
+                        {% with story.get_clean_excerpt as clean_excerpt %}
+                        {% if clean_excerpt %}
+                            <p class="story-excerpt" itemprop="description">{{ clean_excerpt|truncatechars:180 }}</p>
+                        {% endif %}
+                        {% endwith %}
+                        
+                        <div class="story-actions">
+                            <div class="story-links">
+                                <a href="{{ story.url }}" target="_blank" itemprop="url">Read full story ↗</a>
+                                <a href="https://www.bing.com/news/search?q={{ story.get_search_terms }}" target="_blank" title="{{ t.search_related }}">Find coverage ↗</a>
+                            </div>
+                            <button class="share-btn" onclick="shareStory('{{ story.title|escapejs }}', '{{ story.url|escapejs }}')" title="Share">📤</button>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+                
+                {% if cat_data.stories|length > 20 %}
+                <button class="load-more" onclick="loadMore(this)" style="width: 100%; margin-top: 24px; padding: 14px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; font-size: 0.9rem; font-weight: 500; color: var(--text-secondary); transition: all 0.2s;">
+                    Load more stories ({{ cat_data.stories|length }} total)
+                </button>
+                {% endif %}
+            {% else %}
+                <p class="empty" style="text-align: center; padding: 60px 20px; color: var(--text-muted);">{{ t.no_stories }}</p>
+            {% endif %}
+        </section>
+        {% endfor %}
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>About 24HourWire</h4>
+                <p>Aggregating news from across the political spectrum to give you the full picture. Updated every 15 minutes.</p>
+                <p style="margin-top: 12px;"><a href="/about/?lang={{ language }}">Learn how it works</a></p>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Sources</h4>
+                <p>{{ selected_sources|join:", " }}</p>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Contact</h4>
+                <p><a href="mailto:admin@24hourwire.news">admin@24hourwire.news</a></p>
+                <p><a href="https://x.com/24HourWire" target="_blank">@24HourWire on X</a></p>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Legal</h4>
+                <p><a href="/terms/?lang={{ language }}">Terms of Service</a></p>
+                <p><a href="/privacy/?lang={{ language }}">Privacy Policy</a></p>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2026 24HourWire. News content &copy; respective publishers.</p>
+            <p class="admin-link">
+                {% if user.is_authenticated %}
+                    {{ user.username }} | <a href="/logout/">Logout</a>
+                {% else %}
+                    <a href="/login/">Admin Login</a>
+                {% endif %}
+            </p>
+        </div>
+    </footer>
+
+    <div id="cookie-banner">
+        <div>
+            <span>{{ t.privacy_text }} <a href="{% url 'privacy' %}?lang={{ language }}" style="color: var(--accent);">{{ t.privacy_link }}</a></span>
+            <button onclick="acceptCookies()" style="background: var(--primary); color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: var(--radius); font-weight: 500;">
                 {{ t.got_it }}
             </button>
         </div>
     </div>
 
-    <script>
-        function getCookie(name) {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop().split(';').shift();
-        }
-        function acceptCookies() {
-            document.cookie = 'cookie_consent=accepted; max-age=31536000; path=/';
-            document.getElementById('cookie-banner').style.display = 'none';
-        }
-        document.getElementById('cookie-banner').style.display = 'block';
-    </script>
-
-    <div class="source-filter">
-        <label>
-            <strong>{{ t.sources }}</strong>
-            <select id="source-select" onchange="updateSources(this.value)" style="margin-left: 10px; padding: 5px 10px; border-radius: 4px; border: 1px solid #ddd;">
-                <option value="default" {% if source_filter == 'default' %}selected{% endif %}>{{ t.center_default }}</option>
-                <option value="all" {% if source_filter == 'all' %}selected{% endif %}>{{ t.all_sources }}</option>
-                <option value="center" {% if source_filter == 'center' %}selected{% endif %}>{{ t.center_only }}</option>
-                <option value="left-center" {% if source_filter == 'left-center' %}selected{% endif %}>{{ t.left_center_only }}</option>
-                <option value="left" {% if source_filter == 'left' %}selected{% endif %}>{{ t.left_only }}</option>
-                <option value="right" {% if source_filter == 'right' %}selected{% endif %}>{{ t.right_only }}</option>
-                <option value="clear" {% if source_filter == 'clear' %}selected{% endif %}>{{ t.clear_all }}</option>
-            </select>
-        </label>
-        <span id="source-count" style="cursor: pointer; color: #888; font-size: 0.9rem; margin-left: 15px;" onclick="toggleSourceList()">
-            {{ selected_sources|length }} {{ t.sources_suffix }} ▾
-        </span>
-        <div id="source-list" style="display: none; font-size: 0.8rem; color: #888; margin-top: 5px; padding: 8px; background: #f0f0f0; border-radius: 4px; width: 100%;">
-            {{ selected_sources|join:", " }}
-        </div>
-    </div>
-
-    <div class="tabs">
-        {% for cat_id, cat_data in grouped.items %}
-            <a href="#{{ cat_id }}" class="tab {% if forloop.first %}active{% endif %}" onclick="showCategory('{{ cat_id }}'); return false;">{{ cat_data.name }}</a>
-        {% endfor %}
-    </div>
-
-    {% for cat_id, cat_data in grouped.items %}
-    <div id="{{ cat_id }}" class="category" data-count="{{ cat_data.stories|length }}">
-        <h2>{{ cat_data.name }} <span style="font-weight: normal; color: #888; font-size: 0.9rem;">({{ cat_data.stories|length }})</span></h2>
-        {% if cat_id == "most_covered" %}
-            <p style="color: #666; font-size: 0.85rem; margin-bottom: 15px;">
-                {{ t.covered_by_2 }}
-            </p>
-        {% endif %}
-        {% if cat_data.stories %}
-            {% for story in cat_data.stories %}
-            <div class="story {% if forloop.counter > 20 %}extra-story" style="display: none;"{% else %}"{% endif %} itemscope itemtype="https://schema.org/NewsArticle">
-                <h3><a href="{{ story.url }}" target="_blank" itemprop="headline">{{ story.title }}</a></h3>
-                <p class="meta">
-                    <span class="source" itemprop="publisher" itemscope itemtype="https://schema.org/Organization"><span itemprop="name">{{ story.source }}{% if story.is_paywalled %}<span class="paywall" title="{{ t.paywall_title }}">$</span>{% endif %}</span></span>
-                    {% if story.covered_by_count %}
-                    <span class="covered-by" style="background: #e8f0e8; padding: 2px 6px; border-radius: 3px; font-size: 0.75rem; color: #2e7d32;">{{ story.covered_by_count }} {{ t.sources_label }}</span>
-                    {% endif %}
-                    <a href="{{ story.bias_link }}" target="_blank" class="bias" style="color: {{ story.bias_color }}; font-size: 0.75rem; text-decoration: none;">{{ story.bias_label }}</a>
-                    <span class="time" itemprop="datePublished" content="{{ story.published|date:'c' }}">{{ story.published|timesince }} {{ t.ago }}</span>
-                </p>
-                {% with story.get_clean_excerpt as clean_excerpt %}
-                {% if clean_excerpt %}
-                    <p class="excerpt" itemprop="description">{{ clean_excerpt|truncatechars:200 }}</p>
-                {% endif %}
-                {% endwith %}
-                <div class="links">
-                    <a href="{{ story.url }}" target="_blank" itemprop="url">{{ t.read_full }} ↗</a>
-                    <a href="https://www.bing.com/news/search?q={{ story.get_search_terms }}" target="_blank" title="{{ t.search_related }}">{{ t.find_coverage }} ↗</a>
-                    <a href="{{ story.bias_link }}" target="_blank">{{ t.bias_rating }}</a>
-                </div>
-                <div class="share-links">
-                    <span style="font-size: 0.75rem; color: #888; margin-right: 5px;">Share:</span>
-                    <a href="https://twitter.com/intent/tweet?url={{ story.url|urlencode }}&text={{ story.title|urlencode }}&via=24HourWire" target="_blank" title="Share on X">𝕏</a>
-                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ story.url|urlencode }}" target="_blank" title="Share on Facebook">Facebook</a>
-                    <a href="https://threads.net/intent/post?text={{ story.title|urlencode }}%20{{ story.url|urlencode }}" target="_blank" title="Share on Threads">Threads</a>
-                    <a href="https://truthsocial.com/share?url={{ story.url|urlencode }}&text={{ story.title|urlencode }}" target="_blank" title="Share on Truth Social">Truth</a>
-                    <a href="mailto:?subject={{ story.title|urlencode }}&body={{ story.url|urlencode }}" title="Share via Email">Email</a>
-                    <a href="javascript:void(0)" onclick="copyLink('{{ story.url|escapejs }}', this)" title="Copy link" class="copy-btn">Copy</a>
-                </div>
-            </div>
-            {% endfor %}
-            {% if cat_data.stories|length > 20 %}
-            <button class="load-more" onclick="loadMore(this)" style="width: 100%; padding: 12px; background: #f5f5f5; border: 1px solid #ddd; cursor: pointer; border-radius: 4px; margin-top: 15px;">
-                {{ t.show_stories }} {{ cat_data.stories|length }} {{ t.stories }}
-            </button>
-            {% endif %}
-        {% else %}
-            <p class="empty">{{ t.no_stories }}</p>
-        {% endif %}
-    </div>
-    {% endfor %}
-
-    <footer>
-        <p>&copy; 2026 24HourWire. {{ t.footer_copy }}</p>
-        <p>
-            {{ t.footer_sources }} {% for source, _ in sources %}{% if forloop.last %}{{ t.footer_and }} {% endif %}{{ source }}{% if not forloop.last %}, {% endif %}{% endfor %} | <a href="/terms/?lang={{ language }}">{{ t.footer_terms }}</a> | <a href="/privacy/?lang={{ language }}">{{ t.footer_privacy }}</a> | <a href="/about/?lang={{ language }}">{{ t.footer_about }}</a>
-        </p>
-        <p style="margin-top: 10px; font-size: 0.75rem;">
-            Contact: <a href="mailto:admin@24hourwire.news">admin@24hourwire.news</a> | 
-            <a href="https://x.com/24HourWire" target="_blank">@24HourWire on X</a>
-        </p>
-    </footer>
-
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1306415581374425" crossorigin="anonymous"></script>
 
     <script>
+        // Language selector
         document.getElementById('lang-select').addEventListener('change', function() {
             var url = new URL(window.location);
             url.searchParams.set('lang', this.value);
             window.location.href = url.toString();
         });
 
+        // Category tabs
         function showCategory(catId) {
-            document.querySelectorAll('.category').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.category-section').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
             document.getElementById(catId).style.display = 'block';
             document.querySelector(`.tab[href="#${catId}"]`).classList.add('active');
         }
 
+        // Load more stories
         function loadMore(btn) {
-            const category = btn.closest('.category');
-            category.querySelectorAll('.extra-story').forEach(el => el.style.display = 'block');
+            const section = btn.closest('.category-section');
+            section.querySelectorAll('.story-card').forEach(el => el.style.display = 'flex');
             btn.style.display = 'none';
         }
 
-        function updateSources(value) {
-            var url = new URL(window.location);
-            if (value === 'default') {
-                url.searchParams.delete('sources');
-            } else if (value === 'all') {
-                url.searchParams.set('sources', 'all');
-            } else if (value === 'clear') {
-                url.searchParams.set('sources', '');
-            } else if (['center', 'left-center', 'left', 'right'].includes(value)) {
-                url.searchParams.set('sources', value);
-            } else {
-                url.searchParams.set('sources', value);
-            }
-            window.location.href = url.toString();
-        }
-
-        document.querySelectorAll('.category').forEach(el => el.style.display = 'none');
-        document.querySelectorAll('.category')[0].style.display = 'block';
-
-        function toggleSourceList() {
-            const list = document.getElementById('source-list');
-            const count = document.getElementById('source-count');
-            if (list.style.display === 'none') {
-                list.style.display = 'block';
-                count.textContent = count.textContent.replace('▸', '▾');
-            } else {
-                list.style.display = 'none';
-                count.textContent = count.textContent.replace('▾', '▸');
-            }
-        }
-
-        function copyLink(url, btn) {
-            navigator.clipboard.writeText(url).then(function() {
-                const originalText = btn.textContent;
-                btn.textContent = 'Copied!';
-                btn.style.background = '#d4edda';
-                setTimeout(function() {
-                    btn.textContent = originalText;
-                    btn.style.background = '';
-                }, 2000);
-            }).catch(function(err) {
-                console.error('Could not copy text: ', err);
+        // Search functionality
+        document.getElementById('search-input').addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            const visibleSection = document.querySelector('.category-section:not([style*="none"])');
+            if (!visibleSection) return;
+            
+            visibleSection.querySelectorAll('.story-card').forEach(card => {
+                const title = card.getAttribute('data-title');
+                const source = card.getAttribute('data-source');
+                if (title.includes(query) || source.includes(query)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
             });
+        });
+
+        // Share story
+        function shareStory(title, url) {
+            if (navigator.share) {
+                navigator.share({
+                    title: title,
+                    url: url
+                });
+            } else {
+                navigator.clipboard.writeText(url);
+                alert('Link copied to clipboard!');
+            }
         }
 
+        // Cookie banner
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+        
+        function acceptCookies() {
+            document.cookie = 'cookie_consent=accepted; max-age=31536000; path=/';
+            document.getElementById('cookie-banner').style.display = 'none';
+        }
+        
+        if (!getCookie('cookie_consent')) {
+            document.getElementById('cookie-banner').style.display = 'block';
+        }
+
+        // Theme toggle
         function toggleTheme() {
             const html = document.documentElement;
             const currentTheme = html.getAttribute('data-theme');
@@ -380,7 +854,6 @@
         function updateThemeIcon(theme) {
             const btn = document.querySelector('.theme-toggle');
             btn.textContent = theme === 'dark' ? '☀️' : '🌙';
-            btn.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
         }
 
         function loadTheme() {
@@ -389,6 +862,11 @@
             updateThemeIcon(savedTheme);
         }
 
+        // Initialize
+        document.querySelectorAll('.category-section').forEach(el => el.style.display = 'none');
+        const firstSection = document.querySelector('.category-section');
+        if (firstSection) firstSection.style.display = 'block';
+        
         loadTheme();
     </script>
 </body>
