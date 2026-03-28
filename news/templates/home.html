@@ -327,22 +327,80 @@
         }
         
         /* Tabs */
-        .tabs-container {
+        .tabs-wrapper {
+            position: relative;
             margin-bottom: 24px;
             border-bottom: 2px solid var(--border);
+        }
+
+        .tabs-container {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+            padding: 0 40px;
         }
-        
+
         .tabs-container::-webkit-scrollbar {
-            display: none;
+            height: 6px;
         }
-        
+
+        .tabs-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .tabs-container::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        .tabs-container::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
         .tabs {
             display: flex;
             gap: 4px;
             min-width: min-content;
+        }
+
+        .scroll-btn {
+            position: absolute;
+            top: 0;
+            bottom: 2px;
+            width: 40px;
+            background: var(--bg-primary);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            transition: opacity 0.2s;
+        }
+
+        .scroll-btn:hover {
+            background: var(--bg-secondary);
+        }
+
+        .scroll-btn.left {
+            left: 0;
+            border-right: 1px solid var(--border);
+        }
+
+        .scroll-btn.right {
+            right: 0;
+            border-left: 1px solid var(--border);
+        }
+
+        .scroll-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--text-secondary);
+        }
+
+        .scroll-btn:hover svg {
+            fill: var(--primary);
         }
         
         .tab {
@@ -733,6 +791,22 @@
             color: var(--text-primary);
         }
 
+        [data-theme="dark"] .scroll-btn {
+            background: var(--bg-primary);
+        }
+
+        [data-theme="dark"] .scroll-btn:hover {
+            background: var(--bg-secondary);
+        }
+
+        [data-theme="dark"] .scroll-btn svg {
+            fill: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .scroll-btn:hover svg {
+            fill: var(--primary);
+        }
+
         /* Cookie Banner */
         #cookie-banner {
             display: none;
@@ -821,15 +895,27 @@
     </div>
 
     <main>
-        <div class="tabs-container">
-            <nav class="tabs">
-                {% for cat_id, cat_data in grouped.items %}
-                    <a href="#{{ cat_id }}" class="tab {% if forloop.first %}active{% endif %}" onclick="showCategory('{{ cat_id }}'); return false;">
-                        {{ cat_data.name }}
-                        <span class="tab-count">{{ cat_data.stories|length }}</span>
-                    </a>
-                {% endfor %}
-            </nav>
+        <div class="tabs-wrapper">
+            <button class="scroll-btn left" onclick="scrollTabs('left')" aria-label="Scroll left">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                </svg>
+            </button>
+            <div class="tabs-container">
+                <nav class="tabs">
+                    {% for cat_id, cat_data in grouped.items %}
+                        <a href="#{{ cat_id }}" class="tab {% if forloop.first %}active{% endif %}" onclick="showCategory('{{ cat_id }}'); return false;">
+                            {{ cat_data.name }}
+                            <span class="tab-count">{{ cat_data.stories|length }}</span>
+                        </a>
+                    {% endfor %}
+                </nav>
+            </div>
+            <button class="scroll-btn right" onclick="scrollTabs('right')" aria-label="Scroll right">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                </svg>
+            </button>
         </div>
 
         {% for cat_id, cat_data in grouped.items %}
@@ -952,6 +1038,17 @@
             document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
             document.getElementById(catId).style.display = 'block';
             document.querySelector(`.tab[href="#${catId}"]`).classList.add('active');
+        }
+
+        // Scroll tabs left/right
+        function scrollTabs(direction) {
+            const container = document.querySelector('.tabs-container');
+            const scrollAmount = 300;
+            if (direction === 'left') {
+                container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+            } else {
+                container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+            }
         }
 
         // Load more stories
