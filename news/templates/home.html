@@ -57,7 +57,6 @@
         <p class="subtitle" style="font-size: 0.85rem;">
             <a href="/about/?lang={{ language }}" style="color: #0066cc;">{{ t.how_it_works }}</a>
             {% if user.is_authenticated %}
-                | <a href="/dashboard/" style="color: #0066cc;">Dashboard</a>
                 | <span style="color: #666;">{{ user.username }}</span>
                 | <a href="/logout/" style="color: #0066cc;">Logout</a>
             {% else %}

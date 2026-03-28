@@ -111,7 +111,7 @@ def home(request):
     else:
         selected_sources = lang_default_sources
     
-    all_stories = list(Story.objects.filter(published__gte=cutoff, language=language))
+    all_stories = list(Story.objects.filter(published__gte=cutoff, language=language).order_by('-published'))
     
     for story in all_stories:
         story.story_categories = get_story_categories(story.title, language)

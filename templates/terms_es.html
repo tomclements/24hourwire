@@ -24,8 +24,6 @@
 <body>
     <div style="margin-bottom: 15px; font-size: 0.9rem;">
         <a href="/?lang=es" style="color: #0066cc; text-decoration: none;">Inicio</a>
-        <span style="color: #888; margin: 0 10px;">|</span>
-        <a href="/dashboard/" style="color: #0066cc; text-decoration: none;">Panel</a>
         {% if user.is_authenticated %}
             <span style="color: #888; margin: 0 10px;">|</span>
             <span style="color: #666;">{{ user.username }}</span>
