@@ -693,6 +693,22 @@
             background: var(--bg-tertiary);
         }
         
+        [data-theme="dark"] .search-input {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-color: var(--border);
+        }
+        
+        [data-theme="dark"] .search-input::placeholder {
+            color: var(--text-muted);
+        }
+        
+        [data-theme="dark"] .search-input:focus {
+            background: var(--bg-secondary);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(96,165,250,0.2);
+        }
+        
         /* Cookie Banner */
         #cookie-banner {
             display: none;
