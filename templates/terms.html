@@ -1,78 +1,261 @@
 <!DOCTYPE html>
 <html lang="en">
+{% load static %}
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Terms of Service - 24HourWire</title>
+    <meta name="description" content="Terms of Service for 24HourWire news aggregation platform.">
+    <link rel="icon" type="image/jpeg" href="{% static 'news/images/logo.jpg' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #0A2540;
+            --text-primary: #1a1a1a;
+            --text-secondary: #4a5568;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f7fafc;
+            --border: #e2e8f0;
+        }
+        
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
-        h1 { font-size: 1.8rem; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
-        h2 { font-size: 1.3rem; margin: 25px 0 10px 0; }
-        p { margin-bottom: 15px; }
-        ul { margin: 15px 0 15px 30px; }
-        li { margin-bottom: 8px; }
-        .back-link { display: inline-block; margin-bottom: 20px; color: #0066cc; text-decoration: none; font-size: 0.9rem; }
-        .back-link:hover { text-decoration: underline; }
-        .lang-switch { float: right; font-size: 0.9rem; }
-        .lang-switch a { color: #0066cc; text-decoration: none; }
-        .lang-switch a:hover { text-decoration: underline; }
-        footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 0.8rem; text-align: center; }
-        footer a { color: #666; text-decoration: underline; }
+        
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            line-height: 1.7; 
+            color: var(--text-primary); 
+            background: var(--bg-primary);
+        }
+        
+        header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 20px 24px;
+        }
+        
+        .header-content {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .header-content img {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+        }
+        
+        .header-content h1 {
+            font-size: 1.25rem;
+            color: var(--primary);
+        }
+        
+        .back-link {
+            margin-left: auto;
+            color: #0066cc;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        main {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+        
+        h2 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin: 32px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border);
+        }
+        
+        h3 {
+            font-size: 1.2rem;
+            color: var(--text-primary);
+            margin: 24px 0 12px 0;
+        }
+        
+        p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+        
+        ul, ol {
+            margin: 16px 0 16px 24px;
+            color: var(--text-secondary);
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        .highlight-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            margin: 24px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .highlight-box p {
+            margin: 0;
+            color: #92400e;
+        }
+        
+        footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 24px;
+            text-align: center;
+            margin-top: 60px;
+        }
+        
+        footer p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
     </style>
 </head>
 <body>
-    <div style="margin-bottom: 15px; font-size: 0.9rem;">
-        <a href="/" style="color: #0066cc; text-decoration: none;">Home</a>
-        {% if user.is_authenticated %}
-            <span style="color: #888; margin: 0 10px;">|</span>
-            <span style="color: #666;">{{ user.username }}</span>
-            <span style="color: #888; margin: 0 10px;">|</span>
-            <a href="/logout/" style="color: #0066cc; text-decoration: none;">Logout</a>
-        {% else %}
-            <span style="color: #888; margin: 0 10px;">|</span>
-            <a href="/login/" style="color: #0066cc; text-decoration: none;">Admin Login</a>
-        {% endif %}
-    </div>
+    <header>
+        <div class="header-content">
+            <img src="{% static 'news/images/logo.jpg' %}" alt="24HourWire Logo">
+            <h1>24HourWire</h1>
+            <a href="/" class="back-link">← Back to News</a>
+        </div>
+    </header>
     
-    <div class="lang-switch">
-        <strong>English</strong> | <a href="/terms/?lang=es">Español</a>
-    </div>
-    
-    <a href="/" class="back-link">← Back to news</a>
-    
-    <h1>Terms of Service</h1>
-    <p><strong>Last Updated:</strong> March 26, 2026</p>
-
-    <h2>1. Acceptance of Terms</h2>
-    <p>By accessing or using 24HourWire ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, do not use the Service.</p>
-
-    <h2>2. Description of Service</h2>
-    <p>24HourWire aggregates news headlines and summaries from publicly available RSS feeds and news sources. We do not create original content. Our service provides links to third-party websites and news sources.</p>
-
-    <h2>3. Nature of Content</h2>
-    <p>All news content displayed on 24HourWire, including headlines, summaries, and images, is sourced from third-party news organizations and wire services. We do not claim ownership of this content.</p>
-
-    <h2>4. Disclaimer of Warranties</h2>
-    <p>THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE." WE MAKE NO WARRANTIES, EXPRESS OR IMPLIED.</p>
-
-    <h2>5. Limitation of Liability</h2>
-    <p>TO THE MAXIMUM EXTENT PERMITTED BY LAW, 24HourWire SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES.</p>
-
-    <h2>6. Third-Party Content and Links</h2>
-    <p>The Service contains links to third-party websites. We do not endorse, control, or assume responsibility for third-party content or privacy practices.</p>
-
-    <h2>7. Intellectual Property</h2>
-    <p>News content is the intellectual property of the respective news organizations. 24HourWire does not claim ownership of any third-party content.</p>
-
-    <h2>8. Changes to Terms</h2>
-    <p>We reserve the right to modify these terms at any time. Continued use constitutes acceptance.</p>
-
-    <h2>9. Contact</h2>
-    <p>For questions: contact@24hourwire.com</p>
+    <main>
+        <h1 style="font-size: 2rem; color: var(--primary); margin-bottom: 8px;">Terms of Service</h1>
+        <p style="color: var(--text-muted); margin-bottom: 32px;">Last Updated: March 28, 2026</p>
+        
+        <div class="highlight-box">
+            <p><strong>IMPORTANT:</strong> BY ACCESSING OR USING 24HOURWIRE, YOU AGREE TO BE BOUND BY THESE TERMS. IF YOU DO NOT AGREE, PLEASE DO NOT USE THE SERVICE.</p>
+        </div>
+        
+        <h2>1. Acceptance of Terms</h2>
+        <p>Welcome to 24HourWire ("we," "us," or "our"). These Terms of Service ("Terms") govern your access to and use of the 24HourWire website and services (collectively, the "Service"). By accessing or using the Service, you agree to be bound by these Terms and our Privacy Policy. If you are using the Service on behalf of an organization, you represent that you have authority to bind that organization to these Terms.</p>
+        
+        <h2>2. Description of Service</h2>
+        <p>24HourWire is a news aggregation platform that collects, organizes, and displays headlines and brief summaries from publicly available news sources. The Service allows users to:</p>
+        <ul>
+            <li>View aggregated news content from multiple sources</li>
+            <li>Compare coverage of stories across different outlets</li>
+            <li>Filter content by political bias ratings</li>
+            <li>Access direct links to original source articles</li>
+        </ul>
+        <p>All content displayed is automatically deleted after 24 hours. We do not host full articles, images, or other copyrighted material.</p>
+        
+        <h2>3. Intellectual Property Rights</h2>
+        
+        <h3>3.1 Our Content</h3>
+        <p>The 24HourWire name, logo, website design, software, and original content are owned by us and protected by copyright, trademark, and other intellectual property laws. You may not reproduce, modify, distribute, or create derivative works from our proprietary content without express written permission.</p>
+        
+        <h3>3.2 Third-Party Content</h3>
+        <p>News headlines, summaries, and articles displayed on the Service are owned by their respective publishers. We display this content under the doctrine of fair use (17 U.S.C. § 107) for purposes of news aggregation, commentary, and comparison. All third-party content is clearly attributed to its source with direct links to the original publications.</p>
+        
+        <h3>3.3 Your Use License</h3>
+        <p>Subject to these Terms, we grant you a limited, non-exclusive, non-transferable, revocable license to access and use the Service for personal, non-commercial purposes.</p>
+        
+        <h2>4. Prohibited Conduct</h2>
+        <p>You agree not to:</p>
+        <ul>
+            <li><strong>Scrape or crawl:</strong> Use automated systems, robots, spiders, or scrapers to access, extract, or copy content from the Service without authorization</li>
+            <li><strong>Overload systems:</strong> Attempt to interfere with or disrupt the Service, servers, or networks connected to the Service</li>
+            <li><strong>Reverse engineer:</strong> Decompile, reverse engineer, or attempt to derive source code from the Service</li>
+            <li><strong>Commercial use:</strong> Use the Service for commercial purposes without written permission</li>
+            <li><strong>Frame or mirror:</strong> Frame or mirror any part of the Service without authorization</li>
+            <li><strong>Impersonate:</strong> Impersonate any person or entity or misrepresent your affiliation</li>
+            <li><strong>Malicious activity:</strong> Introduce viruses, malware, or other harmful code</li>
+            <li><strong>Harvest data:</strong> Collect or harvest user information without consent</li>
+        </ul>
+        
+        <h2>5. Disclaimer of Warranties</h2>
+        <p>THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO:</p>
+        <ul>
+            <li>Implied warranties of merchantability, fitness for a particular purpose, or non-infringement</li>
+            <li>Warranties that the Service will be uninterrupted, timely, secure, or error-free</li>
+            <li>Warranties regarding the accuracy, reliability, or completeness of any content</li>
+            <li>Warranties that the Service is free of viruses or other harmful components</li>
+        </ul>
+        <p>We do not guarantee the accuracy, completeness, or usefulness of any aggregated content. News content reflects the views and biases of the original sources and does not represent our opinions.</p>
+        
+        <h2>6. Limitation of Liability</h2>
+        <p>TO THE FULLEST EXTENT PERMITTED BY LAW:</p>
+        <ul>
+            <li>We shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of or inability to use the Service</li>
+            <li>Our total liability shall not exceed the amount you have paid us in the twelve (12) months preceding the claim, or $100, whichever is greater</li>
+            <li>We are not responsible for the content, accuracy, or practices of third-party news sources linked from our Service</li>
+            <li>We are not liable for any loss or damage arising from your reliance on any information obtained through the Service</li>
+        </ul>
+        
+        <h2>7. Indemnification</h2>
+        <p>You agree to defend, indemnify, and hold harmless 24HourWire, its affiliates, officers, directors, employees, and agents from and against any claims, damages, obligations, losses, liabilities, costs, or debt, and expenses (including but not limited to attorney's fees) arising from:</p>
+        <ul>
+            <li>Your use of and access to the Service</li>
+            <li>Your violation of any term of these Terms</li>
+            <li>Your violation of any third-party right, including copyright, trademark, or privacy right</li>
+            <li>Any claim that your use of the Service caused damage to a third party</li>
+        </ul>
+        
+        <h2>8. DMCA Compliance & Copyright Infringement</h2>
+        <p>We respect the intellectual property rights of others and comply with the Digital Millennium Copyright Act (DMCA).</p>
+        
+        <h3>8.1 Takedown Notices</h3>
+        <p>If you believe that material available on our Service infringes your copyright, please send a written notice to our designated DMCA agent containing:</p>
+        <ol>
+            <li>A physical or electronic signature of the copyright owner or authorized agent</li>
+            <li>Identification of the copyrighted work claimed to be infringed</li>
+            <li>Identification of the infringing material and its location on the Service</li>
+            <li>Your contact information (address, phone, email)</li>
+            <li>A statement that you have a good faith belief the use is not authorized by the copyright owner</li>
+            <li>A statement that the information is accurate, under penalty of perjury</li>
+        </ol>
+        
+        <h3>8.2 DMCA Agent</h3>
+        <p><strong>Name:</strong> Tom Clements<br>
+        <strong>Email:</strong> admin@24hourwire.news<br>
+        <strong>Address:</strong> 24HourWire, c/o Tom Clements, Minneapolis, MN 55401</p>
+        
+        <h3>8.3 Counter-Notices</h3>
+        <p>If you believe material was removed in error, you may submit a counter-notice with the required information under 17 U.S.C. § 512(g).</p>
+        
+        <h2>9. Governing Law & Jurisdiction</h2>
+        <p>These Terms shall be governed by and construed in accordance with the laws of the State of Minnesota, United States, without regard to its conflict of law provisions. You agree that any legal action or proceeding between you and 24HourWire shall be brought exclusively in the state or federal courts located in Hennepin County, Minnesota, and you consent to the personal jurisdiction and venue of such courts.</p>
+        
+        <h2>10. Termination</h2>
+        <p>We may terminate or suspend your access to the Service immediately, without prior notice or liability, for any reason, including if you breach these Terms. Upon termination, your right to use the Service will cease immediately. All provisions of these Terms which by their nature should survive termination shall survive.</p>
+        
+        <h2>11. Changes to Terms</h2>
+        <p>We reserve the right to modify or replace these Terms at any time. If a revision is material, we will provide at least 30 days' notice prior to any new terms taking effect. What constitutes a material change will be determined at our sole discretion. Your continued use of the Service after any changes constitutes acceptance of the new Terms.</p>
+        
+        <h2>12. Severability</h2>
+        <p>If any provision of these Terms is held to be invalid or unenforceable, such provision shall be struck and the remaining provisions shall be enforced to the fullest extent permitted by law.</p>
+        
+        <h2>13. Entire Agreement</h2>
+        <p>These Terms, together with our Privacy Policy and Fair Use Policy, constitute the entire agreement between you and 24HourWire regarding the Service and supersede all prior agreements, whether written or oral.</p>
+        
+        <h2>14. Waiver</h2>
+        <p>Our failure to enforce any right or provision of these Terms will not be considered a waiver of those rights. No waiver of any term will be deemed a further or continuing waiver of such term.</p>
+        
+        <h2>15. Contact Information</h2>
+        <p>If you have any questions about these Terms, please contact us:</p>
+        <p><strong>Email:</strong> admin@24hourwire.news<br>
+        <strong>Twitter/X:</strong> @24HourWire<br>
+        <strong>Address:</strong> 24HourWire, Minneapolis, MN 55401</p>
+    </main>
     
     <footer>
-        <p><a href="/">Home</a> | <a href="/terms/">Terms</a> | <a href="/privacy/">Privacy</a> | <a href="/about/">About</a></p>
+        <p>&copy; 2026 24HourWire. All rights reserved. | <a href="/" style="color: #0066cc;">Home</a> | <a href="/copyright/" style="color: #0066cc;">Copyright Policy</a> | <a href="/privacy/" style="color: #0066cc;">Privacy Policy</a></p>
     </footer>
 </body>
 </html>

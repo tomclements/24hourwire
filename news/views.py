@@ -206,6 +206,10 @@ def privacy_view(request):
     return render(request, 'privacy.html')
 
 
+def copyright_view(request):
+    return render(request, 'copyright.html')
+
+
 def login_view(request):
     if request.user.is_authenticated:
         if is_staff_or_superuser(request.user):
