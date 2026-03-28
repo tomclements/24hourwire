@@ -1,9 +1,16 @@
 <!DOCTYPE html>
 <html lang="{{ language }}">
+{% load static %}
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>24HourWire</title>
+    <title>24HourWire | The Latest News from All Angles</title>
+    <meta name="description" content="Get the latest news from all angles with 24HourWire. Unbiased news aggregator showing current events from multiple perspectives. 24 hour news coverage from diverse sources.">
+    <meta property="og:title" content="24HourWire | The Latest News from All Angles">
+    <meta property="og:description" content="Unbiased news aggregator showing current events from multiple perspectives. 24 hour news coverage from diverse sources.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://24hourwire.com">
+    <link rel="canonical" href="https://24hourwire.com">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 1000px; margin: 0 auto; padding: 20px; }
@@ -28,6 +35,9 @@
         .excerpt { margin: 8px 0; color: #444; font-size: 0.95rem; }
         .links a { font-size: 0.8rem; margin-right: 12px; color: #0066cc; text-decoration: none; }
         .links a:hover { text-decoration: underline; }
+        .share-links { margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .share-links a { font-size: 0.75rem; color: #666; text-decoration: none; padding: 4px 10px; background: #f5f5f5; border-radius: 12px; transition: background 0.2s; }
+        .share-links a:hover { background: #e0e0e0; text-decoration: none; }
         .bias { margin-left: 5px; }
         .empty { color: #888; font-size: 0.9rem; font-style: italic; padding: 20px 0; }
         .empty-category { display: none; }
@@ -41,11 +51,122 @@
         footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 0.8rem; text-align: center; }
         footer p { margin-bottom: 8px; }
         footer a { color: #666; text-decoration: underline; }
+        
+        .theme-toggle {
+            background: none;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            cursor: pointer;
+            padding: 5px 12px;
+            font-size: 0.85rem;
+            margin-left: 10px;
+        }
+        .theme-toggle:hover {
+            background: #f0f0f0;
+        }
+        
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --text-color: #e0e0e0;
+            --header-border: #444;
+            --subtitle-color: #aaa;
+            --tab-bg: #2a2a2a;
+            --tab-color: #ccc;
+            --tab-active-bg: #444;
+            --tab-active-color: #fff;
+            --category-border: #333;
+            --story-border: #2a2a2a;
+            --link-color: #6bb5ff;
+            --source-bg: #2a2a2a;
+            --time-color: #888;
+            --excerpt-color: #bbb;
+            --filter-bg: #2a2a2a;
+            --footer-color: #888;
+            --share-bg: #2a2a2a;
+            --share-hover: #3a3a3a;
+        }
+        
+        [data-theme="dark"] body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+        [data-theme="dark"] header {
+            border-bottom-color: var(--header-border);
+        }
+        [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3 {
+            color: var(--text-color);
+        }
+        [data-theme="dark"] .subtitle {
+            color: var(--subtitle-color);
+        }
+        [data-theme="dark"] .tab {
+            background: var(--tab-bg);
+            color: var(--tab-color);
+        }
+        [data-theme="dark"] .tab:hover {
+            background: #333;
+        }
+        [data-theme="dark"] .tab.active {
+            background: var(--tab-active-bg);
+            color: var(--tab-active-color);
+        }
+        [data-theme="dark"] .category h2 {
+            border-bottom-color: var(--category-border);
+        }
+        [data-theme="dark"] .story {
+            border-bottom-color: var(--story-border);
+        }
+        [data-theme="dark"] .story h3 a {
+            color: var(--text-color);
+        }
+        [data-theme="dark"] .links a {
+            color: var(--link-color);
+        }
+        [data-theme="dark"] .source {
+            background: var(--source-bg);
+        }
+        [data-theme="dark"] .time {
+            color: var(--time-color);
+        }
+        [data-theme="dark"] .excerpt {
+            color: var(--excerpt-color);
+        }
+        [data-theme="dark"] .source-filter {
+            background: var(--filter-bg);
+        }
+        [data-theme="dark"] footer {
+            color: var(--footer-color);
+            border-top-color: #333;
+        }
+        [data-theme="dark"] footer a {
+            color: var(--footer-color);
+        }
+        [data-theme="dark"] .share-links a {
+            background: var(--share-bg);
+            color: #ccc;
+        }
+        [data-theme="dark"] .share-links a:hover {
+            background: var(--share-hover);
+        }
+        [data-theme="dark"] .theme-toggle {
+            border-color: #555;
+            color: #ccc;
+        }
+        [data-theme="dark"] .theme-toggle:hover {
+            background: #333;
+        }
+        [data-theme="dark"] #cookie-banner {
+            background: #2a2a2a;
+            color: #ccc;
+        }
     </style>
 </head>
 <body>
     <header>
-        <h1>24HourWire</h1>
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+            <img src="{% static 'news/images/logo.jpg' %}" alt="24HourWire Logo" style="width: 60px; height: 60px; object-fit: contain;">
+            <h1 style="margin: 0;">24HourWire</h1>
+        </div>
         <p class="subtitle">
             {{ t.subtitle }}
             | <select id="lang-select" style="font-size: 0.85rem; padding: 2px 6px; border-radius: 4px; border: 1px solid #ccc;">
@@ -53,6 +174,7 @@
                     <option value="{{ code }}" {% if code == language %}selected{% endif %}>{{ name }}</option>
                 {% endfor %}
             </select>
+            | <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">🌙</button>
         </p>
         <p class="subtitle" style="font-size: 0.85rem;">
             <a href="/about/?lang={{ language }}" style="color: #0066cc;">{{ t.how_it_works }}</a>
@@ -126,25 +248,34 @@
         {% endif %}
         {% if cat_data.stories %}
             {% for story in cat_data.stories %}
-            <div class="story {% if forloop.counter > 20 %}extra-story" style="display: none;"{% else %}"{% endif %}>
-                <h3><a href="{{ story.url }}" target="_blank">{{ story.title }}</a></h3>
+            <div class="story {% if forloop.counter > 20 %}extra-story" style="display: none;"{% else %}"{% endif %} itemscope itemtype="https://schema.org/NewsArticle">
+                <h3><a href="{{ story.url }}" target="_blank" itemprop="headline">{{ story.title }}</a></h3>
                 <p class="meta">
-                    <span class="source">{{ story.source }}{% if story.is_paywalled %}<span class="paywall" title="{{ t.paywall_title }}">$</span>{% endif %}</span>
+                    <span class="source" itemprop="publisher" itemscope itemtype="https://schema.org/Organization"><span itemprop="name">{{ story.source }}{% if story.is_paywalled %}<span class="paywall" title="{{ t.paywall_title }}">$</span>{% endif %}</span></span>
                     {% if story.covered_by_count %}
                     <span class="covered-by" style="background: #e8f0e8; padding: 2px 6px; border-radius: 3px; font-size: 0.75rem; color: #2e7d32;">{{ story.covered_by_count }} {{ t.sources_label }}</span>
                     {% endif %}
                     <a href="{{ story.bias_link }}" target="_blank" class="bias" style="color: {{ story.bias_color }}; font-size: 0.75rem; text-decoration: none;">{{ story.bias_label }}</a>
-                    <span class="time">{{ story.published|timesince }} {{ t.ago }}</span>
+                    <span class="time" itemprop="datePublished" content="{{ story.published|date:'c' }}">{{ story.published|timesince }} {{ t.ago }}</span>
                 </p>
                 {% with story.get_clean_excerpt as clean_excerpt %}
                 {% if clean_excerpt %}
-                    <p class="excerpt">{{ clean_excerpt|truncatechars:200 }}</p>
+                    <p class="excerpt" itemprop="description">{{ clean_excerpt|truncatechars:200 }}</p>
                 {% endif %}
                 {% endwith %}
                 <div class="links">
-                    <a href="{{ story.url }}" target="_blank">{{ t.read_full }} ↗</a>
+                    <a href="{{ story.url }}" target="_blank" itemprop="url">{{ t.read_full }} ↗</a>
                     <a href="https://www.bing.com/news/search?q={{ story.get_search_terms }}" target="_blank" title="{{ t.search_related }}">{{ t.find_coverage }} ↗</a>
                     <a href="{{ story.bias_link }}" target="_blank">{{ t.bias_rating }}</a>
+                </div>
+                <div class="share-links">
+                    <span style="font-size: 0.75rem; color: #888; margin-right: 5px;">Share:</span>
+                    <a href="https://twitter.com/intent/tweet?url={{ story.url|urlencode }}&text={{ story.title|urlencode }}&via=24HourWire" target="_blank" title="Share on X">𝕏</a>
+                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ story.url|urlencode }}" target="_blank" title="Share on Facebook">Facebook</a>
+                    <a href="https://threads.net/intent/post?text={{ story.title|urlencode }}%20{{ story.url|urlencode }}" target="_blank" title="Share on Threads">Threads</a>
+                    <a href="https://truthsocial.com/share?url={{ story.url|urlencode }}&text={{ story.title|urlencode }}" target="_blank" title="Share on Truth Social">Truth</a>
+                    <a href="mailto:?subject={{ story.title|urlencode }}&body={{ story.url|urlencode }}" title="Share via Email">Email</a>
+                    <a href="javascript:void(0)" onclick="copyLink('{{ story.url|escapejs }}', this)" title="Copy link" class="copy-btn">Copy</a>
                 </div>
             </div>
             {% endfor %}
@@ -163,6 +294,10 @@
         <p>&copy; 2026 24HourWire. {{ t.footer_copy }}</p>
         <p>
             {{ t.footer_sources }} {% for source, _ in sources %}{% if forloop.last %}{{ t.footer_and }} {% endif %}{{ source }}{% if not forloop.last %}, {% endif %}{% endfor %} | <a href="/terms/?lang={{ language }}">{{ t.footer_terms }}</a> | <a href="/privacy/?lang={{ language }}">{{ t.footer_privacy }}</a> | <a href="/about/?lang={{ language }}">{{ t.footer_about }}</a>
+        </p>
+        <p style="margin-top: 10px; font-size: 0.75rem;">
+            Contact: <a href="mailto:admin@24hourwire.news">admin@24hourwire.news</a> | 
+            <a href="https://x.com/24HourWire" target="_blank">@24HourWire on X</a>
         </p>
     </footer>
 
@@ -218,6 +353,43 @@
                 count.textContent = count.textContent.replace('▾', '▸');
             }
         }
+
+        function copyLink(url, btn) {
+            navigator.clipboard.writeText(url).then(function() {
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                btn.style.background = '#d4edda';
+                setTimeout(function() {
+                    btn.textContent = originalText;
+                    btn.style.background = '';
+                }, 2000);
+            }).catch(function(err) {
+                console.error('Could not copy text: ', err);
+            });
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const btn = document.querySelector('.theme-toggle');
+            btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+            btn.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+        }
+
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        }
+
+        loadTheme();
     </script>
 </body>
 </html>
