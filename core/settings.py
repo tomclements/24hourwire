@@ -150,7 +150,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Security settings for production
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
-CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip() 
+    for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', 'https://24hourwire.com,https://www.24hourwire.com').split(',')
+    if origin.strip()
+]
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
