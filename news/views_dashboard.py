@@ -29,12 +29,17 @@ def dashboard_view(request):
     cached_time = request.session.get(cache_time_key)
     force_refresh = request.method == 'POST' and request.GET.get('refresh')
 
-    if force_refresh or not cached_time or (timezone.now().timestamp() - cached_time) > 3600:
-        feed_health = _check_all_feeds()
-        request.session[cache_key] = feed_health
-        request.session[cache_time_key] = timezone.now().timestamp()
-    else:
-        feed_health = request.session[cache_key]
+    feed_health = []
+    try:
+        if force_refresh or not cached_time or (timezone.now().timestamp() - cached_time) > 3600:
+            feed_health = _check_all_feeds()
+            request.session[cache_key] = feed_health
+            request.session[cache_time_key] = timezone.now().timestamp()
+        else:
+            feed_health = request.session[cache_key]
+    except Exception as e:
+        # If feed check fails, use empty list and don't cache
+        feed_health = []
 
     # Summary
     total_feeds = sum(len(feeds) for feeds in LANGUAGE_FEEDS.values())
