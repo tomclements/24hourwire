@@ -71,26 +71,34 @@ def _check_all_feeds():
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
                 })
                 with urllib.request.urlopen(req, context=ctx, timeout=10) as response:
-                    feed = feedparser.parse(response.read())
-                    if feed.entries:
+                    try:
+                        feed = feedparser.parse(response.read())
+                        if feed.entries:
+                            results.append({
+                                'language': language,
+                                'source': source_name,
+                                'status': 'ok',
+                                'entries': len(feed.entries),
+                            })
+                        else:
+                            results.append({
+                                'language': language,
+                                'source': source_name,
+                                'status': 'empty',
+                                'entries': 0,
+                            })
+                    except Exception as parse_error:
                         results.append({
                             'language': language,
                             'source': source_name,
-                            'status': 'ok',
-                            'entries': len(feed.entries),
-                        })
-                    else:
-                        results.append({
-                            'language': language,
-                            'source': source_name,
-                            'status': 'empty',
+                            'status': f'parse_error',
                             'entries': 0,
                         })
             except Exception as e:
                 results.append({
                     'language': language,
                     'source': source_name,
-                    'status': str(e)[:60],
+                    'status': 'error',
                     'entries': 0,
                 })
 
