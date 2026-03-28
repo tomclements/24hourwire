@@ -63,14 +63,55 @@
         header {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 16px 24px;
+            padding: 12px 16px;
+        }
+        
+        @media (max-width: 640px) {
+            header {
+                padding: 10px 12px;
+            }
         }
         
         .header-top {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        
+        @media (max-width: 640px) {
+            .header-top {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .brand {
+                justify-content: center;
+            }
+            
+            .brand img {
+                width: 36px;
+                height: 36px;
+            }
+            
+            .brand-text h1 {
+                font-size: 1.25rem;
+            }
+            
+            .brand-text .tagline {
+                display: none;
+            }
+            
+            .header-actions {
+                width: 100%;
+            }
+            
+            .search-container {
+                max-width: none;
+                flex: 1;
+            }
         }
         
         .brand {
@@ -103,6 +144,15 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            flex: 1;
+            justify-content: flex-end;
+        }
+        
+        @media (max-width: 640px) {
+            .header-actions {
+                width: 100%;
+                gap: 8px;
+            }
         }
         
         /* Search Bar */
@@ -135,14 +185,65 @@
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-muted);
+            pointer-events: none;
+        }
+        
+        .search-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+        
+        @media (max-width: 640px) {
+            .search-container {
+                max-width: none;
+            }
+            
+            .search-input {
+                padding: 8px 14px 8px 36px;
+                font-size: 0.85rem;
+            }
+            
+            .search-icon {
+                left: 12px;
+            }
+            
+            .search-icon svg {
+                width: 16px;
+                height: 16px;
+            }
         }
         
         /* Bias Filter Pills */
         .bias-filters {
             display: flex;
             gap: 8px;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             align-items: center;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            padding-bottom: 4px;
+        }
+        
+        .bias-filters::-webkit-scrollbar {
+            display: none;
+        }
+        
+        @media (max-width: 640px) {
+            .bias-filters {
+                gap: 6px;
+            }
+            
+            .bias-filters > span {
+                display: none;
+            }
+            
+            .bias-pill {
+                padding: 5px 10px;
+                font-size: 0.75rem;
+                white-space: nowrap;
+            }
         }
         
         .bias-pill {
@@ -216,21 +317,32 @@
         main {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 24px;
+            padding: 16px;
+        }
+
+        @media (min-width: 640px) {
+            main {
+                padding: 24px;
+            }
         }
         
         /* Tabs */
         .tabs-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             margin-bottom: 24px;
             border-bottom: 2px solid var(--border);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        
+        .tabs-container::-webkit-scrollbar {
+            display: none;
         }
         
         .tabs {
             display: flex;
             gap: 4px;
+            min-width: min-content;
         }
         
         .tab {
@@ -274,10 +386,11 @@
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
             gap: 20px;
         }
-        
+
         @media (max-width: 768px) {
             .stories-grid {
                 grid-template-columns: 1fr;
+                gap: 12px;
             }
         }
         
@@ -285,13 +398,19 @@
             background: var(--bg-primary);
             border: 1px solid var(--border);
             border-radius: var(--radius-lg);
-            padding: 20px;
+            padding: 16px;
             transition: all 0.2s;
             display: flex;
             flex-direction: column;
             height: 100%;
         }
-        
+
+        @media (min-width: 640px) {
+            .story-card {
+                padding: 20px;
+            }
+        }
+
         .story-card:hover {
             box-shadow: var(--shadow-md);
             transform: translateY(-2px);
@@ -628,7 +747,11 @@
                 
                 <div class="header-actions">
                     <div class="search-container">
-                        <span class="search-icon">🔍</span>
+                        <span class="search-icon">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                            </svg>
+                        </span>
                         <input type="text" class="search-input" placeholder="Search news..." id="search-input">
                     </div>
                     
@@ -645,7 +768,7 @@
             
             <div class="bias-filters">
                 <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">Filter:</span>
-                <a href="?sources=all" class="bias-pill all {% if source_filter == 'all' %}active{% endif %}">All Sources</a>
+                <a href="?sources=all" class="bias-pill all {% if source_filter == 'all' %}active{% endif %}">All</a>
                 <a href="?sources=left" class="bias-pill left {% if source_filter == 'left' %}active{% endif %}">Left</a>
                 <a href="?sources=left-center" class="bias-pill left-center {% if source_filter == 'left-center' %}active{% endif %}">Left-Center</a>
                 <a href="?sources=center" class="bias-pill center {% if source_filter == 'center' %}active{% endif %}">Center</a>
