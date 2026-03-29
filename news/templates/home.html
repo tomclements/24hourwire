@@ -274,6 +274,17 @@
         .bias-pill.active {
             border-color: currentColor;
             box-shadow: var(--shadow-md);
+            font-weight: 700;
+            position: relative;
+            padding-left: 28px;
+        }
+
+        .bias-pill.active::before {
+            content: "✓";
+            position: absolute;
+            left: 10px;
+            font-weight: 700;
+            font-size: 0.9rem;
         }
         
         .bias-pill.left { background: rgba(59,130,246,0.1); color: var(--bias-left); }
@@ -866,7 +877,16 @@
             
             <div class="header-controls-row">
                 <div class="bias-filters">
-                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">Filter:</span>
+                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">
+                        {% if source_filter == 'all' or not source_filter %}Filter: All Sources
+                        {% elif source_filter == 'left' %}Filter: Left Only
+                        {% elif source_filter == 'left-center' %}Filter: Left-Center
+                        {% elif source_filter == 'center' %}Filter: Center Only
+                        {% elif source_filter == 'right-center' %}Filter: Right-Center
+                        {% elif source_filter == 'right' %}Filter: Right Only
+                        {% else %}Filter:
+                        {% endif %}
+                    </span>
                     <a href="?sources=all" class="bias-pill all {% if source_filter == 'all' %}active{% endif %}">All</a>
                     <a href="?sources=left" class="bias-pill left {% if source_filter == 'left' %}active{% endif %}">Left</a>
                     <a href="?sources=left-center" class="bias-pill left-center {% if source_filter == 'left-center' %}active{% endif %}">Left-Center</a>
