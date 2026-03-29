@@ -4,6 +4,7 @@ import ssl
 import re
 import logging
 from datetime import datetime, timedelta
+from difflib import SequenceMatcher
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from news.models import Story, normalize_url, title_fingerprint, build_clusters
@@ -52,6 +53,10 @@ class Command(BaseCommand):
             except Exception:
                 return feedparser.parse('')
 
+    def title_similarity(self, title1, title2):
+        """Calculate similarity ratio between two titles."""
+        return SequenceMatcher(None, title1.lower(), title2.lower()).ratio()
+
     def fetch_language(self, language):
         feeds = LANGUAGE_FEEDS.get(language, [])
         logger.info(f'Fetching {language} news from {len(feeds)} sources')
@@ -73,7 +78,12 @@ class Command(BaseCommand):
         total_dupes = 0
         url_dupes = 0
         title_dupes = 0
+        fuzzy_dupes = 0
         to_create = []
+        
+        # Track recent stories per source for fuzzy deduplication
+        # Key: source_name, Value: list of (title, timestamp) tuples
+        recent_source_stories = {}
 
         for source_name, feed_url in feeds:
             self.safe_write(f"  {source_name}...", ending=" ")
@@ -121,6 +131,23 @@ class Command(BaseCommand):
                     total_dupes += 1
                     continue
 
+                # Level 3: Fuzzy deduplication - skip if similar title from same source within last 30 minutes
+                is_fuzzy_dup = False
+                if source_name in recent_source_stories:
+                    for recent_title, recent_time in recent_source_stories[source_name]:
+                        time_diff = (pub_time - recent_time).total_seconds() / 60  # minutes
+                        if time_diff <= 30:  # Within 30 minutes
+                            similarity = self.title_similarity(title, recent_title)
+                            if similarity >= 0.75:  # 75% similar
+                                is_fuzzy_dup = True
+                                logger.info(f'Fuzzy duplicate: {title[:50]}... vs {recent_title[:50]}... ({similarity:.2f})')
+                                break
+                
+                if is_fuzzy_dup:
+                    fuzzy_dupes += 1
+                    total_dupes += 1
+                    continue
+
                 rss_excerpt = entry.get('summary', '')[:800]
 
                 title_words = set(title.lower().split())
@@ -144,6 +171,12 @@ class Command(BaseCommand):
                 ))
                 existing_url_hashes.add(url_hash)
                 existing_source_fps.add((source_name, fp))
+                
+                # Track for fuzzy deduplication
+                if source_name not in recent_source_stories:
+                    recent_source_stories[source_name] = []
+                recent_source_stories[source_name].append((title, pub_time))
+                
                 total_new += 1
                 source_count += 1
 
@@ -154,7 +187,7 @@ class Command(BaseCommand):
         if to_create:
             Story.objects.bulk_create(to_create, ignore_conflicts=True)
 
-        return total_new, total_dupes, url_dupes, title_dupes
+        return total_new, total_dupes, url_dupes, title_dupes, fuzzy_dupes
 
     def handle(self, *args, **options):
         language = options['language']
@@ -170,6 +203,7 @@ class Command(BaseCommand):
         total_dupes = 0
         url_dupes = 0
         title_dupes = 0
+        fuzzy_dupes = 0
 
         if language == 'all':
             languages = LANGUAGE_FEEDS.keys()
@@ -177,19 +211,20 @@ class Command(BaseCommand):
             languages = [language]
 
         for lang in languages:
-            new, dupes, u_dupes, t_dupes = self.fetch_language(lang)
+            new, dupes, u_dupes, t_dupes, f_dupes = self.fetch_language(lang)
             total_new += new
             total_dupes += dupes
             url_dupes += u_dupes
             title_dupes += t_dupes
+            fuzzy_dupes += f_dupes
 
         # Build story clusters for "Most Covered" tab
         for lang in languages:
             cluster_count = build_clusters(lang)
             self.safe_write(f"Built {cluster_count} clusters for {lang}")
 
-        logger.info(f'Fetch complete: {total_new} new, {total_dupes} dupes ({url_dupes} url, {title_dupes} title)')
+        logger.info(f'Fetch complete: {total_new} new, {total_dupes} dupes ({url_dupes} url, {title_dupes} title, {fuzzy_dupes} fuzzy)')
         self.safe_write(self.style.SUCCESS(
             f"\nFetch complete: {total_new} new stories "
-            f"({total_dupes} duplicates skipped: {url_dupes} url, {title_dupes} title)"
+            f"({total_dupes} duplicates skipped: {url_dupes} url, {title_dupes} title, {fuzzy_dupes} similar)"
         ))
