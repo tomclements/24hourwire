@@ -124,20 +124,21 @@
         }
         
         .header-banner {
-            text-align: center;
+            width: 100%;
             margin-bottom: 16px;
         }
 
         .header-banner .banner-img {
-            height: 60px;
-            width: auto;
-            max-width: 100%;
-            object-fit: contain;
+            width: 100%;
+            height: auto;
+            max-height: 80px;
+            object-fit: cover;
+            display: block;
         }
 
         @media (max-width: 640px) {
             .header-banner .banner-img {
-                height: 45px;
+                max-height: 60px;
             }
         }
 
