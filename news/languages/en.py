@@ -4,9 +4,75 @@ CODE = 'en'
 NAME = 'English'
 
 FEEDS = [
+    # General/Main feeds
     ('Reuters', 'https://news.google.com/rss/search?q=site:reuters.com&hl=en-US&gl=US&ceid=US:en'),
     ('AP', 'https://news.google.com/rss/search?q=site:apnews.com&hl=en-US&gl=US&ceid=US:en'),
     ('BBC', 'https://feeds.bbci.co.uk/news/rss.xml'),
+    
+    # Category-specific feeds for better coverage
+    # Sports
+    ('Reuters Sports', 'https://www.reuters.com/sports/rss.xml'),
+    ('BBC Sport', 'https://feeds.bbci.co.uk/sport/rss.xml'),
+    ('AP Sports', 'https://rsshub.app/apnews/sports'),
+    ('ESPN', 'https://www.espn.com/espn/rss/news'),
+    ('CBS Sports', 'https://www.cbssports.com/rss/headlines/'),
+    ('Sky Sports', 'https://www.skysports.com/rss/12040'),
+    
+    # Business
+    ('Reuters Business', 'https://www.reuters.com/business/rss.xml'),
+    ('BBC Business', 'https://feeds.bbci.co.uk/news/business/rss.xml'),
+    ('AP Business', 'https://rsshub.app/apnews/business'),
+    ('Bloomberg Markets', 'https://www.bloomberg.com/feeds/markets/sitemap_news.xml'),
+    ('Forbes Business', 'https://www.forbes.com/business/feed/'),
+    ('CNBC', 'https://www.cnbc.com/id/100003114/device/rss/rss.html'),
+    ('MarketWatch', 'https://www.marketwatch.com/rss/topstories'),
+    ('Financial Times', 'https://www.ft.com/?format=rss'),
+    
+    # Technology
+    ('Reuters Technology', 'https://www.reuters.com/technology/rss.xml'),
+    ('BBC Technology', 'https://feeds.bbci.co.uk/news/technology/rss.xml'),
+    ('AP Technology', 'https://rsshub.app/apnews/technology'),
+    ('Bloomberg Technology', 'https://www.bloomberg.com/feeds/technology/sitemap_news.xml'),
+    ('Forbes Tech', 'https://www.forbes.com/technology/feed/'),
+    ('TechCrunch', 'https://techcrunch.com/feed/'),
+    ('The Verge', 'https://www.theverge.com/rss/index.xml'),
+    ('Wired', 'https://www.wired.com/feed/rss'),
+    ('Ars Technica', 'https://arstechnica.com/feed/'),
+    
+    # World News
+    ('Reuters World', 'https://www.reuters.com/world/rss.xml'),
+    ('BBC World', 'https://feeds.bbci.co.uk/news/world/rss.xml'),
+    ('AP World', 'https://rsshub.app/apnews/world'),
+    ('Al Jazeera World', 'https://www.aljazeera.com/xml/rss/all.xml'),
+    ('France 24 World', 'https://www.france24.com/en/rss'),
+    ('Deutsche Welle World', 'https://rss.dw.com/xml/rss-en-all'),
+    
+    # Science
+    ('BBC Science', 'https://feeds.bbci.co.uk/news/science_and_environment/rss.xml'),
+    ('Reuters Science', 'https://www.reuters.com/lifestyle/science/rss.xml'),
+    ('AP Science', 'https://rsshub.app/apnews/science'),
+    ('New Scientist', 'https://www.newscientist.com/feed/home/'),
+    ('Scientific American', 'https://www.scientificamerican.com/rss/'),
+    
+    # Health
+    ('BBC Health', 'https://feeds.bbci.co.uk/news/health/rss.xml'),
+    ('Reuters Health', 'https://www.reuters.com/lifestyle/health/rss.xml'),
+    ('AP Health', 'https://rsshub.app/apnews/health'),
+    ('STAT News', 'https://www.statnews.com/feed/'),
+    ('MedPage Today', 'https://www.medpagetoday.com/rss/headlines.xml'),
+    
+    # Entertainment
+    ('BBC Entertainment', 'https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml'),
+    ('Reuters Entertainment', 'https://www.reuters.com/lifestyle/entertainment/rss.xml'),
+    ('AP Entertainment', 'https://rsshub.app/apnews/entertainment'),
+    ('Variety', 'https://variety.com/feed/'),
+    ('Hollywood Reporter', 'https://www.hollywoodreporter.com/feed/'),
+    ('Entertainment Weekly', 'https://feeds.ew.com/entertainmentweekly/latest'),
+    
+    # Politics (already have many political sources)
+    ('BBC Politics', 'https://feeds.bbci.co.uk/news/politics/rss.xml'),
+    ('Reuters Politics', 'https://www.reuters.com/politics/rss.xml'),
+    ('AP Politics', 'https://rsshub.app/apnews/politics'),
     ('CBS News', 'https://news.google.com/rss/search?q=site:cbsnews.com&hl=en-US&gl=US&ceid=US:en'),
     ('ABC News', 'https://news.google.com/rss/search?q=site:abcnews.com&hl=en-US&gl=US&ceid=US:en'),
     ('NBC News', 'https://news.google.com/rss/search?q=site:nbcnews.com&hl=en-US&gl=US&ceid=US:en'),
@@ -82,6 +148,68 @@ SOURCE_INFO = {
     'Common Dreams': ('Left', '#999', 'https://mediabiasfactcheck.com/common-dreams/'),
     'Truthout': ('Left', '#999', 'https://mediabiasfactcheck.com/truthout/'),
     'Vox': ('Left', '#999', 'https://mediabiasfactcheck.com/vox/'),
+    
+    # Category-specific sources (same bias as parent)
+    'Reuters Sports': ('Center', '#666', 'https://mediabiasfactcheck.com/reuters/'),
+    'Reuters Business': ('Center', '#666', 'https://mediabiasfactcheck.com/reuters/'),
+    'Reuters Technology': ('Center', '#666', 'https://mediabiasfactcheck.com/reuters/'),
+    'Reuters World': ('Center', '#666', 'https://mediabiasfactcheck.com/reuters/'),
+    'Reuters Science': ('Center', '#666', 'https://mediabiasfactcheck.com/reuters/'),
+    'Reuters Health': ('Center', '#666', 'https://mediabiasfactcheck.com/reuters/'),
+    'Reuters Entertainment': ('Center', '#666', 'https://mediabiasfactcheck.com/reuters/'),
+    'Reuters Politics': ('Center', '#666', 'https://mediabiasfactcheck.com/reuters/'),
+    'AP Sports': ('Center', '#666', 'https://mediabiasfactcheck.com/associated-press/'),
+    'AP Business': ('Center', '#666', 'https://mediabiasfactcheck.com/associated-press/'),
+    'AP Technology': ('Center', '#666', 'https://mediabiasfactcheck.com/associated-press/'),
+    'AP World': ('Center', '#666', 'https://mediabiasfactcheck.com/associated-press/'),
+    'AP Science': ('Center', '#666', 'https://mediabiasfactcheck.com/associated-press/'),
+    'AP Health': ('Center', '#666', 'https://mediabiasfactcheck.com/associated-press/'),
+    'AP Entertainment': ('Center', '#666', 'https://mediabiasfactcheck.com/associated-press/'),
+    'AP Politics': ('Center', '#666', 'https://mediabiasfactcheck.com/associated-press/'),
+    'BBC Sport': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/bbc/'),
+    'BBC Business': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/bbc/'),
+    'BBC Technology': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/bbc/'),
+    'BBC World': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/bbc/'),
+    'BBC Science': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/bbc/'),
+    'BBC Health': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/bbc/'),
+    'BBC Entertainment': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/bbc/'),
+    'BBC Politics': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/bbc/'),
+    'Bloomberg Markets': ('Center', '#666', 'https://mediabiasfactcheck.com/bloomberg/'),
+    'Bloomberg Technology': ('Center', '#666', 'https://mediabiasfactcheck.com/bloomberg/'),
+    'Al Jazeera World': ('Left', '#999', 'https://mediabiasfactcheck.com/al-jazeera/'),
+    'France 24 World': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/france-24/'),
+    'Deutsche Welle World': ('Center', '#666', 'https://mediabiasfactcheck.com/deutsche-welle/'),
+    
+    # Sports sources
+    'ESPN': ('Center', '#666', 'https://mediabiasfactcheck.com/espn/'),
+    'CBS Sports': ('Center', '#666', 'https://mediabiasfactcheck.com/cbs-sports/'),
+    'Sky Sports': ('Center', '#666', 'https://mediabiasfactcheck.com/sky-sports/'),
+    
+    # Business sources
+    'CNBC': ('Center', '#666', 'https://mediabiasfactcheck.com/cnbc/'),
+    'MarketWatch': ('Center', '#666', 'https://mediabiasfactcheck.com/marketwatch/'),
+    'Financial Times': ('Center', '#666', 'https://mediabiasfactcheck.com/financial-times/'),
+    'Forbes Business': ('Center', '#666', 'https://mediabiasfactcheck.com/forbes/'),
+    
+    # Technology sources
+    'Forbes Tech': ('Center', '#666', 'https://mediabiasfactcheck.com/forbes/'),
+    'TechCrunch': ('Center', '#666', 'https://mediabiasfactcheck.com/techcrunch/'),
+    'The Verge': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/the-verge/'),
+    'Wired': ('Center', '#666', 'https://mediabiasfactcheck.com/wired/'),
+    'Ars Technica': ('Center', '#666', 'https://mediabiasfactcheck.com/ars-technica/'),
+    
+    # Science sources
+    'New Scientist': ('Center', '#666', 'https://mediabiasfactcheck.com/new-scientist/'),
+    'Scientific American': ('Center', '#666', 'https://mediabiasfactcheck.com/scientific-american/'),
+    
+    # Health sources
+    'STAT News': ('Center', '#666', 'https://mediabiasfactcheck.com/stat-news/'),
+    'MedPage Today': ('Center', '#666', 'https://mediabiasfactcheck.com/medpage-today/'),
+    
+    # Entertainment sources
+    'Variety': ('Center', '#666', 'https://mediabiasfactcheck.com/variety/'),
+    'Hollywood Reporter': ('Center', '#666', 'https://mediabiasfactcheck.com/hollywood-reporter/'),
+    'Entertainment Weekly': ('Center', '#666', 'https://mediabiasfactcheck.com/entertainment-weekly/'),
 }
 
 DEFAULT_SOURCES = ['Reuters', 'AP', 'Deutsche Welle', 'Bloomberg', 'Forbes', 'Free Press']
@@ -125,6 +253,56 @@ SOURCES = [
     ('Daily Wire', 'Right'),
     ('Epoch Times', 'Right'),
     ('Fox News', 'Right'),
+    
+    # Category-specific sources
+    ('Reuters Sports', 'Center'),
+    ('Reuters Business', 'Center'),
+    ('Reuters Technology', 'Center'),
+    ('Reuters World', 'Center'),
+    ('Reuters Science', 'Center'),
+    ('Reuters Health', 'Center'),
+    ('Reuters Entertainment', 'Center'),
+    ('Reuters Politics', 'Center'),
+    ('AP Sports', 'Center'),
+    ('AP Business', 'Center'),
+    ('AP Technology', 'Center'),
+    ('AP World', 'Center'),
+    ('AP Science', 'Center'),
+    ('AP Health', 'Center'),
+    ('AP Entertainment', 'Center'),
+    ('AP Politics', 'Center'),
+    ('BBC Sport', 'Left-Center'),
+    ('BBC Business', 'Left-Center'),
+    ('BBC Technology', 'Left-Center'),
+    ('BBC World', 'Left-Center'),
+    ('BBC Science', 'Left-Center'),
+    ('BBC Health', 'Left-Center'),
+    ('BBC Entertainment', 'Left-Center'),
+    ('BBC Politics', 'Left-Center'),
+    ('Bloomberg Markets', 'Center'),
+    ('Bloomberg Technology', 'Center'),
+    ('Al Jazeera World', 'Left'),
+    ('France 24 World', 'Left-Center'),
+    ('Deutsche Welle World', 'Center'),
+    ('ESPN', 'Center'),
+    ('CBS Sports', 'Center'),
+    ('Sky Sports', 'Center'),
+    ('CNBC', 'Center'),
+    ('MarketWatch', 'Center'),
+    ('Financial Times', 'Center'),
+    ('Forbes Business', 'Center'),
+    ('Forbes Tech', 'Center'),
+    ('TechCrunch', 'Center'),
+    ('The Verge', 'Left-Center'),
+    ('Wired', 'Center'),
+    ('Ars Technica', 'Center'),
+    ('New Scientist', 'Center'),
+    ('Scientific American', 'Center'),
+    ('STAT News', 'Center'),
+    ('MedPage Today', 'Center'),
+    ('Variety', 'Center'),
+    ('Hollywood Reporter', 'Center'),
+    ('Entertainment Weekly', 'Center'),
 ]
 
 CATEGORY_KEYWORDS = {
