@@ -238,3 +238,104 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect('home')
+
+
+def different_angle(request, story_id):
+    """Show related stories with different bias for a given story."""
+    from django.http import JsonResponse
+    import json
+    
+    try:
+        story = Story.objects.get(id=story_id)
+    except Story.DoesNotExist:
+        return JsonResponse({'error': 'Story not found'}, status=404)
+    
+    # Get story's bias
+    language = story.language
+    lang_source_info = LANGUAGE_SOURCE_INFO.get(language, LANGUAGE_SOURCE_INFO['en'])
+    story_bias = lang_source_info.get(story.source, ('Unknown', '#999', ''))[0]
+    
+    # Find opposite biases
+    bias_order = ['Left', 'Left-Center', 'Center', 'Right-Center', 'Right']
+    opposite_biases = []
+    if story_bias in bias_order:
+        story_idx = bias_order.index(story_bias)
+        # Get biases that are different (prioritize farther ones)
+        for i, bias in enumerate(bias_order):
+            if bias != story_bias:
+                opposite_biases.append(bias)
+    
+    # Get search terms from story title
+    search_terms = story.get_search_terms().split('+')
+    
+    # Find related stories from different biases
+    cutoff = timezone.now() - timedelta(hours=48)  # Wider time window
+    related_stories = []
+    
+    all_recent_stories = Story.objects.filter(
+        published__gte=cutoff,
+        language=language
+    ).exclude(id=story_id)
+    
+    for related in all_recent_stories:
+        related_bias = lang_source_info.get(related.source, ('Unknown', '#999', ''))[0]
+        if related_bias not in opposite_biases:
+            continue
+            
+        # Check for keyword overlap
+        related_title_lower = related.title.lower()
+        match_score = 0
+        for term in search_terms:
+            if term.lower() in related_title_lower:
+                match_score += 1
+        
+        # Include if at least 2 keywords match or high similarity
+        if match_score >= 2 or match_score >= len(search_terms) * 0.5:
+            bias_info = lang_source_info.get(related.source, ('Unknown', '#999', ''))
+            related.bias_label = bias_info[0]
+            related.bias_color = bias_info[1]
+            related.is_paywalled = related.source in PAYWALLED_SOURCES
+            related.story_categories = get_story_categories(related.title, language)
+            related.match_score = match_score
+            related_stories.append(related)
+    
+    # Sort by match score (highest first) then by published date
+    related_stories.sort(key=lambda x: (-x.match_score, x.published), reverse=False)
+    
+    # Limit to top 10
+    related_stories = related_stories[:10]
+    
+    # Return JSON for AJAX requests
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        stories_data = []
+        for s in related_stories:
+            stories_data.append({
+                'id': s.id,
+                'title': s.title,
+                'source': s.source,
+                'url': s.url,
+                'bias_label': s.bias_label,
+                'bias_color': s.bias_color,
+                'published': s.published.strftime('%Y-%m-%d %H:%M'),
+                'is_paywalled': s.is_paywalled,
+                'excerpt': s.get_clean_excerpt()[:200] if s.get_clean_excerpt() else '',
+            })
+        return JsonResponse({
+            'original_story': {
+                'id': story.id,
+                'title': story.title,
+                'source': story.source,
+                'bias_label': story_bias,
+            },
+            'related_stories': stories_data,
+        })
+    
+    # Return HTML for direct browser requests
+    return render(request, 'different_angle.html', {
+        'original_story': story,
+        'original_bias': story_bias,
+        'related_stories': related_stories,
+        'language': language,
+        'language_names': LANGUAGE_NAMES,
+        't': UI_STRINGS.get(language, UI_STRINGS['en']),
+    })

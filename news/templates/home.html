@@ -639,6 +639,136 @@
             transform: scale(1.1);
         }
         
+        .different-angle-btn {
+            background: transparent;
+            border: 1px solid var(--accent);
+            border-radius: 4px;
+            padding: 4px 10px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--accent);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .different-angle-btn:hover {
+            background: var(--accent);
+            color: white;
+        }
+        
+        /* Different Angle Modal */
+        .different-angle-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .different-angle-modal.active {
+            display: flex;
+        }
+        
+        .different-angle-content {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .different-angle-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
+        .different-angle-header h3 {
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            margin: 0;
+        }
+        
+        .different-angle-header .original-story {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close-modal:hover {
+            color: var(--text-primary);
+        }
+        
+        .different-angle-list {
+            padding: 20px;
+        }
+        
+        .different-angle-item {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
+        }
+        
+        .different-angle-item:last-child {
+            border-bottom: none;
+        }
+        
+        .different-angle-item:hover {
+            background: var(--bg-secondary);
+        }
+        
+        .different-angle-item a {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        .different-angle-item a:hover {
+            color: var(--accent);
+        }
+        
+        .different-angle-meta {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+        
+        .no-different-angle {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+        
         /* Featured Section for Most Covered */
         .featured-section {
             background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
@@ -989,6 +1119,7 @@
                             <div class="story-links">
                                 <a href="{{ story.url }}" target="_blank" itemprop="url">Read full story ↗</a>
                                 <a href="https://www.bing.com/news/search?q={{ story.get_search_terms }}" target="_blank" title="{{ t.search_related }}">Find coverage ↗</a>
+                                <button class="different-angle-btn" onclick="showDifferentAngle({{ story.id }}, '{{ story.title|escapejs }}', '{{ story.source }}', '{{ story.bias_label }}')" title="See different perspectives">Different Angle ↗</button>
                             </div>
                             <button class="share-btn" onclick="shareStory('{{ story.title|escapejs }}', '{{ story.url|escapejs }}')" title="Share">📤</button>
                         </div>
@@ -1165,6 +1296,86 @@
         if (firstSection) firstSection.style.display = 'block';
         
         loadTheme();
+        
+        // Different Angle functionality
+        function showDifferentAngle(storyId, storyTitle, storySource, storyBias) {
+            const modal = document.getElementById('different-angle-modal');
+            const content = document.getElementById('different-angle-content');
+            const loading = document.getElementById('different-angle-loading');
+            const list = document.getElementById('different-angle-list');
+            const title = document.getElementById('different-angle-original-title');
+            const source = document.getElementById('different-angle-original-source');
+            
+            // Show modal with loading state
+            modal.classList.add('active');
+            loading.style.display = 'block';
+            list.innerHTML = '';
+            title.textContent = storyTitle;
+            source.textContent = storySource + ' (' + storyBias + ')';
+            
+            // Fetch related stories
+            fetch('/different-angle/' + storyId + '/', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                
+                if (data.related_stories && data.related_stories.length > 0) {
+                    data.related_stories.forEach(story => {
+                        const item = document.createElement('div');
+                        item.className = 'different-angle-item';
+                        item.innerHTML = `
+                            <a href="${story.url}" target="_blank">${story.title}</a>
+                            <div class="different-angle-meta">
+                                <span class="source-tag">${story.source}${story.is_paywalled ? '<span class="paywall-badge">$</span>' : ''}</span>
+                                <span class="bias-badge" style="background: ${story.bias_color}20; color: ${story.bias_color};">${story.bias_label}</span>
+                            </div>
+                            ${story.excerpt ? `<p style="margin-top: 8px; font-size: 0.85rem; color: var(--text-secondary);">${story.excerpt}</p>` : ''}
+                        `;
+                        list.appendChild(item);
+                    });
+                } else {
+                    list.innerHTML = '<div class="no-different-angle">No related stories from different perspectives found.</div>';
+                }
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                list.innerHTML = '<div class="no-different-angle">Error loading related stories. Please try again.</div>';
+                console.error('Error:', error);
+            });
+        }
+        
+        function closeDifferentAngle() {
+            document.getElementById('different-angle-modal').classList.remove('active');
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('different-angle-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDifferentAngle();
+            }
+        });
     </script>
+    
+    <!-- Different Angle Modal -->
+    <div class="different-angle-modal" id="different-angle-modal">
+        <div class="different-angle-content" id="different-angle-content">
+            <div class="different-angle-header">
+                <div>
+                    <h3>Different Angle</h3>
+                    <div class="original-story">Original: <span id="different-angle-original-title"></span><br><span id="different-angle-original-source" style="color: var(--text-muted);"></span></div>
+                </div>
+                <button class="close-modal" onclick="closeDifferentAngle()">&times;</button>
+            </div>
+            <div class="different-angle-list" id="different-angle-list">
+                <div id="different-angle-loading" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                    Loading related stories...
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

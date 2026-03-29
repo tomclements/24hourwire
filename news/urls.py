@@ -12,4 +12,5 @@ urlpatterns = [
     path('dashboard/', user_passes_test(views.is_staff_or_superuser, login_url='/login/')(dashboard_view), name='dashboard'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
+    path('different-angle/<int:story_id>/', views.different_angle, name='different_angle'),
 ]
