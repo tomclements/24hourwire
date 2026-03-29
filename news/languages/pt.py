@@ -16,6 +16,64 @@ FEEDS = [
     ('Exame', 'https://news.google.com/rss/search?q=site:exame.com&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
     ('IstoÉ', 'https://news.google.com/rss/search?q=site:istoe.com.br&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
     ('Valor Econômico', 'https://news.google.com/rss/search?q=site:valor.globo.com&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    
+    # Category-specific feeds
+    # Sports
+    ('Globo Esporte', 'https://news.google.com/rss/search?q=site:ge.globo.com&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('Lance!', 'https://news.google.com/rss/search?q=site:lance.com.br&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('ESPN Brasil', 'https://news.google.com/rss/search?q=site:espn.com.br&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('UOL Esporte', 'https://news.google.com/rss/search?q=site:uol.com.br/esporte&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('Folha Esporte', 'https://news.google.com/rss/search?q=site:folha.uol.com.br/esporte&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('Estadão Esporte', 'https://news.google.com/rss/search?q=site:esporte.estadao.com.br&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    
+    # Business
+    ('Valor Econômico Economia', 'https://news.google.com/rss/search?q=site:valor.globo.com&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('Exame Economia', 'https://news.google.com/rss/search?q=site:exame.com/economia&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('Estadão Economia', 'https://news.google.com/rss/search?q=site:economia.estadao.com.br&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('Folha Economia', 'https://news.google.com/rss/search?q=site:folha.uol.com.br/mercado&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('G1 Economia', 'https://news.google.com/rss/search?q=site:g1.globo.com/economia&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('BBC Brasil Economia', 'https://news.google.com/rss/search?q=site:bbc.com/portuguese&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    
+    # Technology
+    ('G1 Tecnologia', 'https://news.google.com/rss/search?q=site:g1.globo.com/tecnologia&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('TecMundo', 'https://news.google.com/rss/search?q=site:tecmundo.com.br&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('TechTudo', 'https://news.google.com/rss/search?q=site:techtudo.com.br&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('UOL Tecnologia', 'https://news.google.com/rss/search?q=site:uol.com.br/tilt&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('Folha Tecnologia', 'https://news.google.com/rss/search?q=site:folha.uol.com.br/tec&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    
+    # World News
+    ('BBC Brasil Internacional', 'https://news.google.com/rss/search?q=site:bbc.com/portuguese/internacional&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('G1 Mundo', 'https://news.google.com/rss/search?q=site:g1.globo.com/mundo&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('DW Brasil Internacional', 'https://rss.dw.com/xml/rss-pt-all'),
+    ('Folha Mundo', 'https://news.google.com/rss/search?q=site:folha.uol.com.br/mundo&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('Estadão Internacional', 'https://news.google.com/rss/search?q=site:internacional.estadao.com.br&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    
+    # Science
+    ('BBC Brasil Ciência', 'https://news.google.com/rss/search?q=site:bbc.com/portuguese/ciencia&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('G1 Ciência', 'https://news.google.com/rss/search?q=site:g1.globo.com/ciencia-e-saude&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('Folha Ciência', 'https://news.google.com/rss/search?q=site:folha.uol.com.br/ciencia&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('UOL Ciência', 'https://news.google.com/rss/search?q=site:uol.com.br/ciencia&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    
+    # Health
+    ('G1 Saúde', 'https://news.google.com/rss/search?q=site:g1.globo.com/bemestar&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('UOL Saúde', 'https://news.google.com/rss/search?q=site:uol.com.br/vivabem&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('Folha Saúde', 'https://news.google.com/rss/search?q=site:folha.uol.com.br/equilibrio&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('Estadão Saúde', 'https://news.google.com/rss/search?q=site:saude.estadao.com.br&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    
+    # Entertainment
+    ('G1 Pop', 'https://news.google.com/rss/search?q=site:g1.globo.com/pop-arte&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('UOL Entretenimento', 'https://news.google.com/rss/search?q=site:uol.com.br/entretenimento&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('Folha Ilustrada', 'https://news.google.com/rss/search?q=site:folha.uol.com.br/ilustrada&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('Estadão Cultura', 'https://news.google.com/rss/search?q=site:cultura.estadao.com.br&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('O Globo Cultura', 'https://news.google.com/rss/search?q=site:oglobo.globo.com/cultura&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    
+    # Politics
+    ('G1 Política', 'https://news.google.com/rss/search?q=site:g1.globo.com/politica&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('Folha Política', 'https://news.google.com/rss/search?q=site:folha.uol.com.br/poder&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('Estadão Política', 'https://news.google.com/rss/search?q=site:politica.estadao.com.br&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('O Globo Política', 'https://news.google.com/rss/search?q=site:oglobo.globo.com/politica&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('CartaCapital Política', 'https://news.google.com/rss/search?q=site:cartacapital.com.br/politica&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
+    ('UOL Política', 'https://news.google.com/rss/search?q=site:uol.com.br/politica&hl=pt-BR&gl=BR&ceid=BR:pt-419'),
 ]
 
 SOURCE_INFO = {
@@ -31,6 +89,49 @@ SOURCE_INFO = {
     'Exame': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
     'IstoÉ': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
     'Valor Econômico': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    
+    # Category-specific sources
+    'Globo Esporte': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'Lance!': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'ESPN Brasil': ('Center', '#666', 'https://mediabiasfactcheck.com/espn/'),
+    'UOL Esporte': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'Folha Esporte': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/folha-de-s-paulo/'),
+    'Estadão Esporte': ('Right-Center', '#777', 'https://mediabiasfactcheck.com/estado-de-s-paulo/'),
+    'Valor Econômico Economia': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'Exame Economia': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'Estadão Economia': ('Right-Center', '#777', 'https://mediabiasfactcheck.com/estado-de-s-paulo/'),
+    'Folha Economia': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/folha-de-s-paulo/'),
+    'G1 Economia': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'BBC Brasil Economia': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/bbc/'),
+    'G1 Tecnologia': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'TecMundo': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'TechTudo': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'UOL Tecnologia': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'Folha Tecnologia': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/folha-de-s-paulo/'),
+    'BBC Brasil Internacional': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/bbc/'),
+    'G1 Mundo': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'DW Brasil Internacional': ('Center', '#666', 'https://mediabiasfactcheck.com/deutsche-welle/'),
+    'Folha Mundo': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/folha-de-s-paulo/'),
+    'Estadão Internacional': ('Right-Center', '#777', 'https://mediabiasfactcheck.com/estado-de-s-paulo/'),
+    'BBC Brasil Ciência': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/bbc/'),
+    'G1 Ciência': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'Folha Ciência': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/folha-de-s-paulo/'),
+    'UOL Ciência': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'G1 Saúde': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'UOL Saúde': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'Folha Saúde': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/folha-de-s-paulo/'),
+    'Estadão Saúde': ('Right-Center', '#777', 'https://mediabiasfactcheck.com/estado-de-s-paulo/'),
+    'G1 Pop': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'UOL Entretenimento': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'Folha Ilustrada': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/folha-de-s-paulo/'),
+    'Estadão Cultura': ('Right-Center', '#777', 'https://mediabiasfactcheck.com/estado-de-s-paulo/'),
+    'O Globo Cultura': ('Center', '#666', 'https://mediabiasfactcheck.com/o-globo/'),
+    'G1 Política': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'Folha Política': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/folha-de-s-paulo/'),
+    'Estadão Política': ('Right-Center', '#777', 'https://mediabiasfactcheck.com/estado-de-s-paulo/'),
+    'O Globo Política': ('Center', '#666', 'https://mediabiasfactcheck.com/o-globo/'),
+    'CartaCapital Política': ('Left', '#999', 'https://mediabiasfactcheck.com/'),
+    'UOL Política': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
 }
 
 DEFAULT_SOURCES = ['Folha de S.Paulo', 'O Globo', 'G1', 'BBC Brasil', 'DW Brasil', 'Valor Econômico']
@@ -48,6 +149,49 @@ SOURCES = [
     ('Estadão', 'Right-Center'),
     ('R7', 'Right-Center'),
     ('CartaCapital', 'Left'),
+    
+    # Category-specific sources
+    ('Globo Esporte', 'Center'),
+    ('Lance!', 'Center'),
+    ('ESPN Brasil', 'Center'),
+    ('UOL Esporte', 'Center'),
+    ('Folha Esporte', 'Left-Center'),
+    ('Estadão Esporte', 'Right-Center'),
+    ('Valor Econômico Economia', 'Center'),
+    ('Exame Economia', 'Center'),
+    ('Estadão Economia', 'Right-Center'),
+    ('Folha Economia', 'Left-Center'),
+    ('G1 Economia', 'Center'),
+    ('BBC Brasil Economia', 'Left-Center'),
+    ('G1 Tecnologia', 'Center'),
+    ('TecMundo', 'Center'),
+    ('TechTudo', 'Center'),
+    ('UOL Tecnologia', 'Center'),
+    ('Folha Tecnologia', 'Left-Center'),
+    ('BBC Brasil Internacional', 'Left-Center'),
+    ('G1 Mundo', 'Center'),
+    ('DW Brasil Internacional', 'Center'),
+    ('Folha Mundo', 'Left-Center'),
+    ('Estadão Internacional', 'Right-Center'),
+    ('BBC Brasil Ciência', 'Left-Center'),
+    ('G1 Ciência', 'Center'),
+    ('Folha Ciência', 'Left-Center'),
+    ('UOL Ciência', 'Center'),
+    ('G1 Saúde', 'Center'),
+    ('UOL Saúde', 'Center'),
+    ('Folha Saúde', 'Left-Center'),
+    ('Estadão Saúde', 'Right-Center'),
+    ('G1 Pop', 'Center'),
+    ('UOL Entretenimento', 'Center'),
+    ('Folha Ilustrada', 'Left-Center'),
+    ('Estadão Cultura', 'Right-Center'),
+    ('O Globo Cultura', 'Center'),
+    ('G1 Política', 'Center'),
+    ('Folha Política', 'Left-Center'),
+    ('Estadão Política', 'Right-Center'),
+    ('O Globo Política', 'Center'),
+    ('CartaCapital Política', 'Left'),
+    ('UOL Política', 'Center'),
 ]
 
 CATEGORY_KEYWORDS = {

@@ -14,6 +14,61 @@ FEEDS = [
     ('Amar Ujala', 'https://news.google.com/rss/search?q=site:amarujala.com&hl=hi&gl=IN&ceid=IN:hi'),
     ('DW हिन्दी', 'https://rss.dw.com/xml/rss-hi-all'),
     ('TV9 भारतवर्ष', 'https://news.google.com/rss/search?q=site:tv9hindi.com&hl=hi&gl=IN&ceid=IN:hi'),
+    
+    # Category-specific feeds
+    # Sports
+    ('NDTV खेल', 'https://sports.ndtv.com/rss'),
+    ('Aaj Tak खेल', 'https://www.aajtak.in/sports/rss'),
+    ('Zee News खेल', 'https://zeenews.india.com/rss/sports-news.xml'),
+    ('ABP News खेल', 'https://www.abplive.com/sports/feed'),
+    ('Hindustan खेल', 'https://www.livehindustan.com/sports/rss'),
+    ('Amar Ujala खेल', 'https://www.amarujala.com/sports/rss.xml'),
+    
+    # Business
+    ('NDTV बिजनेस', 'https://www.ndtv.com/business/rss'),
+    ('Zee Business', 'https://www.zeebiz.com/rss'),
+    ('Aaj Tak बिजनेस', 'https://www.aajtak.in/business/rss'),
+    ('ABP News बिजनेस', 'https://www.abplive.com/business/feed'),
+    ('Hindustan बिजनेस', 'https://www.livehindustan.com/business/rss'),
+    ('Amar Ujala बिजनेस', 'https://www.amarujala.com/business/rss.xml'),
+    
+    # Technology
+    ('NDTech Hindi', 'https://www.navbharattimes.com/tech/rss'),
+    ('Aaj Tak टेक', 'https://www.aajtak.in/technology/rss'),
+    ('Zee News टेक', 'https://zeenews.india.com/rss/technology-news.xml'),
+    ('Hindustan टेक', 'https://www.livehindustan.com/technology/rss'),
+    
+    # World News
+    ('BBC हिन्दी अंतरराष्ट्रीय', 'https://feeds.bbci.co.uk/hindi/rss.xml'),
+    ('DW हिन्दी विश्व', 'https://rss.dw.com/xml/rss-hi-all'),
+    ('Aaj Tak विदेश', 'https://www.aajtak.in/world/rss'),
+    ('Zee News विदेश', 'https://zeenews.india.com/rss/world-news.xml'),
+    ('NDTV विदेश', 'https://www.ndtv.com/world/rss'),
+    ('ABP News विदेश', 'https://www.abplive.com/world/feed'),
+    
+    # Science
+    ('NDTV विज्ञान', 'https://www.ndtv.com/science/rss'),
+    ('Zee News विज्ञान', 'https://zeenews.india.com/rss/science-and-environment.xml'),
+    ('Aaj Tak विज्ञान', 'https://www.aajtak.in/science/rss'),
+    
+    # Health
+    ('NDTV स्वास्थ्य', 'https://www.ndtv.com/health/rss'),
+    ('Zee News स्वास्थ्य', 'https://zeenews.india.com/rss/health-news.xml'),
+    ('Aaj Tak स्वास्थ्य', 'https://www.aajtak.in/health/rss'),
+    
+    # Entertainment
+    ('NDTV मनोरंजन', 'https://www.ndtv.com/entertainment/rss'),
+    ('Zee News मनोरंजन', 'https://zeenews.india.com/rss/entertainment-news.xml'),
+    ('Aaj Tak मनोरंजन', 'https://www.aajtak.in/entertainment/rss'),
+    ('ABP News मनोरंजन', 'https://www.abplive.com/entertainment/feed'),
+    
+    # Politics
+    ('BBC हिन्दी भारत', 'https://feeds.bbci.co.uk/hindi/rss.xml'),
+    ('NDTV राजनीति', 'https://www.ndtv.com/india/rss'),
+    ('Aaj Tak राजनीति', 'https://www.aajtak.in/india/rss'),
+    ('Zee News राजनीति', 'https://zeenews.india.com/rss/india-news.xml'),
+    ('ABP News राजनीति', 'https://www.abplive.com/india/feed'),
+    ('Hindustan राजनीति', 'https://www.livehindustan.com/uttar-pradesh/rss'),
 ]
 
 SOURCE_INFO = {
@@ -27,6 +82,46 @@ SOURCE_INFO = {
     'Amar Ujala': ('Center', '#666', 'https://mediabiasfactcheck.com/amar-ujala/'),
     'DW हिन्दी': ('Center', '#666', 'https://mediabiasfactcheck.com/deutsche-welle/'),
     'TV9 भारतवर्ष': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    
+    # Category-specific sources
+    'NDTV खेल': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/ndtv/'),
+    'Aaj Tak खेल': ('Center', '#666', 'https://mediabiasfactcheck.com/aaj-tak/'),
+    'Zee News खेल': ('Right-Center', '#777', 'https://mediabiasfactcheck.com/zee-news/'),
+    'ABP News खेल': ('Center', '#666', 'https://mediabiasfactcheck.com/abp-news/'),
+    'Hindustan खेल': ('Center', '#666', 'https://mediabiasfactcheck.com/hindustan/'),
+    'Amar Ujala खेल': ('Center', '#666', 'https://mediabiasfactcheck.com/amar-ujala/'),
+    'NDTV बिजनेस': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/ndtv/'),
+    'Zee Business': ('Right-Center', '#777', 'https://mediabiasfactcheck.com/zee-news/'),
+    'Aaj Tak बिजनेस': ('Center', '#666', 'https://mediabiasfactcheck.com/aaj-tak/'),
+    'ABP News बिजनेस': ('Center', '#666', 'https://mediabiasfactcheck.com/abp-news/'),
+    'Hindustan बिजनेस': ('Center', '#666', 'https://mediabiasfactcheck.com/hindustan/'),
+    'Amar Ujala बिजनेस': ('Center', '#666', 'https://mediabiasfactcheck.com/amar-ujala/'),
+    'NDTech Hindi': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'Aaj Tak टेक': ('Center', '#666', 'https://mediabiasfactcheck.com/aaj-tak/'),
+    'Zee News टेक': ('Right-Center', '#777', 'https://mediabiasfactcheck.com/zee-news/'),
+    'Hindustan टेक': ('Center', '#666', 'https://mediabiasfactcheck.com/hindustan/'),
+    'BBC हिन्दी अंतरराष्ट्रीय': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/bbc/'),
+    'DW हिन्दी विश्व': ('Center', '#666', 'https://mediabiasfactcheck.com/deutsche-welle/'),
+    'Aaj Tak विदेश': ('Center', '#666', 'https://mediabiasfactcheck.com/aaj-tak/'),
+    'Zee News विदेश': ('Right-Center', '#777', 'https://mediabiasfactcheck.com/zee-news/'),
+    'NDTV विदेश': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/ndtv/'),
+    'ABP News विदेश': ('Center', '#666', 'https://mediabiasfactcheck.com/abp-news/'),
+    'NDTV विज्ञान': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/ndtv/'),
+    'Zee News विज्ञान': ('Right-Center', '#777', 'https://mediabiasfactcheck.com/zee-news/'),
+    'Aaj Tak विज्ञान': ('Center', '#666', 'https://mediabiasfactcheck.com/aaj-tak/'),
+    'NDTV स्वास्थ्य': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/ndtv/'),
+    'Zee News स्वास्थ्य': ('Right-Center', '#777', 'https://mediabiasfactcheck.com/zee-news/'),
+    'Aaj Tak स्वास्थ्य': ('Center', '#666', 'https://mediabiasfactcheck.com/aaj-tak/'),
+    'NDTV मनोरंजन': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/ndtv/'),
+    'Zee News मनोरंजन': ('Right-Center', '#777', 'https://mediabiasfactcheck.com/zee-news/'),
+    'Aaj Tak मनोरंजन': ('Center', '#666', 'https://mediabiasfactcheck.com/aaj-tak/'),
+    'ABP News मनोरंजन': ('Center', '#666', 'https://mediabiasfactcheck.com/abp-news/'),
+    'BBC हिन्दी भारत': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/bbc/'),
+    'NDTV राजनीति': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/ndtv/'),
+    'Aaj Tak राजनीति': ('Center', '#666', 'https://mediabiasfactcheck.com/aaj-tak/'),
+    'Zee News राजनीति': ('Right-Center', '#777', 'https://mediabiasfactcheck.com/zee-news/'),
+    'ABP News राजनीति': ('Center', '#666', 'https://mediabiasfactcheck.com/abp-news/'),
+    'Hindustan राजनीति': ('Center', '#666', 'https://mediabiasfactcheck.com/hindustan/'),
 }
 
 DEFAULT_SOURCES = ['BBC हिन्दी', 'NDTV हिन्दी', 'Aaj Tak', 'Hindustan', 'Dainik Bhaskar', 'DW हिन्दी']
@@ -42,6 +137,46 @@ SOURCES = [
     ('Amar Ujala', 'Center'),
     ('TV9 भारतवर्ष', 'Center'),
     ('Zee News', 'Right-Center'),
+    
+    # Category-specific sources
+    ('NDTV खेल', 'Left-Center'),
+    ('Aaj Tak खेल', 'Center'),
+    ('Zee News खेल', 'Right-Center'),
+    ('ABP News खेल', 'Center'),
+    ('Hindustan खेल', 'Center'),
+    ('Amar Ujala खेल', 'Center'),
+    ('NDTV बिजनेस', 'Left-Center'),
+    ('Zee Business', 'Right-Center'),
+    ('Aaj Tak बिजनेस', 'Center'),
+    ('ABP News बिजनेस', 'Center'),
+    ('Hindustan बिजनेस', 'Center'),
+    ('Amar Ujala बिजनेस', 'Center'),
+    ('NDTech Hindi', 'Center'),
+    ('Aaj Tak टेक', 'Center'),
+    ('Zee News टेक', 'Right-Center'),
+    ('Hindustan टेक', 'Center'),
+    ('BBC हिन्दी अंतरराष्ट्रीय', 'Left-Center'),
+    ('DW हिन्दी विश्व', 'Center'),
+    ('Aaj Tak विदेश', 'Center'),
+    ('Zee News विदेश', 'Right-Center'),
+    ('NDTV विदेश', 'Left-Center'),
+    ('ABP News विदेश', 'Center'),
+    ('NDTV विज्ञान', 'Left-Center'),
+    ('Zee News विज्ञान', 'Right-Center'),
+    ('Aaj Tak विज्ञान', 'Center'),
+    ('NDTV स्वास्थ्य', 'Left-Center'),
+    ('Zee News स्वास्थ्य', 'Right-Center'),
+    ('Aaj Tak स्वास्थ्य', 'Center'),
+    ('NDTV मनोरंजन', 'Left-Center'),
+    ('Zee News मनोरंजन', 'Right-Center'),
+    ('Aaj Tak मनोरंजन', 'Center'),
+    ('ABP News मनोरंजन', 'Center'),
+    ('BBC हिन्दी भारत', 'Left-Center'),
+    ('NDTV राजनीति', 'Left-Center'),
+    ('Aaj Tak राजनीति', 'Center'),
+    ('Zee News राजनीति', 'Right-Center'),
+    ('ABP News राजनीति', 'Center'),
+    ('Hindustan राजनीति', 'Center'),
 ]
 
 CATEGORY_KEYWORDS = {

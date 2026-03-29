@@ -14,6 +14,60 @@ FEEDS = [
     ('法国国际广播电台', 'https://www.rfi.fr/cn/rss'),
     ('端传媒', 'https://news.google.com/rss/search?q=site:theinitium.com&hl=zh-CN&gl=CN&ceid=CN:zh-Hans'),
     ('澎湃新闻', 'https://news.google.com/rss/search?q=site:thepaper.cn&hl=zh-CN&gl=CN&ceid=CN:zh-Hans'),
+    
+    # Category-specific feeds
+    # Sports
+    ('新浪体育', 'https://sports.sina.com.cn/rss/all.xml'),
+    ('腾讯体育', 'https://sports.qq.com/rss/allsports.xml'),
+    ('网易体育', 'https://sports.163.com/rss/'),
+    ('搜狐体育', 'https://sports.sohu.com/rss/'),
+    ('南华早报体育', 'https://www.scmp.com/rss/3/feed'),
+    ('联合早报体育', 'https://www.zaobao.com.sg/zht/sports/rss.xml'),
+    
+    # Business
+    ('新浪财经', 'https://finance.sina.com.cn/rss/roll.xml'),
+    ('腾讯财经', 'https://finance.qq.com/rss/qq_stock.xml'),
+    ('网易财经', 'https://money.163.com/rss/'),
+    ('财新', 'https://www.caixin.com/rss.xml'),
+    ('南华早报商业', 'https://www.scmp.com/rss/2/feed'),
+    ('联合早报财经', 'https://www.zaobao.com.sg/zht/finance/rss.xml'),
+    
+    # Technology
+    ('腾讯科技', 'https://tech.qq.com/rss/qq_tech.xml'),
+    ('新浪科技', 'https://tech.sina.com.cn/rss/roll.xml'),
+    ('网易科技', 'https://tech.163.com/rss/'),
+    ('搜狐科技', 'https://it.sohu.com/rss/'),
+    ('36氪', 'https://36kr.com/feed'),
+    ('虎嗅', 'https://www.huxiu.com/rss/0.xml'),
+    
+    # World News
+    ('BBC中文国际', 'https://feeds.bbci.co.uk/zhongwen/simp/rss.xml'),
+    ('DW中文国际', 'https://rss.dw.com/xml/rss-zh-all'),
+    ('端传媒国际', 'https://theinitium.com/rss/'),
+    ('联合早报国际', 'https://www.zaobao.com.sg/zht/world/rss.xml'),
+    
+    # Science
+    ('腾讯科技科学', 'https://tech.qq.com/rss/science.xml'),
+    ('新浪科技科学', 'https://tech.sina.com.cn/rss/science.xml'),
+    ('果壳', 'https://www.guokr.com/rss/'),
+    ('科学网', 'https://www.sciencenet.cn/xml/news.aspx'),
+    
+    # Health
+    ('腾讯健康', 'https://health.qq.com/rss/'),
+    ('新浪健康', 'https://health.sina.com.cn/rss/'),
+    ('39健康网', 'https://www.39.net/rss/'),
+    
+    # Entertainment
+    ('腾讯娱乐', 'https://ent.qq.com/rss/qq_ent.xml'),
+    ('新浪娱乐', 'https://ent.sina.com.cn/rss/'),
+    ('网易娱乐', 'https://ent.163.com/rss/'),
+    ('搜狐娱乐', 'https://yule.sohu.com/rss/'),
+    
+    # Politics
+    ('BBC中文政治', 'https://feeds.bbci.co.uk/zhongwen/trad/rss.xml'),
+    ('DW中文政治', 'https://rss.dw.com/xml/rss-zh-all'),
+    ('端传媒时政', 'https://theinitium.com/rss/'),
+    ('澎湃新闻政治', 'https://www.thepaper.cn/rss.jsp'),
 ]
 
 SOURCE_INFO = {
@@ -27,6 +81,45 @@ SOURCE_INFO = {
     '法国国际广播电台': ('Center', '#666', 'https://mediabiasfactcheck.com/rfi/'),
     '端传媒': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/the-initium/'),
     '澎湃新闻': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    
+    # Category-specific sources
+    '新浪体育': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    '腾讯体育': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    '网易体育': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    '搜狐体育': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    '南华早报体育': ('Center', '#666', 'https://mediabiasfactcheck.com/south-china-morning-post/'),
+    '联合早报体育': ('Center', '#666', 'https://mediabiasfactcheck.com/zaobao/'),
+    '新浪财经': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    '腾讯财经': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    '网易财经': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    '财新': ('Center', '#666', 'https://mediabiasfactcheck.com/caixin/'),
+    '南华早报商业': ('Center', '#666', 'https://mediabiasfactcheck.com/south-china-morning-post/'),
+    '联合早报财经': ('Center', '#666', 'https://mediabiasfactcheck.com/zaobao/'),
+    '腾讯科技': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    '新浪科技': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    '网易科技': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    '搜狐科技': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    '36氪': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    '虎嗅': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'BBC中文国际': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/bbc/'),
+    'DW中文国际': ('Center', '#666', 'https://mediabiasfactcheck.com/deutsche-welle/'),
+    '端传媒国际': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/the-initium/'),
+    '联合早报国际': ('Center', '#666', 'https://mediabiasfactcheck.com/zaobao/'),
+    '腾讯科技科学': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    '新浪科技科学': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    '果壳': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    '科学网': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    '腾讯健康': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    '新浪健康': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    '39健康网': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    '腾讯娱乐': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    '新浪娱乐': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    '网易娱乐': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    '搜狐娱乐': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
+    'BBC中文政治': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/bbc/'),
+    'DW中文政治': ('Center', '#666', 'https://mediabiasfactcheck.com/deutsche-welle/'),
+    '端传媒时政': ('Left-Center', '#888', 'https://mediabiasfactcheck.com/the-initium/'),
+    '澎湃新闻政治': ('Center', '#666', 'https://mediabiasfactcheck.com/'),
 }
 
 DEFAULT_SOURCES = ['新华社', '央视新闻', 'BBC中文', '南华早报', '联合早报', '澎湃新闻']
@@ -42,6 +135,45 @@ SOURCES = [
     ('端传媒', 'Left-Center'),
     ('DW中文', 'Center'),
     ('法国国际广播电台', 'Center'),
+    
+    # Category-specific sources
+    ('新浪体育', 'Center'),
+    ('腾讯体育', 'Center'),
+    ('网易体育', 'Center'),
+    ('搜狐体育', 'Center'),
+    ('南华早报体育', 'Center'),
+    ('联合早报体育', 'Center'),
+    ('新浪财经', 'Center'),
+    ('腾讯财经', 'Center'),
+    ('网易财经', 'Center'),
+    ('财新', 'Center'),
+    ('南华早报商业', 'Center'),
+    ('联合早报财经', 'Center'),
+    ('腾讯科技', 'Center'),
+    ('新浪科技', 'Center'),
+    ('网易科技', 'Center'),
+    ('搜狐科技', 'Center'),
+    ('36氪', 'Center'),
+    ('虎嗅', 'Center'),
+    ('BBC中文国际', 'Left-Center'),
+    ('DW中文国际', 'Center'),
+    ('端传媒国际', 'Left-Center'),
+    ('联合早报国际', 'Center'),
+    ('腾讯科技科学', 'Center'),
+    ('新浪科技科学', 'Center'),
+    ('果壳', 'Center'),
+    ('科学网', 'Center'),
+    ('腾讯健康', 'Center'),
+    ('新浪健康', 'Center'),
+    ('39健康网', 'Center'),
+    ('腾讯娱乐', 'Center'),
+    ('新浪娱乐', 'Center'),
+    ('网易娱乐', 'Center'),
+    ('搜狐娱乐', 'Center'),
+    ('BBC中文政治', 'Left-Center'),
+    ('DW中文政治', 'Center'),
+    ('端传媒时政', 'Left-Center'),
+    ('澎湃新闻政治', 'Center'),
 ]
 
 CATEGORY_KEYWORDS = {
