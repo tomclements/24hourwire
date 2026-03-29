@@ -1097,28 +1097,6 @@
     </div>
 
     <main>
-            <button class="scroll-btn left" onclick="scrollTabs('left')" aria-label="Scroll left">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-                </svg>
-            </button>
-            <div class="tabs-container">
-                <nav class="tabs">
-                    {% for cat_id, cat_data in grouped.items %}
-                        <a href="#{{ cat_id }}" class="tab {% if forloop.first %}active{% endif %}" onclick="showCategory('{{ cat_id }}'); return false;">
-                            {{ cat_data.name }}
-                            <span class="tab-count">{{ cat_data.stories|length }}</span>
-                        </a>
-                    {% endfor %}
-                </nav>
-            </div>
-            <button class="scroll-btn right" onclick="scrollTabs('right')" aria-label="Scroll right">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-                </svg>
-            </button>
-        </div>
-
         {% for cat_id, cat_data in grouped.items %}
         <section id="{{ cat_id }}" class="category-section" data-count="{{ cat_data.stories|length }}">
             <div class="category-header">
@@ -1279,13 +1257,14 @@
 
         // Share story
         function shareStory(title, url) {
+            const shareText = `${title} via @24HourWire`;
             if (navigator.share) {
                 navigator.share({
-                    title: title,
+                    title: shareText,
                     url: url
                 });
             } else {
-                navigator.clipboard.writeText(url);
+                navigator.clipboard.writeText(`${url} via @24HourWire`);
                 alert('Link copied to clipboard!');
             }
         }
