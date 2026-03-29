@@ -3,6 +3,7 @@ import urllib.request
 import ssl
 import re
 import logging
+import hashlib
 from datetime import datetime, timedelta
 from difflib import SequenceMatcher
 from django.core.management.base import BaseCommand
@@ -45,7 +46,7 @@ class Command(BaseCommand):
             req = urllib.request.Request(url, headers={
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
             })
-            with urllib.request.urlopen(req, context=ctx, timeout=20) as response:
+            with urllib.request.urlopen(req, context=ctx, timeout=15) as response:
                 return feedparser.parse(response.read())
         except Exception:
             try:
@@ -57,6 +58,14 @@ class Command(BaseCommand):
         """Calculate similarity ratio between two titles."""
         return SequenceMatcher(None, title1.lower(), title2.lower()).ratio()
 
+    def url_exists(self, url_hash):
+        """Check if URL already exists in database (memory-efficient)."""
+        return Story.objects.filter(url_hash=url_hash).exists()
+
+    def fingerprint_exists(self, source_name, fp):
+        """Check if fingerprint exists for source (memory-efficient)."""
+        return Story.objects.filter(source=source_name, title_fingerprint=fp).exists()
+
     def fetch_language(self, language):
         feeds = LANGUAGE_FEEDS.get(language, [])
         logger.info(f'Fetching {language} news from {len(feeds)} sources')
@@ -64,26 +73,16 @@ class Command(BaseCommand):
 
         cutoff = timezone.now() - timedelta(hours=24)
 
-        # Load existing hashes for this language — two queries instead of N
-        existing_url_hashes = set(
-            Story.objects.filter(language=language)
-            .values_list('url_hash', flat=True)
-        )
-        existing_source_fps = set(
-            Story.objects.filter(language=language, url_hash__gt='')
-            .values_list('source', 'title_fingerprint')
-        )
-
         total_new = 0
         total_dupes = 0
         url_dupes = 0
         title_dupes = 0
         fuzzy_dupes = 0
-        to_create = []
         
         # Track recent stories per source for fuzzy deduplication
-        # Key: source_name, Value: list of (title, timestamp) tuples
+        # Clear this periodically to save memory
         recent_source_stories = {}
+        processed_count = 0
 
         for source_name, feed_url in feeds:
             self.safe_write(f"  {source_name}...", ending=" ")
@@ -97,13 +96,14 @@ class Command(BaseCommand):
                 continue
 
             source_count = 0
-            for entry in feed.entries[:50]:
+            to_create = []  # Process in smaller batches
+            
+            for entry in feed.entries[:30]:  # Reduced from 50 to save memory
                 url = normalize_url(entry.get('link', ''))
-                import hashlib
                 url_hash = hashlib.sha256(url.encode()).hexdigest()
 
-                # Level 1: Skip if normalized URL already stored
-                if url_hash in existing_url_hashes:
+                # Level 1: Skip if normalized URL already stored (check DB directly)
+                if self.url_exists(url_hash):
                     url_dupes += 1
                     total_dupes += 1
                     continue
@@ -126,7 +126,7 @@ class Command(BaseCommand):
                 fp = title_fingerprint(title)
 
                 # Level 2: Skip if same source already has this title fingerprint
-                if (source_name, fp) in existing_source_fps:
+                if self.fingerprint_exists(source_name, fp):
                     title_dupes += 1
                     total_dupes += 1
                     continue
@@ -134,13 +134,12 @@ class Command(BaseCommand):
                 # Level 3: Fuzzy deduplication - skip if similar title from same source within last 30 minutes
                 is_fuzzy_dup = False
                 if source_name in recent_source_stories:
-                    for recent_title, recent_time in recent_source_stories[source_name]:
-                        time_diff = (pub_time - recent_time).total_seconds() / 60  # minutes
-                        if time_diff <= 30:  # Within 30 minutes
+                    for recent_title, recent_time in recent_source_stories[source_name][-10:]:  # Only check last 10
+                        time_diff = (pub_time - recent_time).total_seconds() / 60
+                        if time_diff <= 30:
                             similarity = self.title_similarity(title, recent_title)
-                            if similarity >= 0.75:  # 75% similar
+                            if similarity >= 0.75:
                                 is_fuzzy_dup = True
-                                logger.info(f'Fuzzy duplicate: {title[:50]}... vs {recent_title[:50]}... ({similarity:.2f})')
                                 break
                 
                 if is_fuzzy_dup:
@@ -148,8 +147,8 @@ class Command(BaseCommand):
                     total_dupes += 1
                     continue
 
-                rss_excerpt = entry.get('summary', '')[:800]
-
+                # Create excerpt
+                rss_excerpt = entry.get('summary', '')[:600]  # Reduced from 800
                 title_words = set(title.lower().split())
                 if rss_excerpt:
                     rss_words = set(rss_excerpt.lower().split())
@@ -169,23 +168,37 @@ class Command(BaseCommand):
                     category='world',
                     published=pub_time,
                 ))
-                existing_url_hashes.add(url_hash)
-                existing_source_fps.add((source_name, fp))
                 
-                # Track for fuzzy deduplication
+                # Track for fuzzy deduplication (limit size)
                 if source_name not in recent_source_stories:
                     recent_source_stories[source_name] = []
                 recent_source_stories[source_name].append((title, pub_time))
+                # Keep only last 20 entries per source to save memory
+                recent_source_stories[source_name] = recent_source_stories[source_name][-20:]
                 
                 total_new += 1
                 source_count += 1
+                processed_count += 1
+                
+                # Insert in smaller batches to free memory
+                if len(to_create) >= 50:
+                    Story.objects.bulk_create(to_create, ignore_conflicts=True)
+                    to_create = []
+                    
+                # Clear recent_source_stories periodically
+                if processed_count >= 500:
+                    recent_source_stories.clear()
+                    processed_count = 0
+                    import gc
+                    gc.collect()
+
+            # Insert remaining stories for this source
+            if to_create:
+                Story.objects.bulk_create(to_create, ignore_conflicts=True)
+                to_create = []
 
             logger.info(f'{source_name}: {source_count} stories')
             self.safe_write(f"OK ({source_count} new)")
-
-        # Bulk insert — single DB round-trip
-        if to_create:
-            Story.objects.bulk_create(to_create, ignore_conflicts=True)
 
         return total_new, total_dupes, url_dupes, title_dupes, fuzzy_dupes
 
@@ -217,11 +230,19 @@ class Command(BaseCommand):
             url_dupes += u_dupes
             title_dupes += t_dupes
             fuzzy_dupes += f_dupes
+            
+            # Force garbage collection between languages
+            import gc
+            gc.collect()
 
-        # Build story clusters for "Most Covered" tab
-        for lang in languages:
-            cluster_count = build_clusters(lang)
-            self.safe_write(f"Built {cluster_count} clusters for {lang}")
+        # Build story clusters for "Most Covered" tab (skip if too many stories)
+        if total_new < 1000:  # Only cluster if we didn't just add tons of stories
+            for lang in languages:
+                try:
+                    cluster_count = build_clusters(lang)
+                    self.safe_write(f"Built {cluster_count} clusters for {lang}")
+                except Exception as e:
+                    logger.error(f'Error building clusters for {lang}: {e}')
 
         logger.info(f'Fetch complete: {total_new} new, {total_dupes} dupes ({url_dupes} url, {title_dupes} title, {fuzzy_dupes} fuzzy)')
         self.safe_write(self.style.SUCCESS(
