@@ -57,6 +57,7 @@ class Story(models.Model):
     fetched_at = models.DateTimeField(auto_now_add=True)
     url_hash = models.CharField(max_length=64, db_index=True, default='')
     title_fingerprint = models.CharField(max_length=32, db_index=True, default='')
+    tweeted = models.BooleanField(default=False, db_index=True)
 
     class Meta:
         ordering = ['-published']

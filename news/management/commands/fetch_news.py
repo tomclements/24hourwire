@@ -4,6 +4,7 @@ import ssl
 import re
 import logging
 import hashlib
+import gc
 from datetime import datetime, timedelta
 from difflib import SequenceMatcher
 from django.core.management.base import BaseCommand
@@ -58,20 +59,34 @@ class Command(BaseCommand):
         """Calculate similarity ratio between two titles."""
         return SequenceMatcher(None, title1.lower(), title2.lower()).ratio()
 
-    def url_exists(self, url_hash):
-        """Check if URL already exists in database (memory-efficient)."""
-        return Story.objects.filter(url_hash=url_hash).exists()
-
-    def fingerprint_exists(self, source_name, fp):
-        """Check if fingerprint exists for source (memory-efficient)."""
-        return Story.objects.filter(source=source_name, title_fingerprint=fp).exists()
-
     def fetch_language(self, language):
         feeds = LANGUAGE_FEEDS.get(language, [])
         logger.info(f'Fetching {language} news from {len(feeds)} sources')
         self.safe_write(f"\nFetching {language} news...")
 
         cutoff = timezone.now() - timedelta(hours=24)
+
+        # OPTIMIZATION: Only load hashes for last 6 hours to save memory
+        # Stories older than 24h get deleted anyway, so we only need recent ones
+        recent_cutoff = timezone.now() - timedelta(hours=6)
+        
+        logger.info(f'Loading existing hashes for {language}...')
+        self.safe_write(f"  Loading existing hashes...", ending=" ")
+        
+        # Load URL hashes (only recent ones to save memory)
+        existing_url_hashes = set(
+            Story.objects.filter(language=language, published__gte=recent_cutoff)
+            .values_list('url_hash', flat=True)
+        )
+        
+        # Load source+fingerprint combos (only recent ones)
+        existing_source_fps = set(
+            Story.objects.filter(language=language, published__gte=recent_cutoff)
+            .values_list('source', 'title_fingerprint')
+        )
+        
+        self.safe_write(f"OK ({len(existing_url_hashes)} hashes, {len(existing_source_fps)} fingerprints)")
+        logger.info(f'Loaded {len(existing_url_hashes)} URL hashes, {len(existing_source_fps)} fingerprints')
 
         total_new = 0
         total_dupes = 0
@@ -80,9 +95,7 @@ class Command(BaseCommand):
         fuzzy_dupes = 0
         
         # Track recent stories per source for fuzzy deduplication
-        # Clear this periodically to save memory
         recent_source_stories = {}
-        processed_count = 0
 
         for source_name, feed_url in feeds:
             self.safe_write(f"  {source_name}...", ending=" ")
@@ -96,14 +109,14 @@ class Command(BaseCommand):
                 continue
 
             source_count = 0
-            to_create = []  # Process in smaller batches
+            to_create = []
             
-            for entry in feed.entries[:30]:  # Reduced from 50 to save memory
+            for entry in feed.entries[:25]:  # Reduced from 30 to save memory/processing
                 url = normalize_url(entry.get('link', ''))
                 url_hash = hashlib.sha256(url.encode()).hexdigest()
 
-                # Level 1: Skip if normalized URL already stored (check DB directly)
-                if self.url_exists(url_hash):
+                # Level 1: Skip if normalized URL already stored
+                if url_hash in existing_url_hashes:
                     url_dupes += 1
                     total_dupes += 1
                     continue
@@ -126,15 +139,15 @@ class Command(BaseCommand):
                 fp = title_fingerprint(title)
 
                 # Level 2: Skip if same source already has this title fingerprint
-                if self.fingerprint_exists(source_name, fp):
+                if (source_name, fp) in existing_source_fps:
                     title_dupes += 1
                     total_dupes += 1
                     continue
 
-                # Level 3: Fuzzy deduplication - skip if similar title from same source within last 30 minutes
+                # Level 3: Fuzzy deduplication
                 is_fuzzy_dup = False
                 if source_name in recent_source_stories:
-                    for recent_title, recent_time in recent_source_stories[source_name][-10:]:  # Only check last 10
+                    for recent_title, recent_time in recent_source_stories[source_name][-5:]:  # Only check last 5
                         time_diff = (pub_time - recent_time).total_seconds() / 60
                         if time_diff <= 30:
                             similarity = self.title_similarity(title, recent_title)
@@ -148,7 +161,7 @@ class Command(BaseCommand):
                     continue
 
                 # Create excerpt
-                rss_excerpt = entry.get('summary', '')[:600]  # Reduced from 800
+                rss_excerpt = entry.get('summary', '')[:500]  # Reduced from 800
                 title_words = set(title.lower().split())
                 if rss_excerpt:
                     rss_words = set(rss_excerpt.lower().split())
@@ -169,36 +182,35 @@ class Command(BaseCommand):
                     published=pub_time,
                 ))
                 
-                # Track for fuzzy deduplication (limit size)
+                # Track for fuzzy deduplication
                 if source_name not in recent_source_stories:
                     recent_source_stories[source_name] = []
                 recent_source_stories[source_name].append((title, pub_time))
-                # Keep only last 20 entries per source to save memory
-                recent_source_stories[source_name] = recent_source_stories[source_name][-20:]
+                recent_source_stories[source_name] = recent_source_stories[source_name][-10:]  # Keep only last 10
+                
+                # Add to existing sets to prevent duplicates within this run
+                existing_url_hashes.add(url_hash)
+                existing_source_fps.add((source_name, fp))
                 
                 total_new += 1
                 source_count += 1
-                processed_count += 1
                 
-                # Insert in smaller batches to free memory
-                if len(to_create) >= 50:
+                # Insert in batches
+                if len(to_create) >= 25:
                     Story.objects.bulk_create(to_create, ignore_conflicts=True)
                     to_create = []
-                    
-                # Clear recent_source_stories periodically
-                if processed_count >= 500:
-                    recent_source_stories.clear()
-                    processed_count = 0
-                    import gc
-                    gc.collect()
 
             # Insert remaining stories for this source
             if to_create:
                 Story.objects.bulk_create(to_create, ignore_conflicts=True)
-                to_create = []
 
             logger.info(f'{source_name}: {source_count} stories')
             self.safe_write(f"OK ({source_count} new)")
+            
+            # Force garbage collection after each source to prevent memory buildup
+            if len(recent_source_stories) > 100:
+                recent_source_stories.clear()
+                gc.collect()
 
         return total_new, total_dupes, url_dupes, title_dupes, fuzzy_dupes
 
@@ -219,7 +231,7 @@ class Command(BaseCommand):
         fuzzy_dupes = 0
 
         if language == 'all':
-            languages = LANGUAGE_FEEDS.keys()
+            languages = list(LANGUAGE_FEEDS.keys())
         else:
             languages = [language]
 
@@ -232,11 +244,10 @@ class Command(BaseCommand):
             fuzzy_dupes += f_dupes
             
             # Force garbage collection between languages
-            import gc
             gc.collect()
 
-        # Build story clusters for "Most Covered" tab (skip if too many stories)
-        if total_new < 1000:  # Only cluster if we didn't just add tons of stories
+        # Build story clusters for "Most Covered" tab
+        if total_new < 1000:
             for lang in languages:
                 try:
                     cluster_count = build_clusters(lang)
