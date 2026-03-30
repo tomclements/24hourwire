@@ -1267,14 +1267,22 @@
 
         // Share story
         function shareStory(title, url) {
-            const shareText = `${title} via @24HourWire`;
+            // Construct share text with title and via attribution
+            const shareText = `${title}\n\nvia @24HourWire`;
+            
             if (navigator.share) {
+                // Use text field which is more widely supported than title
                 navigator.share({
-                    title: shareText,
+                    title: '24HourWire',
+                    text: shareText,
                     url: url
+                }).catch(err => {
+                    // Fallback if share fails
+                    console.log('Share failed, falling back to clipboard');
                 });
             } else {
-                navigator.clipboard.writeText(`${url} via @24HourWire`);
+                // Fallback: copy to clipboard
+                navigator.clipboard.writeText(`${title}\n${url}\n\nvia @24HourWire`);
                 alert('Link copied to clipboard!');
             }
         }
