@@ -7,7 +7,7 @@ services:
   - type: web
     name: 24hourwire
     runtime: python
-    plan: free
+    plan: starter
     buildCommand: |
       chmod +x build_validation.sh &&
       ./build_validation.sh &&
