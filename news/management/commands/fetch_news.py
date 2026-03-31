@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from difflib import SequenceMatcher
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from news.models import Story, normalize_url, title_fingerprint, build_clusters
+from news.models import Story, normalize_url, title_fingerprint
 from news.sources_config import LANGUAGE_FEEDS, SUPPORTED_LANGUAGES
 
 logger = logging.getLogger('news.fetch')
@@ -245,20 +245,6 @@ class Command(BaseCommand):
             
             # Force garbage collection between languages
             gc.collect()
-
-        # Build story clusters for "Most Covered" tab
-        # Only build if not too many stories to prevent memory issues
-        if total_new < 2000:
-            for lang in languages:
-                try:
-                    cluster_count = build_clusters(lang, max_stories=500)
-                    self.safe_write(f"Built {cluster_count} clusters for {lang}")
-                except Exception as e:
-                    logger.error(f'Error building clusters for {lang}: {e}')
-        else:
-            self.safe_write(self.style.WARNING(
-                f"Skipping cluster build: {total_new} new stories (too many for memory)"
-            ))
 
         logger.info(f'Fetch complete: {total_new} new, {total_dupes} dupes ({url_dupes} url, {title_dupes} title, {fuzzy_dupes} fuzzy)')
         self.safe_write(self.style.SUCCESS(

@@ -49,6 +49,25 @@ services:
           name: 24hourwire
           envVarKey: SECRET_KEY
 
+  # Cron job for building clusters (separate from fetching)
+  - type: cron
+    name: 24hourwire-clusters
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: python manage.py build_clusters
+    schedule: "0 * * * *"  # Every hour at minute 0
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: 24hourwire-db
+          property: connectionString
+      - key: SECRET_KEY
+        fromService:
+          type: web
+          name: 24hourwire
+          envVarKey: SECRET_KEY
+
 databases:
   - name: 24hourwire-db
     plan: free
