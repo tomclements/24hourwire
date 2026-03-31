@@ -370,8 +370,8 @@ CATEGORY_KEYWORDS = {
         'alabama', 'south carolina', 'tennessee', 'kentucky', 'indiana', 'wisconsin',
         'iowa', 'nebraska', 'kansas', 'oklahoma', 'missouri', 'arkansas', 'louisiana',
         'mississippi', 'alaska', 'hawaii', 'fbi', 'cia', 'pentagon', 'capitol hill',
-        'american', 'americans', 'u.s.', 'united states', 'america', 'midwest', 'south',
-        'northeast', 'west coast', 'east coast', 'gulf', 'great lakes',
+        'american', 'americans', 'u.s.', 'united states', 'america', 'midwest',
+        'northeast', 'west coast', 'east coast', 'gulf', 'great lakes', 'south dakota',
     ],
     'world': [
         'ukraine', 'russia', 'china', 'iran', 'israel', 'gaza', 'middle east', 'europe',
