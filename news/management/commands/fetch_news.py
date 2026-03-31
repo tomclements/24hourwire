@@ -247,13 +247,18 @@ class Command(BaseCommand):
             gc.collect()
 
         # Build story clusters for "Most Covered" tab
-        # Always build clusters, but limit to recent stories for performance
-        for lang in languages:
-            try:
-                cluster_count = build_clusters(lang)
-                self.safe_write(f"Built {cluster_count} clusters for {lang}")
-            except Exception as e:
-                logger.error(f'Error building clusters for {lang}: {e}')
+        # Only build if not too many stories to prevent memory issues
+        if total_new < 2000:
+            for lang in languages:
+                try:
+                    cluster_count = build_clusters(lang, max_stories=500)
+                    self.safe_write(f"Built {cluster_count} clusters for {lang}")
+                except Exception as e:
+                    logger.error(f'Error building clusters for {lang}: {e}')
+        else:
+            self.safe_write(self.style.WARNING(
+                f"Skipping cluster build: {total_new} new stories (too many for memory)"
+            ))
 
         logger.info(f'Fetch complete: {total_new} new, {total_dupes} dupes ({url_dupes} url, {title_dupes} title, {fuzzy_dupes} fuzzy)')
         self.safe_write(self.style.SUCCESS(

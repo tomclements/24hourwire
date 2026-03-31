@@ -126,15 +126,24 @@ class StoryCluster(models.Model):
         return f"{self.source_count} sources: {self.representative_story.title[:50]}"
 
 
-def build_clusters(language):
-    """Build StoryClusters for a language by grouping stories with similar titles."""
+def build_clusters(language, max_stories=500):
+    """Build StoryClusters for a language by grouping stories with similar titles.
+    
+    Args:
+        language: Language code
+        max_stories: Maximum stories to process (to prevent memory issues)
+    """
     from django.utils import timezone
     from datetime import timedelta
     from collections import OrderedDict
     from news.sources_config import LANGUAGE_STOP_WORDS
 
     cutoff = timezone.now() - timedelta(hours=24)
-    stories = list(Story.objects.filter(published__gte=cutoff, language=language))
+    # Limit stories to prevent memory issues
+    stories = list(Story.objects.filter(
+        published__gte=cutoff, 
+        language=language
+    ).order_by('-published')[:max_stories])
 
     stop_words = LANGUAGE_STOP_WORDS.get(language, LANGUAGE_STOP_WORDS['en'])
 
