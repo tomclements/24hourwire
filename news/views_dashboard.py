@@ -22,6 +22,17 @@ def dashboard_view(request):
 
     # Summary
     total_feeds = sum(len(feeds) for feeds in LANGUAGE_FEEDS.values())
+    
+    # Get latest story info
+    last_import = Story.objects.order_by('-fetched_at').first()
+    newest_story = Story.objects.order_by('-published').first()
+    
+    # Time since last import
+    if last_import:
+        time_since_import = timezone.now() - last_import.fetched_at
+        hours_since_import = time_since_import.total_seconds() / 3600
+    else:
+        hours_since_import = None
 
     return render(request, 'dashboard.html', {
         'story_counts': story_counts,
@@ -29,4 +40,7 @@ def dashboard_view(request):
         'total_clusters': StoryCluster.objects.count(),
         'total_feeds': total_feeds,
         'now': timezone.now(),
+        'last_import': last_import,
+        'newest_story': newest_story,
+        'hours_since_import': hours_since_import,
     })

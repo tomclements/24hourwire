@@ -14,6 +14,8 @@
         .card .label { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
         .card .value { font-size: 2rem; font-weight: 700; }
         .card .value.blue { color: #1565c0; }
+        .card .value.green { color: #16a34a; }
+        .card .value.red { color: #dc2626; }
         table { width: 100%; background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-collapse: collapse; margin-bottom: 25px; }
         th { background: #f0f0f0; text-align: left; padding: 10px 15px; font-size: 0.8rem; text-transform: uppercase; color: #666; border-bottom: 2px solid #ddd; }
         td { padding: 10px 15px; border-bottom: 1px solid #f0f0f0; font-size: 0.9rem; }
@@ -51,6 +53,36 @@
         <div class="card">
             <div class="label">Total Feeds</div>
             <div class="value blue">{{ total_feeds }}</div>
+        </div>
+        <div class="card">
+            <div class="label">Last Import</div>
+            <div class="value {% if hours_since_import > 2 %}red{% else %}green{% endif %}">
+                {% if last_import %}
+                    {{ last_import.fetched_at|timesince }} ago
+                {% else %}
+                    Never
+                {% endif %}
+            </div>
+            {% if last_import %}
+            <div style="font-size: 0.75rem; color: #666; margin-top: 5px;">
+                {{ last_import.fetched_at|date:"M d, H:i" }}
+            </div>
+            {% endif %}
+        </div>
+        <div class="card">
+            <div class="label">Newest Story</div>
+            <div class="value blue">
+                {% if newest_story %}
+                    {{ newest_story.published|timesince }} ago
+                {% else %}
+                    None
+                {% endif %}
+            </div>
+            {% if newest_story %}
+            <div style="font-size: 0.75rem; color: #666; margin-top: 5px;">
+                {{ newest_story.published|date:"M d, H:i" }}
+            </div>
+            {% endif %}
         </div>
     </div>
 
