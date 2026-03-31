@@ -30,6 +30,7 @@
 <body>
     <div class="nav">
         <a href="/">Home</a>
+        <a href="https://dashboard.render.com/web/srv-cvpun5l6l47c73a8d6i0/logs" target="_blank">View Logs ↗</a>
         {% if user.is_authenticated %}
             <span style="color: #666; margin-left: 15px;">Hello, {{ user.username }}</span>
             <a href="/logout/" style="margin-left: 15px;">Logout</a>
@@ -84,6 +85,53 @@
             </div>
             {% endif %}
         </div>
+    </div>
+
+    <div class="section">
+        <h2>Cluster Diagnostics</h2>
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+            <div class="card">
+                <div class="label">Total Clusters</div>
+                <div class="value blue">{{ total_clusters }}</div>
+            </div>
+            <div class="card">
+                <div class="label">Clusters Built (24h)</div>
+                <div class="value {% if recent_clusters == 0 %}red{% else %}green{% endif %}">{{ recent_clusters }}</div>
+            </div>
+            <div class="card">
+                <div class="label">Last Cluster Build</div>
+                <div class="value {% if not latest_cluster or hours_since_import > 2 %}red{% else %}blue{% endif %}">
+                    {% if latest_cluster %}
+                        {{ latest_cluster.created_at|timesince }} ago
+                    {% else %}
+                        Never
+                    {% endif %}
+                </div>
+                {% if latest_cluster %}
+                <div style="font-size: 0.75rem; color: #666; margin-top: 5px;">
+                    {{ latest_cluster.created_at|date:"M d, H:i" }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% if user.is_staff %}
+        <form method="post" style="margin-top: 15px;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="rebuild_clusters">
+            <button type="submit" style="padding: 10px 20px; background: #0066cc; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+                Rebuild Clusters Now
+            </button>
+        </form>
+        {% endif %}
+        {% if messages %}
+        <div style="margin-top: 15px;">
+            {% for message in messages %}
+            <div style="padding: 10px; background: {% if message.tags == 'success' %}#d4edda{% else %}#f8d7da{% endif %}; border-radius: 4px; margin-bottom: 10px;">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
     </div>
 
     <div class="section">

@@ -1,13 +1,27 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.utils import timezone
+from django.contrib import messages
 from datetime import timedelta
-from news.models import Story, StoryCluster
+from news.models import Story, StoryCluster, build_clusters
 from news.sources_config import LANGUAGE_FEEDS, LANGUAGE_NAMES, SOURCES
 
 
 def dashboard_view(request):
     cutoff = timezone.now() - timedelta(hours=24)
 
+    # Handle rebuild clusters request
+    if request.method == 'POST' and request.POST.get('action') == 'rebuild_clusters':
+        if request.user.is_staff:
+            total_clusters = 0
+            for lang in LANGUAGE_FEEDS.keys():
+                try:
+                    count = build_clusters(lang)
+                    total_clusters += count
+                except Exception as e:
+                    messages.error(request, f'Error building clusters for {lang}: {e}')
+            messages.success(request, f'Rebuilt {total_clusters} clusters')
+            return redirect('/dashboard/')
+    
     # Story counts per language
     story_counts = {}
     for lang in sorted(LANGUAGE_FEEDS.keys()):
@@ -33,6 +47,12 @@ def dashboard_view(request):
         hours_since_import = time_since_import.total_seconds() / 3600
     else:
         hours_since_import = None
+    
+    # Get latest cluster info
+    latest_cluster = StoryCluster.objects.order_by('-created_at').first()
+    recent_clusters = StoryCluster.objects.filter(
+        created_at__gte=timezone.now() - timedelta(hours=24)
+    ).count()
 
     return render(request, 'dashboard.html', {
         'story_counts': story_counts,
@@ -43,4 +63,7 @@ def dashboard_view(request):
         'last_import': last_import,
         'newest_story': newest_story,
         'hours_since_import': hours_since_import,
+        'latest_cluster': latest_cluster,
+        'recent_clusters': recent_clusters,
+        'user': request.user,
     })
