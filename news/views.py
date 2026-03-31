@@ -107,7 +107,27 @@ def home(request):
     elif selected_sources_param == 'clear' or selected_sources_param == '':
         selected_sources = []
     elif selected_sources_param:
-        selected_sources = selected_sources_param.split(',')
+        # Check if the param contains bias categories (left, center, right, etc.)
+        bias_categories = ['left', 'left-center', 'center', 'right-center', 'right']
+        requested_values = [v.strip().lower() for v in selected_sources_param.split(',')]
+        
+        # If any requested value is a bias category, convert to source names
+        if any(v in bias_categories for v in requested_values):
+            selected_sources = []
+            for val in requested_values:
+                if val == 'left':
+                    selected_sources.extend([s[0] for s in lang_sources if s[1] == 'Left'])
+                elif val == 'left-center':
+                    selected_sources.extend([s[0] for s in lang_sources if s[1] == 'Left-Center'])
+                elif val == 'center':
+                    selected_sources.extend([s[0] for s in lang_sources if s[1] == 'Center'])
+                elif val == 'right-center':
+                    selected_sources.extend([s[0] for s in lang_sources if s[1] == 'Right-Center'])
+                elif val == 'right':
+                    selected_sources.extend([s[0] for s in lang_sources if s[1] == 'Right'])
+        else:
+            # Treat as source names
+            selected_sources = requested_values
     else:
         selected_sources = lang_default_sources
     
