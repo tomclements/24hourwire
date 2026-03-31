@@ -495,6 +495,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
             gap: 20px;
+            max-width: 100%;
         }
 
         @media (max-width: 768px) {
@@ -1066,7 +1067,6 @@
                     <button type="button" class="bias-pill center" data-bias="center" onclick="toggleBiasFilter('center')">Center</button>
                     <button type="button" class="bias-pill right-center" data-bias="right-center" onclick="toggleBiasFilter('right-center')">Right-Center</button>
                     <button type="button" class="bias-pill right" data-bias="right" onclick="toggleBiasFilter('right')">Right</button>
-                    <button type="button" id="apply-bias-filter" class="bias-pill apply-btn" style="display: none; background: var(--primary); color: white;" onclick="applyBiasFilter()">Apply</button>
                 </div>
                 
                 <div class="header-actions">
@@ -1296,50 +1296,79 @@
             }
         }
 
-        // Multi-select bias filter
+        // Multi-select bias filter - reloads immediately on click
         let selectedBiases = new Set(['all']);
         
         function toggleBiasFilter(bias) {
             const btn = document.querySelector(`.bias-pill[data-bias="${bias}"]`);
-            const applyBtn = document.getElementById('apply-bias-filter');
             
             if (bias === 'all') {
-                // Selecting "All" clears other selections
-                selectedBiases.clear();
-                selectedBiases.add('all');
-                document.querySelectorAll('.bias-pill').forEach(pill => {
-                    pill.classList.remove('active');
-                });
-                btn.classList.add('active');
-            } else {
-                // Remove "All" if selecting specific bias
-                selectedBiases.delete('all');
-                document.querySelector('.bias-pill[data-bias="all"]').classList.remove('active');
-                
-                // Toggle this bias
-                if (selectedBiases.has(bias)) {
-                    selectedBiases.delete(bias);
-                    btn.classList.remove('active');
-                } else {
-                    selectedBiases.add(bias);
-                    btn.classList.add('active');
-                }
-                
-                // If nothing selected, default to "All"
-                if (selectedBiases.size === 0) {
-                    selectedBiases.add('all');
-                    document.querySelector('.bias-pill[data-bias="all"]').classList.add('active');
-                }
+                // Selecting "All" clears other selections and reloads immediately
+                window.location.href = '?sources=all';
+                return;
             }
             
-            // Show Apply button
-            applyBtn.style.display = 'inline-flex';
+            // For specific biases, toggle and reload
+            selectedBiases.delete('all');
             
-            // Update label
-            updateFilterLabel();
+            // Toggle this bias
+            if (selectedBiases.has(bias)) {
+                selectedBiases.delete(bias);
+            } else {
+                selectedBiases.add(bias);
+            }
+            
+            // If nothing selected, go to "All"
+            if (selectedBiases.size === 0) {
+                window.location.href = '?sources=all';
+                return;
+            }
+            
+            // Update visual feedback immediately
+            updateBiasButtons();
+            
+            // Reload with selected biases
+            const biases = Array.from(selectedBiases).join(',');
+            window.location.href = `?sources=${biases}`;
         }
         
-        function updateFilterLabel() {
+        function updateBiasButtons() {
+            // Update visual state of all buttons
+            document.querySelectorAll('.bias-pill').forEach(pill => {
+                const bias = pill.getAttribute('data-bias');
+                if (bias === 'all') {
+                    if (selectedBiases.has('all')) {
+                        pill.classList.add('active');
+                    } else {
+                        pill.classList.remove('active');
+                    }
+                } else {
+                    if (selectedBiases.has(bias)) {
+                        pill.classList.add('active');
+                    } else {
+                        pill.classList.remove('active');
+                    }
+                }
+            });
+        }
+        
+        // Initialize bias filters from URL
+        function initBiasFilters() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sources = urlParams.get('sources');
+            
+            if (sources && sources !== 'all') {
+                selectedBiases.clear();
+                const biases = sources.split(',');
+                biases.forEach(bias => {
+                    selectedBiases.add(bias.trim());
+                });
+            }
+            
+            // Update visual state
+            updateBiasButtons();
+            
+            // Update label
             const label = document.getElementById('active-filters');
             if (selectedBiases.has('all')) {
                 label.textContent = 'All Sources';
@@ -1355,39 +1384,6 @@
                     return map[b] || b;
                 });
                 label.textContent = biasNames.join(', ');
-            }
-        }
-        
-        function applyBiasFilter() {
-            const applyBtn = document.getElementById('apply-bias-filter');
-            applyBtn.textContent = 'Loading...';
-            
-            if (selectedBiases.has('all')) {
-                window.location.href = '?sources=all';
-            } else {
-                const biases = Array.from(selectedBiases).join(',');
-                window.location.href = `?sources=${biases}`;
-            }
-        }
-        
-        // Initialize bias filters from URL
-        function initBiasFilters() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const sources = urlParams.get('sources');
-            
-            if (sources && sources !== 'all') {
-                selectedBiases.clear();
-                const biases = sources.split(',');
-                biases.forEach(bias => {
-                    selectedBiases.add(bias.trim());
-                    const btn = document.querySelector(`.bias-pill[data-bias="${bias.trim()}"]`);
-                    if (btn) btn.classList.add('active');
-                });
-                document.querySelector('.bias-pill[data-bias="all"]').classList.remove('active');
-                updateFilterLabel();
-            } else {
-                // Default to "All"
-                document.querySelector('.bias-pill[data-bias="all"]').classList.add('active');
             }
         }
         
