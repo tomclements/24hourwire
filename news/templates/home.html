@@ -12,6 +12,8 @@
     <meta property="og:url" content="https://24hourwire.com">
     <link rel="canonical" href="https://24hourwire.com">
     <link rel="icon" type="image/jpeg" href="{% static 'news/images/logo.jpg' %}">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1046,48 +1048,6 @@
             text-decoration: underline;
         }
         
-        /* Stories scroll wrapper for mobile */
-        .stories-scroll-wrapper {
-            position: relative;
-            width: 100%;
-        }
-
-        .stories-scroll-btn {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 40px;
-            height: 40px;
-            background: var(--bg-primary);
-            border: 1px solid var(--border);
-            border-radius: 50%;
-            cursor: pointer;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-            box-shadow: var(--shadow-md);
-            transition: all 0.2s;
-        }
-
-        .stories-scroll-btn:hover {
-            background: var(--bg-secondary);
-        }
-
-        .stories-scroll-btn.left {
-            left: -20px;
-        }
-
-        .stories-scroll-btn.right {
-            right: -20px;
-        }
-
-        .stories-scroll-btn svg {
-            width: 24px;
-            height: 24px;
-            fill: var(--text-primary);
-        }
-
         /* Mobile-specific fixes */
         @media (max-width: 768px) {
             body {
@@ -1118,50 +1078,31 @@
                 width: 100%;
                 box-sizing: border-box;
             }
-
-            /* Horizontal scrolling stories on mobile */
-            .stories-scroll-wrapper {
-                position: relative;
-                padding: 0 8px;
-            }
-
-            .stories-scroll-btn {
-                display: flex;
-            }
             
             .stories-grid {
-                display: flex;
-                flex-wrap: nowrap;
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+                display: grid;
+                grid-template-columns: 1fr;
                 gap: 12px;
-                overflow-x: auto;
-                scroll-behavior: smooth;
-                scrollbar-width: none; /* Firefox */
-                -ms-overflow-style: none; /* IE 10+ */
-                padding: 4px 0;
-                -webkit-overflow-scrolling: touch;
-            }
-
-            .stories-grid::-webkit-scrollbar {
-                display: none; /* Chrome/Safari/Opera */
             }
             
             .story-card {
-                flex: 0 0 85vw;
-                width: 85vw;
-                min-width: 280px;
-                max-width: 350px;
+                width: 100%;
+                max-width: 100%;
                 box-sizing: border-box;
-                scroll-snap-align: start;
             }
-
-            .load-more {
-                display: none !important;
+            
+            .header-controls-row {
+                flex-direction: column;
+                align-items: stretch;
             }
-        }
-
-        @media (min-width: 769px) {
-            .stories-scroll-btn {
-                display: none !important;
+            
+            .bias-filters {
+                max-width: 100vw;
+                overflow-x: auto;
+                padding-bottom: 8px;
             }
         }
     </style>
@@ -1243,14 +1184,8 @@
             </div>
             
             {% if cat_data.stories %}
-                <div class="stories-scroll-wrapper">
-                    <button class="stories-scroll-btn left" onclick="scrollStories('{{ cat_id }}', 'left')" aria-label="Scroll left">
-                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-                        </svg>
-                    </button>
-                    <div class="stories-grid" id="stories-{{ cat_id }}">
-                        {% for story in cat_data.stories %}
+                <div class="stories-grid">
+                    {% for story in cat_data.stories %}
                     <article class="story-card" data-title="{{ story.title|lower }}" data-source="{{ story.source|lower }}" itemscope itemtype="https://schema.org/NewsArticle">
                         <div class="story-header">
                             <a href="{{ story.url }}" target="_blank" class="story-title" itemprop="headline">{{ story.title }}</a>
@@ -1284,12 +1219,6 @@
                         </div>
                     </article>
                     {% endfor %}
-                    </div>
-                    <button class="stories-scroll-btn right" onclick="scrollStories('{{ cat_id }}', 'right')" aria-label="Scroll right">
-                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-                        </svg>
-                    </button>
                 </div>
                 
                 {% if cat_data.stories|length > 20 %}
@@ -1374,21 +1303,6 @@
         function scrollTabs(direction) {
             const container = document.querySelector('.tabs-container');
             const scrollAmount = 300;
-            if (direction === 'left') {
-                container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-            } else {
-                container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-            }
-        }
-
-        // Scroll stories horizontally on mobile
-        function scrollStories(catId, direction) {
-            const container = document.getElementById('stories-' + catId);
-            if (!container) return;
-            
-            const cardWidth = container.querySelector('.story-card')?.offsetWidth || 300;
-            const scrollAmount = cardWidth + 12; // card width + gap
-            
             if (direction === 'left') {
                 container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
             } else {
