@@ -54,6 +54,7 @@ services:
     name: 24hourwire-clusters
     runtime: python
     plan: starter
+    region: ohio
     buildCommand: pip install -r requirements.txt
     startCommand: python manage.py build_clusters
     schedule: "0 * * * *"  # Every hour at minute 0
