@@ -408,7 +408,7 @@ CATEGORY_KEYWORDS = {
 # Low weight (1): General terms
 CATEGORY_KEYWORDS_WEIGHTED = {
     'politics': {
-        'high': ['supreme court', 'white house', 'congress', 'parliament', 'prime minister', 'kremlin'],
+        'high': ['supreme court', 'white house', 'congress', 'parliament', 'prime minister', 'kremlin', 'executive order'],
         'medium': ['election', 'senator', 'president', 'legislation', 'vote', 'campaign', 'senate'],
         'low': ['policy', 'political', 'government', 'ruling', 'convention'],
     },
@@ -418,9 +418,9 @@ CATEGORY_KEYWORDS_WEIGHTED = {
         'low': ['market', 'business', 'corporate', 'trade', 'economic'],
     },
     'technology': {
-        'high': ['artificial intelligence', 'cybersecurity', 'cyberattack', 'data breach', 'semiconductor', 'quantum computing'],
-        'medium': ['ai', 'software', 'chip', 'cloud computing', 'machine learning', 'blockchain', 'cryptocurrency'],
-        'low': ['tech', 'digital', 'app', 'software', 'online'],
+        'high': ['artificial intelligence', 'cybersecurity', 'cyberattack', 'data breach', 'semiconductor', 'quantum computing', 'openai', 'gpt', 'tesla', 'augmented reality'],
+        'medium': ['ai', 'software', 'chip', 'cloud computing', 'machine learning', 'blockchain', 'cryptocurrency', 'self-driving', 'virtual reality', 'computer', 'network'],
+        'low': ['tech', 'digital', 'app', 'software', 'online', 'model'],
     },
     'science': {
         'high': ['study finds', 'researchers say', 'peer-reviewed', 'breakthrough', 'published in', 'nasa', 'spacex'],
@@ -448,8 +448,8 @@ CATEGORY_KEYWORDS_WEIGHTED = {
         'low': ['international', 'global', 'foreign', 'border', 'crisis'],
     },
     'entertainment': {
-        'high': ['oscar', 'grammy', 'emmy', 'netflix', 'hollywood', 'box office'],
-        'medium': ['movie', 'film', 'actor', 'celebrity', 'album', 'concert', 'premiere'],
+        'high': ['oscar', 'grammy', 'emmy', 'netflix', 'hollywood', 'box office', 'taylor swift'],
+        'medium': ['movie', 'film', 'actor', 'celebrity', 'album', 'concert', 'premiere', 'tour'],
         'low': ['music', 'show', 'star', 'award', 'performance'],
     },
 }
@@ -457,10 +457,13 @@ CATEGORY_KEYWORDS_WEIGHTED = {
 # Exclusion rules - prevent false positives
 EXCLUSION_RULES = {
     'health': {
-        'virus': ['computer virus', 'software virus', 'malware', 'cyber virus'],
+        'virus': ['computer virus', 'software virus', 'malware', 'cyber virus', 'computer networks'],
     },
     'politics': {
         'campaign': ['marketing campaign', 'ad campaign', 'sales campaign'],
+    },
+    'world': {
+        'world': ['world tour'],
     },
 }
 

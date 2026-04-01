@@ -5,6 +5,7 @@ This module can be imported in cron jobs and other contexts without
 requiring Django to be fully configured.
 """
 
+import re
 from news.languages import CATEGORY_KEYWORDS_WEIGHTED, EXCLUSION_RULES
 
 
@@ -15,6 +16,30 @@ def check_exclusion(title_lower, category, keyword):
             if exclusion_phrase in title_lower:
                 return True
     return False
+
+
+def keyword_in_title(keyword, title_lower):
+    """Check if keyword appears as a whole word in title.
+    
+    Uses word boundaries to prevent false matches:
+    - 'cia' won't match 'commercial'
+    - 'ai' won't match 'raises'
+    - 'fed' won't match 'nfl' (wait, that would need to be 'nfl' matching 'fed' inside it)
+    
+    Handles multi-word keywords like 'white house' and 'stock market'.
+    """
+    # Escape special regex characters in keyword
+    escaped_keyword = re.escape(keyword)
+    # Use word boundaries for single words, but for multi-word phrases
+    # we check for the phrase surrounded by word boundaries or string boundaries
+    if ' ' in keyword:
+        # Multi-word phrase - check it appears as-is
+        pattern = r'(?:^|[^a-z])' + escaped_keyword + r'(?:[^a-z]|$)'
+    else:
+        # Single word - use word boundaries
+        pattern = r'\b' + escaped_keyword + r'\b'
+    
+    return re.search(pattern, title_lower) is not None
 
 
 def categorize_story(title, language='en'):
@@ -33,15 +58,15 @@ def categorize_story(title, language='en'):
         score = 0
         # High weight keywords (3 points)
         for keyword in weights.get('high', []):
-            if keyword in title_lower and not check_exclusion(title_lower, category, keyword):
+            if keyword_in_title(keyword, title_lower) and not check_exclusion(title_lower, category, keyword):
                 score += 3
         # Medium weight keywords (2 points)
         for keyword in weights.get('medium', []):
-            if keyword in title_lower and not check_exclusion(title_lower, category, keyword):
+            if keyword_in_title(keyword, title_lower) and not check_exclusion(title_lower, category, keyword):
                 score += 2
         # Low weight keywords (1 point)
         for keyword in weights.get('low', []):
-            if keyword in title_lower and not check_exclusion(title_lower, category, keyword):
+            if keyword_in_title(keyword, title_lower) and not check_exclusion(title_lower, category, keyword):
                 score += 1
         
         if score > 0:
@@ -68,15 +93,15 @@ def get_story_categories(title, language='en'):
         score = 0
         # High weight keywords (3 points)
         for keyword in weights.get('high', []):
-            if keyword in title_lower and not check_exclusion(title_lower, category, keyword):
+            if keyword_in_title(keyword, title_lower) and not check_exclusion(title_lower, category, keyword):
                 score += 3
         # Medium weight keywords (2 points)
         for keyword in weights.get('medium', []):
-            if keyword in title_lower and not check_exclusion(title_lower, category, keyword):
+            if keyword_in_title(keyword, title_lower) and not check_exclusion(title_lower, category, keyword):
                 score += 2
         # Low weight keywords (1 point)
         for keyword in weights.get('low', []):
-            if keyword in title_lower and not check_exclusion(title_lower, category, keyword):
+            if keyword_in_title(keyword, title_lower) and not check_exclusion(title_lower, category, keyword):
                 score += 1
         
         if score > 0:
