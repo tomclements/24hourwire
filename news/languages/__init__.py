@@ -40,3 +40,9 @@ LANGUAGE_NAMES = {code: mod.NAME for code, mod in LANGUAGE_MODULES.items()}
 PAYWALLED_SOURCES = set()
 for mod in LANGUAGE_MODULES.values():
     PAYWALLED_SOURCES |= mod.PAYWALLED_SOURCES
+
+# Weighted keywords (English only for now)
+CATEGORY_KEYWORDS_WEIGHTED = getattr(en, 'CATEGORY_KEYWORDS_WEIGHTED', en.CATEGORY_KEYWORDS)
+
+# Exclusion rules (English only for now)
+EXCLUSION_RULES = getattr(en, 'EXCLUSION_RULES', {})

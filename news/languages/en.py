@@ -402,6 +402,68 @@ CATEGORY_KEYWORDS = {
     ],
 }
 
+# Weighted scoring system for better categorization
+# High weight (3): Strong, specific signals
+# Medium weight (2): Good indicators
+# Low weight (1): General terms
+CATEGORY_KEYWORDS_WEIGHTED = {
+    'politics': {
+        'high': ['supreme court', 'white house', 'congress', 'parliament', 'prime minister', 'kremlin'],
+        'medium': ['election', 'senator', 'president', 'legislation', 'vote', 'campaign', 'senate'],
+        'low': ['policy', 'political', 'government', 'ruling', 'convention'],
+    },
+    'business': {
+        'high': ['stock market', 'federal reserve', 'ipo', 'merger', 'acquisition', 'nasdaq', 'dow jones'],
+        'medium': ['economy', 'inflation', 'earnings', 'revenue', 'profit', 'investment', 'startup'],
+        'low': ['market', 'business', 'corporate', 'trade', 'economic'],
+    },
+    'technology': {
+        'high': ['artificial intelligence', 'cybersecurity', 'cyberattack', 'data breach', 'semiconductor', 'quantum computing'],
+        'medium': ['ai', 'software', 'chip', 'cloud computing', 'machine learning', 'blockchain', 'cryptocurrency'],
+        'low': ['tech', 'digital', 'app', 'software', 'online'],
+    },
+    'science': {
+        'high': ['study finds', 'researchers say', 'peer-reviewed', 'breakthrough', 'published in', 'nasa', 'spacex'],
+        'medium': ['climate change', 'researcher', 'experiment', 'discovery', 'species', 'genetic'],
+        'low': ['research', 'scientist', 'study', 'analysis', 'space'],
+    },
+    'health': {
+        'high': ['fda approves', 'clinical trial', 'vaccine', 'pandemic', 'outbreak', 'hospital'],
+        'medium': ['cancer', 'diabetes', 'treatment', 'surgery', 'patient', 'medical', 'healthcare'],
+        'low': ['health', 'doctor', 'medicine', 'drug', 'symptom'],
+    },
+    'sports': {
+        'high': ['nba', 'nfl', 'mlb', 'nhl', 'fifa', 'world cup', 'olympics', 'championship'],
+        'medium': ['playoffs', 'tournament', 'athlete', 'quarterback', 'goalkeeper', 'coach'],
+        'low': ['game', 'match', 'score', 'team', 'league', 'season'],
+    },
+    'us': {
+        'high': ['white house', 'capitol hill', 'fbi', 'cia', 'pentagon', 'supreme court'],
+        'medium': ['congress', 'senate', 'federal', 'u.s.', 'united states', 'american'],
+        'low': ['america', 'usa', 'federal'],
+    },
+    'world': {
+        'high': ['ukraine', 'russia', 'china', 'iran', 'israel', 'gaza', 'nato', 'united nations'],
+        'medium': ['european union', 'war', 'diplomat', 'sanctions', 'embassy', 'military'],
+        'low': ['international', 'global', 'foreign', 'border', 'crisis'],
+    },
+    'entertainment': {
+        'high': ['oscar', 'grammy', 'emmy', 'netflix', 'hollywood', 'box office'],
+        'medium': ['movie', 'film', 'actor', 'celebrity', 'album', 'concert', 'premiere'],
+        'low': ['music', 'show', 'star', 'award', 'performance'],
+    },
+}
+
+# Exclusion rules - prevent false positives
+EXCLUSION_RULES = {
+    'health': {
+        'virus': ['computer virus', 'software virus', 'malware', 'cyber virus'],
+    },
+    'politics': {
+        'campaign': ['marketing campaign', 'ad campaign', 'sales campaign'],
+    },
+}
+
 STOP_WORDS = {
     'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
     'of', 'with', 'by', 'from', 'is', 'are', 'was', 'were', 'be', 'been',
