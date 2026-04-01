@@ -98,13 +98,15 @@ class Command(BaseCommand):
         recent_source_stories = {}
 
         for source_name, feed_url in feeds:
-            self.safe_write(f"  {source_name}...", ending=" ")
-            logger.info(f'Fetching {source_name} ({language})')
+            # Safe encoding for Windows console
+            safe_name = source_name.encode('ascii', 'replace').decode('ascii')
+            self.safe_write(f"  {safe_name}...", ending=" ")
+            logger.info(f'Fetching {safe_name} ({language})')
 
             feed = self.fetch_feed(feed_url)
 
             if not feed.entries:
-                logger.warning(f'{source_name}: EMPTY')
+                logger.warning(f'{safe_name}: EMPTY')
                 self.safe_write(self.style.WARNING("EMPTY"))
                 continue
 
