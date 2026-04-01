@@ -11,6 +11,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 from news.models import Story, normalize_url, title_fingerprint
 from news.sources_config import LANGUAGE_FEEDS, SUPPORTED_LANGUAGES
+from news.views import categorize_story
 
 logger = logging.getLogger('news.fetch')
 logger.setLevel(logging.INFO)
@@ -180,7 +181,7 @@ class Command(BaseCommand):
                     url_hash=url_hash,
                     title_fingerprint=fp,
                     language=language,
-                    category='world',
+                    category=categorize_story(title, language),
                     published=pub_time,
                 ))
                 
