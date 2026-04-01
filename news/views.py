@@ -63,7 +63,7 @@ def categorize_story(title, language='en'):
 def get_story_categories(title, language='en'):
     """Get all applicable categories for a story using weighted scoring.
     
-    Returns categories with score >= 4 (high confidence) or top 2 categories.
+    Returns categories with score >= 3 (high confidence) or top 2 categories.
     """
     title_lower = title.lower()
     weighted_keywords = CATEGORY_KEYWORDS_WEIGHTED.get(language, CATEGORY_KEYWORDS_WEIGHTED.get('en', {}))
@@ -88,12 +88,12 @@ def get_story_categories(title, language='en'):
         if score > 0:
             category_scores[category] = score
     
-    # Filter categories: require score >= 4 OR take top 2 categories
+    # Filter categories: require score >= 3 OR take top 2 categories
     if not category_scores:
         return ['world']
     
-    # Get categories with high confidence (score >= 4)
-    high_confidence = [cat for cat, score in category_scores.items() if score >= 4]
+    # Get categories with high confidence (score >= 3)
+    high_confidence = [cat for cat, score in category_scores.items() if score >= 3]
     if high_confidence:
         return high_confidence
     
