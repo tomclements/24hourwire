@@ -8,7 +8,7 @@ Usage:
 import sys
 from django.core.management.base import BaseCommand
 from news.tests_category import TEST_CASES
-from news.views import get_story_categories
+from news.categorization import get_story_categories
 
 
 class Command(BaseCommand):

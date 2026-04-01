@@ -11,7 +11,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 from news.models import Story, normalize_url, title_fingerprint
 from news.sources_config import LANGUAGE_FEEDS, SUPPORTED_LANGUAGES
-from news.views import categorize_story
+from news.categorization import categorize_story
 
 logger = logging.getLogger('news.fetch')
 logger.setLevel(logging.INFO)
