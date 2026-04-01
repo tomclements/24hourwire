@@ -313,6 +313,9 @@ CATEGORY_KEYWORDS = {
         'ruling', 'policy', 'white house', 'cabinet', 'secretary', 'convention', 'primary',
         'ballot', 'midterm', 'senator', 'representative', 'gop', 'dnc', 'rnc', 'capitol',
         'partisan', 'bipartisan', 'filibuster', 'veto', 'executive order', 'federal',
+        # International politics
+        'prime minister', 'knesset', 'downing street', 'kremlin', 'bundestag', 'duma',
+        'coalition', 'opposition', 'coalition government', ' snap election',
     ],
     'business': [
         'stock market', 'economy', 'economic', 'trade', 'tariff', 'inflation', 'federal reserve',
@@ -321,6 +324,10 @@ CATEGORY_KEYWORDS = {
         'bitcoin', 'bond', 'investor', 'shares', 'commodity', 'crude oil', 'dow jones',
         'nasdaq', 's&p', 'ipo', 'merger', 'acquisition', 'quarterly', 'fiscal',
         'interest rate', 'treasury', 'market', 'business', 'corporate', 'startup',
+        # Additional financial terms
+        'fed rate', 'rate hike', 'rate cut', 'central bank', 'supply chain', 'labor market',
+        'bull market', 'bear market', 'dividend', 'valuation', 'market cap', 'futures',
+        'hedge fund', 'private equity', 'venture capital', 'seed funding', 'series a',
     ],
     'technology': [
         'tech', 'ai ', 'artificial intelligence', 'software', 'startup', 'silicon valley',
@@ -329,6 +336,10 @@ CATEGORY_KEYWORDS = {
         'google ', 'microsoft', 'apple ', 'amazon ', 'facebook', 'twitter', 'x ', 'tesla',
         'cybersecurity', 'blockchain', 'cryptocurrency', 'app ', 'algorithm', 'machine learning',
         'deep learning', 'chatgpt', 'neural', 'quantum computing', '5g', 'iot',
+        # Emerging tech
+        'vr', 'ar', 'virtual reality', 'augmented reality', 'metaverse', 'autonomous',
+        'ev', 'electric vehicle', 'self-driving', 'autonomous vehicle', 'drone', 'robotics',
+        'quantum', 'edge computing', 'edge ai', 'web3', 'nft', 'spatial computing',
     ],
     'science': [
         'nasa', 'spacex', 'space', 'mars', 'climate change', 'earthquake', 'volcano',
@@ -337,6 +348,10 @@ CATEGORY_KEYWORDS = {
         'arctic', 'antarctic', 'fossil', 'dinosaur', 'evolution', 'ecosystem', 'biodiversity',
         'telescope', 'satellite', 'rocket', 'asteroid', 'comet', 'solar', 'lunar',
         'planet', 'galaxy', 'universe', 'quantum', 'molecule', 'atom', 'nuclear',
+        # Research & academic signals
+        'study finds', 'researchers say', 'published in', 'peer-reviewed', 'scientific',
+        'breakthrough', 'breakthrough discovery', 'new study', 'research shows', 'analysis',
+        'scientist', 'research team', 'research institute', 'university study', 'journal',
     ],
     'health': [
         'hospital', 'doctor', 'medical', 'medicine', 'drug', 'fda ', 'vaccine', 'pandemic',
@@ -358,20 +373,12 @@ CATEGORY_KEYWORDS = {
         'all-star', 'rookie', 'veteran', 'retirement', 'contract', 'free agent',
     ],
     'us': [
-        'california', 'texas', 'florida', 'new york', 'washington', 'chicago', 'los angeles',
-        'miami', 'seattle', 'boston', 'atlanta', 'houston', 'dallas', 'phoenix', 'denver',
-        'detroit', 'portland', 'philadelphia', 'san francisco', 'san diego', 'austin',
-        'nashville', 'memphis', 'las vegas', 'sacramento', 'orlando', 'tampa', 'raleigh',
-        'pittsburgh', 'cleveland', 'cincinnati', 'milwaukee', 'minneapolis', 'indianapolis',
-        'columbus', 'charlotte', 'kansas city', 'st. louis', 'new orleans', 'baltimore',
-        'maryland', 'virginia', 'nevada', 'arizona', 'georgia', 'north carolina',
-        'pennsylvania', 'ohio', 'michigan', 'illinois', 'new jersey', 'massachusetts',
-        'connecticut', 'colorado', 'oregon', 'washington state', 'idaho', 'utah',
-        'alabama', 'south carolina', 'tennessee', 'kentucky', 'indiana', 'wisconsin',
-        'iowa', 'nebraska', 'kansas', 'oklahoma', 'missouri', 'arkansas', 'louisiana',
-        'mississippi', 'alaska', 'hawaii', 'fbi', 'cia', 'pentagon', 'capitol hill',
-        'american', 'americans', 'u.s.', 'united states', 'america', 'midwest',
-        'northeast', 'west coast', 'east coast', 'gulf', 'great lakes', 'south dakota',
+        # Federal/national institutions only - avoid cities/states to reduce false positives
+        'white house', 'capitol hill', 'congress', 'senate', 'house of representatives',
+        'supreme court', 'federal', 'fbi', 'cia', 'pentagon', 'justice department',
+        'state department', 'treasury department', 'homeland security', 'secret service',
+        'american', 'americans', 'u.s.', 'united states', 'america', 'usa',
+        'gop', 'dnc', 'rnc', 'democratic party', 'republican party',
     ],
     'world': [
         'ukraine', 'russia', 'china', 'iran', 'israel', 'gaza', 'middle east', 'europe',
