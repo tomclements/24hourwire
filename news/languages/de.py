@@ -304,10 +304,13 @@ CATEGORY_KEYWORDS = {
         'trainer', 'stadion', 'turnier', 'meisterschaft', 'schiedsrichter',
         'bundesliga', 'bayern', 'dortmund', 'formel 1', 'radfahren',
     ],
-    'us': [
-        'vereinigte staaten', 'usa', 'amerika', 'florida', 'texas', 'kalifornien',
-        'new york', 'miami', 'los angeles', 'chicago', 'washington', 'trump', 'biden',
-        'weißes haus', 'kongress', 'senat', 'fbi', 'cia', 'pentagon',
+    'deutschland': [
+        'deutschland', 'bundestag', 'bundesregierung', 'kanzler', 'scholz',
+        'berlin', 'münchen', 'hamburg', 'spd', 'cdu', 'csu', 'grüne', 'fdp', 'afd',
+        'österreich', 'bundeskanzler', 'wien', 'vienna', 'övp', 'spö', 'fpö',
+        'schweiz', 'bundesrat', 'bern', 'zürich', 'svp', 'sp', 'fdp',
+        'eu-kommission', 'brüssel', 'europäisches parlament', 'europa',
+        'euro', 'europäische union', 'frankreich', 'italien', 'polen',
     ],
     'world': [
         'ukraine', 'russland', 'china', 'iran', 'israel', 'gaza', 'naher osten', 'europa',
@@ -354,7 +357,7 @@ CATEGORY_NAMES = OrderedDict([
     ('all', 'Alle'),
     ('most_covered', 'Am Meisten Berichtet'),
     ('world', 'Welt'),
-    ('us', 'USA'),
+    ('deutschland', 'Deutschland'),
     ('politics', 'Politik'),
     ('business', 'Wirtschaft'),
     ('technology', 'Technologie'),
@@ -363,6 +366,54 @@ CATEGORY_NAMES = OrderedDict([
     ('sports', 'Sport'),
     ('entertainment', 'Unterhaltung'),
 ])
+
+CATEGORY_KEYWORDS_WEIGHTED = {
+    'politics': {
+        'high': ['kanzler', 'scholz', 'bundestag', 'bundesregierung', 'spd', 'cdu', 'csu', 'grüne', 'fdp', 'afd', 'bundespräsident'],
+        'medium': ['regierung', 'minister', 'wahl', 'abstimmung', 'kampagne', 'bundesrat', 'parlament', 'gesetz', 'reform', 'partei', 'opposition', 'koalition', 'demokratie', 'politik'],
+        'low': []
+    },
+    'business': {
+        'high': ['börse', 'dax', 'aktie', 'dividende', 'euro', 'inflation'],
+        'medium': ['wirtschaft', 'markt', 'unternehmen', 'bank', 'finanzen', 'investition', 'arbeitslosigkeit', 'bip', 'wachstum', 'kredit', 'schulden', 'export', 'import', 'konzern', 'handel', 'industrie', 'arbeit', 'gehalt', 'steuer'],
+        'low': []
+    },
+    'technology': {
+        'high': ['künstliche intelligenz', 'ki ', 'cyberangriff', 'cybersicherheit', 'algorithmus'],
+        'medium': ['technologie', 'software', 'digital', 'roboter', 'anwendung', 'smartphone', 'internet', 'informatik', 'daten', 'plattform', 'soziale netzwerke', 'startup', 'google', 'apple', 'microsoft', 'amazon', 'meta', 'tesla'],
+        'low': []
+    },
+    'science': {
+        'high': ['nasa', 'genetik', 'evolution', 'biodiversität'],
+        'medium': ['wissenschaft', 'forschung', 'entdeckung', 'art', 'klima', 'erdbeben', 'vulkan', 'planet', 'weltraum', 'universum', 'physik', 'chemie', 'biologie', 'labor', 'studie', 'wissenschaftler', 'fossil', 'ozean'],
+        'low': []
+    },
+    'health': {
+        'high': ['krankenhaus', 'arzt', 'medizin', 'impfung', 'pandemie', 'covid', 'krebs', 'diabetes'],
+        'medium': ['gesundheit', 'krankheit', 'behandlung', 'virus', 'klinik', 'patient', 'chirurgie', 'therapie', 'symptom', 'diagnose', 'pharmazeutisch', 'ernährung', 'fitness', 'wohlbefinden', 'herz', 'gehirn'],
+        'low': []
+    },
+    'sports': {
+        'high': ['bundesliga', 'champions', 'weltmeisterschaft', 'olympia', 'bayern', 'dortmund'],
+        'medium': ['fußball', 'liga', 'pokal', 'sport', 'mannschaft', 'spieler', 'spiel', 'tor', 'tennis', 'basketball', 'trainer', 'stadion', 'turnier', 'meisterschaft', 'schiedsrichter', 'formel 1', 'radfahren'],
+        'low': []
+    },
+    'deutschland': {
+        'high': ['deutschland', 'bundestag', 'bundesregierung', 'kanzler', 'scholz', 'berlin', 'münchen', 'hamburg'],
+        'medium': ['spd', 'cdu', 'csu', 'grüne', 'fdp', 'afd', 'bundespräsident', 'österreich', 'bundeskanzler', 'wien', 'vienna', 'övp', 'spö', 'fpö', 'schweiz', 'bundesrat', 'bern', 'zürich', 'svp', 'sp', 'fdp', 'eu-kommission', 'brüssel', 'europäisches parlament', 'europa', 'euro', 'europäische union', 'frankreich', 'italien', 'polen'],
+        'low': []
+    },
+    'world': {
+        'high': ['ukraine', 'russland', 'krieg', 'krisis', 'gaza', 'israel', 'putin'],
+        'medium': ['china', 'iran', 'israel', 'gaza', 'naher osten', 'europa', 'asien', 'afrika', 'lateinamerika', 'diplomat', 'einwanderung', 'flüchtling', 'weltweit', 'international', 'uno', 'nato', 'konflikt', 'krise', 'militär', 'armee', 'frieden', 'abkommen', 'vertrag', 'sanktionen'],
+        'low': []
+    },
+    'entertainment': {
+        'high': ['oscar', 'berlinale', 'netflix', 'disney', 'hollywood', 'spotify'],
+        'medium': ['film', 'kino', 'schauspieler', 'schauspielerin', 'prominenz', 'musik', 'album', 'konzert', 'tournee', 'streaming', 'kinokasse', 'theater', 'serie', 'staffel', 'season finale', 'sänger', 'band', 'preis', 'roter teppich', 'komödie', 'drame', 'horror', 'videospiel', 'gaming', 'youtube', 'tiktok', 'influencer', 'viral', 'podcast', 'bestseller', 'buch', 'fernsehen', 'sendung'],
+        'low': []
+    },
+}
 
 UI_STRINGS = {
     'subtitle': 'Wählen Sie Ihre Ausrichtung | Nachrichtenagenturen und andere Feeds | Letzte 24 Stunden',

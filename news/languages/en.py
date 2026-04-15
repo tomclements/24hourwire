@@ -372,13 +372,46 @@ CATEGORY_KEYWORDS = {
         'stadium', 'arena', 'league', 'division', 'conference', 'wild card', 'mvp',
         'all-star', 'rookie', 'veteran', 'retirement', 'contract', 'free agent',
     ],
-    'us': [
+    'united-states': [
         # Federal/national institutions only - avoid cities/states to reduce false positives
         'white house', 'capitol hill', 'congress', 'senate', 'house of representatives',
         'supreme court', 'federal', 'fbi', 'cia', 'pentagon', 'justice department',
         'state department', 'treasury department', 'homeland security', 'secret service',
         'american', 'americans', 'u.s.', 'united states', 'america', 'usa',
         'gop', 'dnc', 'rnc', 'democratic party', 'republican party',
+        # Cities
+        'washington', 'new york', 'los angeles', 'chicago', 'houston', 'phoenix',
+        'philadelphia', 'san antonio', 'san diego', 'dallas', 'san jose',
+    ],
+    'united-kingdom': [
+        # UK institutions
+        'downing street', 'parliament', 'westminster', 'house of commons', 'house of lords',
+        'prime minister', 'cabinet', 'whitehall', 'buckingham palace',
+        'british', 'britain', 'uk ', 'u.k.', 'united kingdom', 'great britain', 'england', 'scotland', 'wales', 'northern ireland',
+        # UK political parties
+        'conservative party', 'labour party', 'liberal democrats', 'snp', 'plaid cymru',
+        # Cities
+        'london', 'manchester', 'birmingham', 'glasgow', 'liverpool', 'edinburgh', 'bristol',
+    ],
+    'europe': [
+        # EU institutions
+        'european union', 'european commission', 'eu ', 'e.u.', 'brussels',
+        'european parliament', 'council of europe', 'euro', 'eurozone', 'schengen',
+        'european central bank', 'ecb',
+        # European countries (general)
+        'france', 'germany', 'italy', 'spain', 'netherlands', 'belgium', 'austria',
+        'sweden', 'norway', 'denmark', 'finland', 'poland', 'romania', 'greece',
+        'portugal', 'czech republic', 'hungary', 'ireland', 'switzerland',
+        'macron', 'scholz', 'meloni', 'sanchez',
+    ],
+    'asia-pacific': [
+        # Asia-Pacific countries and regions
+        'china', 'japan', 'south korea', 'north korea', 'india', 'australia', 'indonesia',
+        'vietnam', 'thailand', 'philippines', 'malaysia', 'singapore', 'taiwan',
+        'hong kong', 'new zealand', 'pakistan', 'bangladesh', 'myanmar', 'cambodia', 'laos',
+        # Institutions and terms
+        'asean', 'apec', 'indo-pacific', 'asia-pacific', 'east asia', 'southeast asia',
+        'xi jinping', 'modi', 'albanese', 'yoon suk-yeol',
     ],
     'world': [
         'ukraine', 'russia', 'china', 'iran', 'israel', 'gaza', 'middle east', 'europe',
@@ -437,10 +470,25 @@ CATEGORY_KEYWORDS_WEIGHTED = {
         'medium': ['playoffs', 'tournament', 'athlete', 'quarterback', 'goalkeeper', 'coach'],
         'low': ['game', 'match', 'score', 'team', 'league', 'season'],
     },
-    'us': {
+    'united-states': {
         'high': ['white house', 'capitol hill', 'fbi', 'cia', 'pentagon', 'supreme court'],
         'medium': ['congress', 'senate', 'federal', 'u.s.', 'united states', 'american'],
         'low': ['america', 'usa', 'federal'],
+    },
+    'united-kingdom': {
+        'high': ['downing street', 'parliament', 'westminster', 'house of commons', 'prime minister'],
+        'medium': ['uk ', 'british', 'britain', 'united kingdom', 'london'],
+        'low': ['england', 'scotland', 'wales'],
+    },
+    'europe': {
+        'high': ['european union', 'european commission', 'brussels', 'european parliament'],
+        'medium': ['euro', 'eu ', 'france', 'germany', 'italy', 'macron', 'scholz'],
+        'low': ['europe', 'european', 'eurozone'],
+    },
+    'asia-pacific': {
+        'high': ['china', 'japan', 'south korea', 'india', 'australia', 'xi jinping', 'modi'],
+        'medium': ['asean', 'hong kong', 'taiwan', 'singapore', 'indonesia', 'thailand'],
+        'low': ['asia', 'pacific', 'east asia', 'southeast asia'],
     },
     'world': {
         'high': ['ukraine', 'russia', 'china', 'iran', 'israel', 'gaza', 'nato', 'united nations'],
@@ -487,7 +535,10 @@ CATEGORY_NAMES = OrderedDict([
     ('all', 'All'),
     ('most_covered', 'Most Covered'),
     ('world', 'World'),
-    ('us', 'US'),
+    ('united-states', 'United States'),
+    ('united-kingdom', 'United Kingdom'),
+    ('europe', 'Europe'),
+    ('asia-pacific', 'Asia-Pacific'),
     ('politics', 'Politics'),
     ('business', 'Business'),
     ('technology', 'Technology'),

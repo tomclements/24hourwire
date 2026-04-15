@@ -274,10 +274,12 @@ CATEGORY_KEYWORDS = {
         'psg', 'marseille', 'lyon', 'ligue 1', 'ligue des champions', 'roland garros',
         'tour de france', 'formule 1', 'cyclisme', 'natation',
     ],
-    'us': [
-        'états-unis', 'ee.uu.', 'amérique du nord', 'floride', 'texas', 'californie',
-        'new york', 'miami', 'los angeles', 'chicago', 'washington', 'trump', 'biden',
-        'blanc', 'congrès', 'sénat', 'fbi', 'cia', 'pentagone',
+    'france': [
+        'france', 'président', 'macron', 'assemblée nationale', 'sénat', 'gouvernement',
+        'paris', 'lyon', 'marseille', 'lr', 'ps', 'lrem', 'rn', 'eelv',
+        'belgique', 'roi', 'bruxelles', 'flandre', 'wallonie', 'mr', 'ps', 'n-va',
+        'suisse', 'conseil fédéral', 'berne', 'zurich', 'udc', 'ps', 'verts', 'plr',
+        'commission européenne', 'bruxelles', 'parlement européen', 'europe', 'ue', 'allemagne', 'italie', 'espagne',
     ],
     'world': [
         'ukraine', 'russie', 'chine', 'iran', 'israël', 'gaza', 'moyen-orient', 'europe',
@@ -325,7 +327,7 @@ CATEGORY_NAMES = OrderedDict([
     ('all', 'Tout'),
     ('most_covered', 'Plus Couvert'),
     ('world', 'Monde'),
-    ('us', 'É.-U.'),
+    ('france', 'France'),
     ('politics', 'Politique'),
     ('business', 'Économie'),
     ('technology', 'Technologie'),
@@ -334,6 +336,54 @@ CATEGORY_NAMES = OrderedDict([
     ('sports', 'Sports'),
     ('entertainment', 'Divertissement'),
 ])
+
+CATEGORY_KEYWORDS_WEIGHTED = {
+    'politics': {
+        'high': ['macron', 'président', 'ministre', 'assemblée', 'sénat', 'parlement'],
+        'medium': ['gouvernement', 'élection', 'vote', 'campagne', 'loi', 'réforme', 'parti', 'gauche', 'droite', 'mélenchon', 'le pen', 'premier ministre', 'état', 'république', 'député', 'sénateur', 'budget', 'fiscalité', 'politique', 'opposition'],
+        'low': []
+    },
+    'business': {
+        'high': ['bourse', 'cac 40', 'euro', 'action', 'dividende', 'inflation'],
+        'medium': ['économie', 'marché', 'entreprise', 'banque', 'finance', 'investissement', 'chômage', 'pib', 'croissance', 'crédit', 'dette', 'export', 'import', 'société', 'commerce', 'industrie', 'emploi', 'salaire', 'impôt'],
+        'low': []
+    },
+    'technology': {
+        'high': ['intelligence artificielle', 'ia ', 'cyberattaque', 'cybersécurité', 'algorithme'],
+        'medium': ['technologie', 'logiciel', 'numérique', 'robot', 'application', 'smartphone', 'internet', 'informatique', 'données', 'plateforme', 'réseaux sociaux', 'startup', 'google', 'apple', 'microsoft', 'amazon', 'meta', 'tesla'],
+        'low': []
+    },
+    'science': {
+        'high': ['nasa', 'cnrs', 'génétique', 'adn', 'evolution', 'biodiversité'],
+        'medium': ['science', 'recherche', 'découverte', 'espèce', 'climat', 'tremblement de terre', 'volcan', 'planète', 'espace', 'univers', 'physique', 'chimie', 'biologie', 'laboratoire', 'étude', 'scientifique', 'fossile', 'océan'],
+        'low': []
+    },
+    'health': {
+        'high': ['hôpital', 'médecin', 'médecine', 'vaccin', 'pandémie', 'covid', 'cancer', 'diabète', 'sida'],
+        'medium': ['santé', 'maladie', 'traitement', 'virus', 'clinique', 'patient', 'chirurgie', 'thérapie', 'symptôme', 'diagnostic', 'pharmaceutique', 'nutrition', 'exercice', 'bien-être', 'coeur', 'cerveau', 'grippe'],
+        'low': []
+    },
+    'sports': {
+        'high': ['psg', 'marseille', 'lyon', 'ligue 1', 'ligue des champions', 'roland garros', 'tour de france'],
+        'medium': ['football', 'ligue', 'champions', 'coupe', 'mondial', 'olympiques', 'sport', 'équipe', 'joueur', 'match', 'but', 'tennis', 'basketball', 'rugby', 'entraîneur', 'stade', 'tournoi', 'championnat', 'sélection', 'arbitre', 'formule 1', 'cyclisme', 'natation'],
+        'low': []
+    },
+    'france': {
+        'high': ['france', 'président', 'macron', 'assemblée nationale', 'sénat', 'gouvernement', 'paris', 'lyon', 'marseille'],
+        'medium': ['lr', 'ps', 'lrem', 'rn', 'eelv', 'belgique', 'roi', 'bruxelles', 'flandre', 'wallonie', 'mr', 'n-va', 'suisse', 'conseil fédéral', 'berne', 'zurich', 'udc', 'verts', 'plr', 'commission européenne', 'parlement européen', 'europe', 'ue', 'allemagne', 'italie', 'espagne'],
+        'low': []
+    },
+    'world': {
+        'high': ['ukraine', 'russie', 'guerre', 'crise', 'gaza', 'israël', 'poutine'],
+        'medium': ['chine', 'iran', 'israël', 'gaza', 'moyen-orient', 'europe', 'asie', 'afrique', 'amérique latine', 'diplomatique', 'immigration', 'réfugié', 'mondial', 'international', 'onu', 'otan', 'conflit', 'militaire', 'armée', 'paix', 'accord', 'traité', 'sanctions'],
+        'low': []
+    },
+    'entertainment': {
+        'high': ['oscar', 'césar', 'cannes', 'netflix', 'disney', 'hollywood', 'spotify'],
+        'medium': ['film', 'cinéma', 'acteur', 'actrice', 'célébrité', 'musique', 'album', 'concert', 'tournée', 'streaming', 'box-office', 'théâtre', 'série', 'saison', 'finale de saison', 'chanteur', 'groupe', 'prix', 'tapis rouge', 'comédie', 'drame', 'horreur', 'jeu vidéo', 'gaming', 'youtube', 'tiktok', 'influenceur', 'viral', 'podcast', 'best-seller', 'livre', 'télévision', 'programme', 'festival'],
+        'low': []
+    },
+}
 
 UI_STRINGS = {
     'subtitle': 'Choisissez votre biais | Services de presse et autres flux | Dernières 24 heures',

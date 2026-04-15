@@ -6,13 +6,14 @@ requiring Django to be fully configured.
 """
 
 import re
-from news.languages import CATEGORY_KEYWORDS_WEIGHTED, EXCLUSION_RULES
+from news.languages import LANGUAGE_CATEGORY_KEYWORDS_WEIGHTED, LANGUAGE_EXCLUSION_RULES
 
 
-def check_exclusion(title_lower, category, keyword):
+def check_exclusion(title_lower, category, keyword, language='en'):
     """Check if a keyword match should be excluded based on context."""
-    if category in EXCLUSION_RULES and keyword in EXCLUSION_RULES[category]:
-        for exclusion_phrase in EXCLUSION_RULES[category][keyword]:
+    exclusion_rules = LANGUAGE_EXCLUSION_RULES.get(language, LANGUAGE_EXCLUSION_RULES.get('en', {}))
+    if category in exclusion_rules and keyword in exclusion_rules[category]:
+        for exclusion_phrase in exclusion_rules[category][keyword]:
             if exclusion_phrase in title_lower:
                 return True
     return False
@@ -46,11 +47,14 @@ def categorize_story(title, language='en'):
     """Categorize a story using weighted keyword scoring.
     
     Returns the single best category based on highest score.
+    Uses language-specific keywords if available, falls back to English.
     """
     title_lower = title.lower()
-    # CATEGORY_KEYWORDS_WEIGHTED is already the English keywords dict
-    # (not a {language: {category: weights}} structure)
-    weighted_keywords = CATEGORY_KEYWORDS_WEIGHTED
+    # Get language-specific weighted keywords, fall back to English
+    weighted_keywords = LANGUAGE_CATEGORY_KEYWORDS_WEIGHTED.get(
+        language, 
+        LANGUAGE_CATEGORY_KEYWORDS_WEIGHTED.get('en', {})
+    )
     
     category_scores = {}
     
@@ -58,15 +62,15 @@ def categorize_story(title, language='en'):
         score = 0
         # High weight keywords (3 points)
         for keyword in weights.get('high', []):
-            if keyword_in_title(keyword, title_lower) and not check_exclusion(title_lower, category, keyword):
+            if keyword_in_title(keyword, title_lower) and not check_exclusion(title_lower, category, keyword, language):
                 score += 3
         # Medium weight keywords (2 points)
         for keyword in weights.get('medium', []):
-            if keyword_in_title(keyword, title_lower) and not check_exclusion(title_lower, category, keyword):
+            if keyword_in_title(keyword, title_lower) and not check_exclusion(title_lower, category, keyword, language):
                 score += 2
         # Low weight keywords (1 point)
         for keyword in weights.get('low', []):
-            if keyword_in_title(keyword, title_lower) and not check_exclusion(title_lower, category, keyword):
+            if keyword_in_title(keyword, title_lower) and not check_exclusion(title_lower, category, keyword, language):
                 score += 1
         
         if score > 0:
@@ -82,10 +86,14 @@ def get_story_categories(title, language='en'):
     """Get all applicable categories for a story using weighted scoring.
     
     Returns categories with score >= 3 (high confidence) or top 2 categories.
+    Uses language-specific keywords if available, falls back to English.
     """
     title_lower = title.lower()
-    # CATEGORY_KEYWORDS_WEIGHTED is already the English keywords dict
-    weighted_keywords = CATEGORY_KEYWORDS_WEIGHTED
+    # Get language-specific weighted keywords, fall back to English
+    weighted_keywords = LANGUAGE_CATEGORY_KEYWORDS_WEIGHTED.get(
+        language, 
+        LANGUAGE_CATEGORY_KEYWORDS_WEIGHTED.get('en', {})
+    )
     
     category_scores = {}
     
@@ -93,15 +101,15 @@ def get_story_categories(title, language='en'):
         score = 0
         # High weight keywords (3 points)
         for keyword in weights.get('high', []):
-            if keyword_in_title(keyword, title_lower) and not check_exclusion(title_lower, category, keyword):
+            if keyword_in_title(keyword, title_lower) and not check_exclusion(title_lower, category, keyword, language):
                 score += 3
         # Medium weight keywords (2 points)
         for keyword in weights.get('medium', []):
-            if keyword_in_title(keyword, title_lower) and not check_exclusion(title_lower, category, keyword):
+            if keyword_in_title(keyword, title_lower) and not check_exclusion(title_lower, category, keyword, language):
                 score += 2
         # Low weight keywords (1 point)
         for keyword in weights.get('low', []):
-            if keyword_in_title(keyword, title_lower) and not check_exclusion(title_lower, category, keyword):
+            if keyword_in_title(keyword, title_lower) and not check_exclusion(title_lower, category, keyword, language):
                 score += 1
         
         if score > 0:

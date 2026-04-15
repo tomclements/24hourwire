@@ -1159,10 +1159,12 @@
                 <div class="tabs-container">
                     <nav class="tabs">
                         {% for cat_id, cat_data in grouped.items %}
+                            {% if cat_data.stories|length > 0 %}
                             <a href="#{{ cat_id }}" class="tab {% if forloop.first %}active{% endif %}" onclick="showCategory('{{ cat_id }}'); return false;">
                                 {{ cat_data.name }}
                                 <span class="tab-count">{{ cat_data.stories|length }}</span>
                             </a>
+                            {% endif %}
                         {% endfor %}
                     </nav>
                 </div>
@@ -1177,6 +1179,7 @@
 
     <main>
         {% for cat_id, cat_data in grouped.items %}
+        {% if cat_data.stories|length > 0 %}
         <section id="{{ cat_id }}" class="category-section" data-count="{{ cat_data.stories|length }}">
             <div class="category-header">
                 <h2 class="category-title">{{ cat_data.name }}</h2>
@@ -1230,6 +1233,7 @@
                 <p class="empty" style="text-align: center; padding: 60px 20px; color: var(--text-muted);">{{ t.no_stories }}</p>
             {% endif %}
         </section>
+        {% endif %}
         {% endfor %}
     </main>
 
@@ -1488,10 +1492,15 @@
             updateThemeIcon(savedTheme);
         }
 
-        // Initialize
+        // Initialize - show first category that has stories
         document.querySelectorAll('.category-section').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
         const firstSection = document.querySelector('.category-section');
-        if (firstSection) firstSection.style.display = 'block';
+        const firstTab = document.querySelector('.tab');
+        if (firstSection) {
+            firstSection.style.display = 'block';
+            if (firstTab) firstTab.classList.add('active');
+        }
         
         loadTheme();
         

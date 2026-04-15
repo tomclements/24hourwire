@@ -240,10 +240,10 @@ CATEGORY_KEYWORDS = {
         'teknik direktör', 'stadyum', 'turnuva', 'şampiyona', 'hakem',
         'galatasaray', 'fenerbahçe', 'beşiktaş', 'trabzonspor', 'süper lig',
     ],
-    'us': [
-        'amerika birleşik devletleri', 'abd', 'florida', 'texas', 'kaliforniya',
-        'new york', 'miami', 'los angeles', 'chicago', 'washington', 'trump', 'biden',
-        'beyaz saray', 'kongre', 'senato', 'fbi', 'cia', 'pentagon',
+    'turkey': [
+        'türkiye', 'türk', 'cumhurbaşkanı', 'erdoğan', 'meclis', 'hükümet', 'türkiye büyük millet meclisi',
+        'ankara', 'istanbul', 'izmir', 'akp', 'chp', 'mhp', 'iyi parti', 'hdp', 'saadet',
+        'balkanlar', 'yunanistan', 'bulgaristan', 'romanya', 'sırbistan', 'arnavutluk', 'bosna', 'kosova', 'kuzey makedonya',
     ],
     'world': [
         'ukrayna', 'rusya', 'çin', 'iran', 'israil', 'gazze', 'orta doğu', 'avrupa',
@@ -287,7 +287,7 @@ CATEGORY_NAMES = OrderedDict([
     ('all', 'Tümü'),
     ('most_covered', 'En Çok Haber Olan'),
     ('world', 'Dünya'),
-    ('us', 'ABD'),
+    ('turkey', 'Türkiye'),
     ('politics', 'Siyaset'),
     ('business', 'Ekonomi'),
     ('technology', 'Teknoloji'),
@@ -296,6 +296,54 @@ CATEGORY_NAMES = OrderedDict([
     ('sports', 'Spor'),
     ('entertainment', 'Eğlence'),
 ])
+
+CATEGORY_KEYWORDS_WEIGHTED = {
+    'politics': {
+        'high': ['cumhurbaşkanı', 'erdoğan', 'meclis', 'hükümet', 'akp', 'chp', 'mhp'],
+        'medium': ['bakan', 'seçim', 'oy', 'kampanya', 'yasası', 'reform', 'parti', 'iyi parti', 'hdp', 'saadet', 'muhalefet', 'koalisyon', 'siyaset'],
+        'low': []
+    },
+    'business': {
+        'high': ['borsa', 'lira', 'dolar', 'euro', 'hisse', 'temettü', 'enflasyon'],
+        'medium': ['ekonomi', 'piyasa', 'şirket', 'banka', 'finans', 'yatırım', 'işsizlik', 'gsyh', 'büyüme', 'kredi', 'borç', 'ihracat', 'ithalat', 'sanayi', 'ticaret', 'istihdam', 'maaş', 'vergi'],
+        'low': []
+    },
+    'technology': {
+        'high': ['yapay zeka', 'siber saldırı', 'siber güvenlik', 'algoritma'],
+        'medium': ['teknoloji', 'yazılım', 'dijital', 'robot', 'uygulama', 'akıllı telefon', 'internet', 'bilgisayar', 'veri', 'platform', 'sosyal medya', 'girişim', 'google', 'apple', 'microsoft', 'amazon', 'meta', 'tesla'],
+        'low': []
+    },
+    'science': {
+        'high': ['nasa', 'genetik', 'evrim', 'biyoçeşitlilik'],
+        'medium': ['bilim', 'araştırma', 'keşif', 'tür', 'iklim', 'deprem', 'volkan', 'gezegen', 'uzay', 'evren', 'fizik', 'kimya', 'biyoloji', 'laboratuvar', 'bilim insanı', 'fosil', 'okyanus'],
+        'low': []
+    },
+    'health': {
+        'high': ['hastane', 'doktor', 'tıp', 'aşı', 'pandemi', 'covid', 'kanser', 'diyabet'],
+        'medium': ['sağlık', 'hastalık', 'tedavi', 'virüs', 'klinik', 'hasta', 'cerrahi', 'terapi', 'belirti', 'teşhis', 'eczacılık', 'beslenme', 'egzersiz', 'kalp', 'beyin'],
+        'low': []
+    },
+    'sports': {
+        'high': ['galatasaray', 'fenerbahçe', 'beşiktaş', 'trabzonspor', 'süper lig'],
+        'medium': ['futbol', 'lig', 'şampiyonlar', 'kupa', 'dünya kupası', 'olimpiyat', 'spor', 'takım', 'oyuncu', 'maç', 'gol', 'tenis', 'basketbol', 'voleybol', 'teknik direktör', 'stadyum', 'turnuva', 'şampiyona', 'hakem'],
+        'low': []
+    },
+    'turkey': {
+        'high': ['türkiye', 'türk', 'cumhurbaşkanı', 'erdoğan', 'meclis', 'hükümet', 'türkiye büyük millet meclisi', 'ankara', 'istanbul', 'izmir'],
+        'medium': ['akp', 'chp', 'mhp', 'iyi parti', 'hdp', 'saadet', 'balkanlar', 'yunanistan', 'bulgaristan', 'romanya', 'sırbistan', 'arnavutluk', 'bosna', 'kosova', 'kuzey makedonya'],
+        'low': []
+    },
+    'world': {
+        'high': ['ukrayna', 'rusya', 'savaş', 'kriz', 'gazze', 'israil', 'putin'],
+        'medium': ['çin', 'iran', 'israil', 'gazze', 'orta doğu', 'avrupa', 'asya', 'afrika', 'latin amerika', 'diplomat', 'göç', 'mülteci', 'dünya', 'uluslararası', 'bm', 'nato', 'çatışma', 'askeri', 'ordu', 'barış', 'anlaşma', 'antlaşma', 'yaptırım'],
+        'low': []
+    },
+    'entertainment': {
+        'high': ['akademi ödülü', 'netflix', 'disney', 'hollywood', 'spotify'],
+        'medium': ['film', 'sinema', 'oyuncu', 'ünlü', 'müzik', 'albüm', 'konser', 'turne', 'yayın', 'gişe', 'tiyatro', 'dizi', 'sezon', 'sezon finali', 'şarkıcı', 'grup', 'ödül', 'kırmızı halı', 'komedi', 'korku', 'oyun', 'espor', 'youtube', 'tiktok', 'influencer', 'viral', 'podcast', 'çok satan', 'kitap', 'televizyon', 'program'],
+        'low': []
+    },
+}
 
 UI_STRINGS = {
     'subtitle': 'Yöneliminizi seçin | Haber ajansları ve diğer kaynaklar | Son 24 saat',

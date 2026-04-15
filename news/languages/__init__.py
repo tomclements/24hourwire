@@ -9,6 +9,8 @@ Each language module exports:
 - DEFAULT_SOURCES: list - default selected sources
 - SOURCES: list - (name, bias) tuples
 - CATEGORY_KEYWORDS: dict - {category: [keywords]}
+- CATEGORY_KEYWORDS_WEIGHTED: dict - {category: {high: [], medium: [], low: []}}
+- EXCLUSION_RULES: dict - {category: {keyword: [exclusions]}}
 - STOP_WORDS: set - stop words for dedup/clustering
 - SOURCE_ATTRIBUTION: str - regex for excerpt cleaning
 - GENERIC_TEXT: list - generic text to filter
@@ -41,8 +43,28 @@ PAYWALLED_SOURCES = set()
 for mod in LANGUAGE_MODULES.values():
     PAYWALLED_SOURCES |= mod.PAYWALLED_SOURCES
 
-# Weighted keywords (English only for now)
-CATEGORY_KEYWORDS_WEIGHTED = getattr(en, 'CATEGORY_KEYWORDS_WEIGHTED', en.CATEGORY_KEYWORDS)
+# Per-language weighted keywords for categorization
+# Falls back to English for languages without weighted keywords
+LANGUAGE_CATEGORY_KEYWORDS_WEIGHTED = {}
+for code, mod in LANGUAGE_MODULES.items():
+    if hasattr(mod, 'CATEGORY_KEYWORDS_WEIGHTED'):
+        LANGUAGE_CATEGORY_KEYWORDS_WEIGHTED[code] = mod.CATEGORY_KEYWORDS_WEIGHTED
+    else:
+        # Fallback to English weighted keywords if not defined
+        LANGUAGE_CATEGORY_KEYWORDS_WEIGHTED[code] = getattr(en, 'CATEGORY_KEYWORDS_WEIGHTED', en.CATEGORY_KEYWORDS)
 
-# Exclusion rules (English only for now)
-EXCLUSION_RULES = getattr(en, 'EXCLUSION_RULES', {})
+# Per-language exclusion rules for categorization
+# Falls back to English for languages without exclusion rules
+LANGUAGE_EXCLUSION_RULES = {}
+for code, mod in LANGUAGE_MODULES.items():
+    if hasattr(mod, 'EXCLUSION_RULES'):
+        LANGUAGE_EXCLUSION_RULES[code] = mod.EXCLUSION_RULES
+    else:
+        # Fallback to English exclusion rules if not defined
+        LANGUAGE_EXCLUSION_RULES[code] = getattr(en, 'EXCLUSION_RULES', {})
+
+# Backward compatibility: English weighted keywords as default
+CATEGORY_KEYWORDS_WEIGHTED = LANGUAGE_CATEGORY_KEYWORDS_WEIGHTED.get('en', {})
+
+# Backward compatibility: English exclusion rules as default
+EXCLUSION_RULES = LANGUAGE_EXCLUSION_RULES.get('en', {})

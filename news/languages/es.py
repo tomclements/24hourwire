@@ -282,9 +282,27 @@ CATEGORY_KEYWORDS = {
         'entrenador', 'estadio', 'torneo', 'campeonato', 'selección', 'árbitro',
         'clásico', 'derby', 'ascenso', 'descenso', 'tabla', 'posiciones',
     ],
-    'us': [
-        'estados unidos', 'ee.uu.', 'norteamérica', 'florida', 'texas', 'california',
-        'nueva york', 'miami', 'los ángeles', 'chicago', 'washington',
+    'espana': [
+        'españa', 'gobierno español', 'congreso de los diputados', 'senado español',
+        'pedro sánchez', 'moncloa', 'madrid', 'barcelona', 'valencia', 'sevilla',
+        'pp', 'psoe', 'vox', 'podemos', 'ciudadanos', 'generalitat', 'cataluña', 'país vasco',
+    ],
+    'mexico': [
+        'méxico', 'amlo', 'andrés manuel lópez obrador', 'palacio nacional',
+        'congreso mexicano', 'cámara de diputados', 'senado mexicano',
+        'ciudad de méxico', 'cdmx', 'guadalajara', 'monterrey', 'morena', 'pan', 'pri', 'prd',
+    ],
+    'latinoamerica': [
+        'argentina', 'brasil', 'chile', 'colombia', 'perú', 'venezuela', 'ecuador', 'bolivia',
+        'uruguay', 'paraguay', 'centroamérica', 'américa latina', 'latinoamérica',
+        'buenos aires', 'são paulo', 'rio de janeiro', 'santiago', 'bogotá', 'lima', 'caracas',
+        'milei', 'lula', 'boric', 'petro', 'castillo', 'maduro', 'bolsonaro',
+    ],
+    'europa': [
+        'unión europea', 'comisión europea', 'parlamento europeo', 'bruselas',
+        'francia', 'alemania', 'italia', 'reino unido', 'portugal', 'bélgica', 'holanda',
+        'euro', 'eurozona', 'schengen', 'bce', 'banco central europeo',
+        'macron', 'scholz', 'meloni', 'sunak', 'merkel', 'parís', 'berlín', 'roma',
     ],
     'world': [
         'ucrania', 'rusia', 'china', 'irán', 'israel', 'gaza', 'medio oriente', 'europa',
@@ -303,6 +321,70 @@ CATEGORY_KEYWORDS = {
         'influencer', 'viral', 'podcast', 'bestseller', 'libro',
         'televisión', 'tele', 'programa', 'famoso', 'famosa',
     ],
+}
+
+# Weighted scoring system for better categorization
+CATEGORY_KEYWORDS_WEIGHTED = {
+    'politics': {
+        'high': ['gobierno', 'congreso', 'senado', 'presidente', 'ministro', 'elecciones'],
+        'medium': ['parlamento', 'partido', 'campaña', 'voto', 'diputado', 'oposición'],
+        'low': ['política', 'político', 'legislación', 'reforma'],
+    },
+    'business': {
+        'high': ['economía', 'mercado', 'bolsa', 'banco', 'inversión', 'empresa'],
+        'medium': ['negocio', 'finanzas', 'dinero', 'acciones', 'comercio'],
+        'low': ['económico', 'bancario', 'empresarial'],
+    },
+    'technology': {
+        'high': ['tecnología', 'inteligencia artificial', 'ciberataque', 'ciberseguridad'],
+        'medium': ['digital', 'internet', 'software', 'aplicación', 'smartphone'],
+        'low': ['tech', 'computación', 'redes'],
+    },
+    'science': {
+        'high': ['ciencia', 'investigación', 'descubrimiento', 'estudio', 'científico'],
+        'medium': ['laboratorio', 'genética', 'clima', 'espacio'],
+        'low': ['científico', 'investigador'],
+    },
+    'health': {
+        'high': ['hospital', 'médico', 'medicina', 'vacuna', 'pandemia', 'salud'],
+        'medium': ['enfermedad', 'tratamiento', 'virus', 'paciente', 'clínica'],
+        'low': ['médico', 'saludable', 'bienestar'],
+    },
+    'sports': {
+        'high': ['fútbol', 'liga', 'champions', 'mundial', 'olimpiadas', 'copa'],
+        'medium': ['equipo', 'jugador', 'partido', 'gol', 'torneo'],
+        'low': ['deporte', 'estadio', 'campeonato'],
+    },
+    'espana': {
+        'high': ['españa', 'gobierno español', 'moncloa', 'pedro sánchez', 'congreso de los diputados'],
+        'medium': ['madrid', 'barcelona', 'cataluña', 'psoe', 'pp'],
+        'low': ['español', 'ibérico'],
+    },
+    'mexico': {
+        'high': ['méxico', 'amlo', 'palacio nacional', 'congreso mexicano', 'cámara de diputados'],
+        'medium': ['ciudad de méxico', 'cdmx', 'morena', 'guadalajara'],
+        'low': ['mexicano', 'nacional'],
+    },
+    'latinoamerica': {
+        'high': ['argentina', 'brasil', 'chile', 'colombia', 'milei', 'lula', 'petro'],
+        'medium': ['buenos aires', 'são paulo', 'bogotá', 'lima', 'américa latina'],
+        'low': ['latinoamérica', 'latinoamericano'],
+    },
+    'europa': {
+        'high': ['unión europea', 'comisión europea', 'parlamento europeo', 'bruselas'],
+        'medium': ['euro', 'francia', 'alemania', 'italia', 'macron', 'scholz'],
+        'low': ['europeo', 'eurozona'],
+    },
+    'world': {
+        'high': ['guerra', 'onu', 'otan', 'conflicto', 'internacional', 'ucrania', 'rusia'],
+        'medium': ['crisis', 'diplomático', 'sanciones', 'acuerdo', 'tratado'],
+        'low': ['global', 'mundial'],
+    },
+    'entertainment': {
+        'high': ['película', 'cine', 'actor', 'actriz', 'oscar', 'netflix'],
+        'medium': ['música', 'álbum', 'concierto', 'celebridad', 'hollywood'],
+        'low': ['espectáculo', 'entretenimiento', 'famoso'],
+    },
 }
 
 STOP_WORDS = {
@@ -326,7 +408,10 @@ CATEGORY_NAMES = OrderedDict([
     ('all', 'Todo'),
     ('most_covered', 'Más Cubierto'),
     ('world', 'Mundo'),
-    ('us', 'EE.UU.'),
+    ('espana', 'España'),
+    ('mexico', 'México'),
+    ('latinoamerica', 'Latinoamérica'),
+    ('europa', 'Europa'),
     ('politics', 'Política'),
     ('business', 'Negocios'),
     ('technology', 'Tecnología'),

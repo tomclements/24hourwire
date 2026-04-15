@@ -249,10 +249,10 @@ CATEGORY_KEYWORDS = {
         'allenatore', 'stadio', 'torneo', 'campionato', 'arbitro',
         'juventus', 'milan', 'inter', 'napoli', 'roma', 'serie b', 'formule 1',
     ],
-    'us': [
-        'stati uniti', 'usa', 'america del nord', 'florida', 'texas', 'california',
-        'new york', 'miami', 'los angeles', 'chicago', 'washington', 'trump', 'biden',
-        'casa bianca', 'congresso', 'senato', 'fbi', 'cia', 'pentagono',
+    'italia': [
+        'italia', 'governo', 'presidente', 'meloni', 'parlamento', 'camera', 'senato',
+        'roma', 'milano', 'napoli', 'fdi', 'lega', 'pd', 'm5s', 'forza italia',
+        'europa', 'ue', 'commissione europea', 'parlamento europeo', 'germania', 'francia', 'spagna',
     ],
     'world': [
         'ucraina', 'russia', 'cina', 'iran', 'israele', 'gaza', 'medio oriente', 'europa',
@@ -298,7 +298,7 @@ CATEGORY_NAMES = OrderedDict([
     ('all', 'Tutti'),
     ('most_covered', 'Più Coperti'),
     ('world', 'Mondo'),
-    ('us', 'USA'),
+    ('italia', 'Italia'),
     ('politics', 'Politica'),
     ('business', 'Economia'),
     ('technology', 'Tecnologia'),
@@ -307,6 +307,54 @@ CATEGORY_NAMES = OrderedDict([
     ('sports', 'Sport'),
     ('entertainment', 'Intrattenimento'),
 ])
+
+CATEGORY_KEYWORDS_WEIGHTED = {
+    'politics': {
+        'high': ['meloni', 'salvini', 'conte', 'draghi', 'quirinale', 'palazzo chigi', 'parlamento', 'camera', 'senato'],
+        'medium': ['governo', 'presidente', 'ministro', 'elezione', 'voto', 'campagna', 'legge', 'riforma', 'partito', 'opposizione', 'maggioranza', 'politica', 'sinistra', 'destra'],
+        'low': []
+    },
+    'business': {
+        'high': ['borsa', 'ftse mib', 'euro', 'azione', 'dividendo', 'inflazione'],
+        'medium': ['economia', 'mercato', 'azienda', 'banca', 'finanza', 'investimento', 'disoccupazione', 'pil', 'crescita', 'credito', 'debito', 'esportazione', 'importazione', 'industria', 'commercio', 'lavoro', 'stipendio', 'tasse'],
+        'low': []
+    },
+    'technology': {
+        'high': ['intelligenza artificiale', 'cyberattacco', 'cybersicurezza', 'algoritmo'],
+        'medium': ['tecnologia', 'software', 'digitale', 'robot', 'app', 'smartphone', 'internet', 'informatica', 'dati', 'piattaforma', 'social network', 'startup', 'google', 'apple', 'microsoft', 'amazon', 'meta', 'tesla'],
+        'low': []
+    },
+    'science': {
+        'high': ['nasa', 'genetica', 'evoluzione', 'biodiversità'],
+        'medium': ['scienza', 'ricerca', 'scoperta', 'specie', 'clima', 'terremoto', 'vulcano', 'pianeta', 'spazio', 'universo', 'fisica', 'chimica', 'biologia', 'laboratorio', 'studio', 'scienziato', 'fossile', 'oceano'],
+        'low': []
+    },
+    'health': {
+        'high': ['ospedale', 'medico', 'medicina', 'vaccino', 'pandemia', 'covid', 'cancro', 'diabete', 'ssn'],
+        'medium': ['salute', 'malattia', 'trattamento', 'virus', 'clinica', 'paziente', 'chirurgia', 'terapia', 'sintomo', 'diagnosi', 'farmaceutico', 'nutrizione', 'esercizio', 'benessere', 'cuore', 'cervello'],
+        'low': []
+    },
+    'sports': {
+        'high': ['juventus', 'milan', 'inter', 'napoli', 'roma', 'serie a', 'serie b', 'coppa italia'],
+        'medium': ['calcio', 'serie', 'champions', 'coppa', 'mondiale', 'olimpiadi', 'sport', 'squadra', 'giocatore', 'partita', 'gol', 'tennis', 'basket', 'pallavolo', 'allenatore', 'stadio', 'torneo', 'campionato', 'arbitro', 'formule 1'],
+        'low': []
+    },
+    'italia': {
+        'high': ['italia', 'governo', 'presidente', 'meloni', 'parlamento', 'camera', 'senato', 'roma', 'milano', 'napoli'],
+        'medium': ['fdi', 'lega', 'pd', 'm5s', 'forza italia', 'europa', 'ue', 'commissione europea', 'parlamento europeo', 'germania', 'francia', 'spagna'],
+        'low': []
+    },
+    'world': {
+        'high': ['ucraina', 'russia', 'guerra', 'crisi', 'gaza', 'israele', 'putin'],
+        'medium': ['cina', 'iran', 'israele', 'gaza', 'medio oriente', 'europa', 'asia', 'africa', 'america latina', 'diplomatico', 'immigrazione', 'rifugiato', 'mondiale', 'internazionale', 'onu', 'nato', 'conflitto', 'militare', 'esercito', 'pace', 'accordo', 'trattato', 'sanzioni'],
+        'low': []
+    },
+    'entertainment': {
+        'high': ['oscar', 'david di donatello', 'sanremo', 'netflix', 'disney', 'hollywood', 'spotify'],
+        'medium': ['film', 'cinema', 'attore', 'attrice', 'celebrità', 'musica', 'album', 'concerto', 'tour', 'streaming', 'botteghino', 'teatro', 'serie', 'stagione', 'finale di stagione', 'cantante', 'band', 'premio', 'tappeto rosso', 'commedia', 'dramma', 'horror', 'videogioco', 'gaming', 'youtube', 'tiktok', 'influencer', 'virale', 'podcast', 'bestseller', 'libro', 'televisione', 'programma', 'festival'],
+        'low': []
+    },
+}
 
 UI_STRINGS = {
     'subtitle': 'Scegli il tuo orientamento | Servizi di notizie e altri feed | Ultime 24 ore',

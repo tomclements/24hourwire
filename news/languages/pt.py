@@ -231,10 +231,10 @@ CATEGORY_KEYWORDS = {
         'técnico', 'estádio', 'torneio', 'campeonato', 'árbitro',
         'flamengo', 'corinthians', 'palmeiras', 'brasileirão', 'libertadores',
     ],
-    'us': [
-        'estados unidos', 'eua', 'amárica do norte', 'flórida', 'texas', 'califórnia',
-        'nova york', 'miami', 'los angeles', 'chicago', 'washington', 'trump', 'biden',
-        'casa branca', 'congresso', 'senado', 'fbi', 'cia', 'pentágono',
+    'brasil': [
+        'brasil', 'governo', 'presidente', 'lula', 'congresso', 'câmara', 'senado',
+        'brasília', 'são paulo', 'rio de janeiro', 'pt', 'psdb', 'pmdb', 'pl', 'psol',
+        'portugal', 'lisboa', 'porto', 'assembléia', 'republica', 'ps', 'psd', 'be', 'cds',
     ],
     'world': [
         'ucrânia', 'rússia', 'china', 'irã', 'israel', 'gaza', 'médio oriente', 'europa',
@@ -282,7 +282,7 @@ CATEGORY_NAMES = OrderedDict([
     ('all', 'Todos'),
     ('most_covered', 'Mais Cobertos'),
     ('world', 'Mundo'),
-    ('us', 'EUA'),
+    ('brasil', 'Brasil'),
     ('politics', 'Política'),
     ('business', 'Economia'),
     ('technology', 'Tecnologia'),
@@ -291,6 +291,54 @@ CATEGORY_NAMES = OrderedDict([
     ('sports', 'Esportes'),
     ('entertainment', 'Entretenimento'),
 ])
+
+CATEGORY_KEYWORDS_WEIGHTED = {
+    'politics': {
+        'high': ['lula', 'bolsonaro', 'presidente', 'congresso', 'senado', 'câmara', 'stf', 'supremo'],
+        'medium': ['governo', 'ministro', 'eleição', 'voto', 'campanha', 'lei', 'reforma', 'partido', 'deputado', 'senador', 'orçamento', 'política', 'oposição'],
+        'low': []
+    },
+    'business': {
+        'high': ['bolsa', 'ibovespa', 'real', 'dólar', 'ação', 'dividendo', 'inflação'],
+        'medium': ['economia', 'mercado', 'empresa', 'banco', 'finanças', 'investimento', 'desemprego', 'pib', 'crescimento', 'crédito', 'dívida', 'exportação', 'importação', 'indústria', 'comércio', 'emprego', 'salário', 'imposto'],
+        'low': []
+    },
+    'technology': {
+        'high': ['inteligência artificial', 'ataque cibernético', 'cibersegurança', 'algoritmo'],
+        'medium': ['tecnologia', 'software', 'digital', 'robô', 'aplicativo', 'smartphone', 'internet', 'computação', 'dados', 'plataforma', 'redes sociais', 'startup', 'google', 'apple', 'microsoft', 'amazon', 'meta', 'tesla'],
+        'low': []
+    },
+    'science': {
+        'high': ['nasa', 'genética', 'evolução', 'biodiversidade'],
+        'medium': ['ciência', 'pesquisa', 'descoberta', 'espécie', 'clima', 'terremoto', 'vulcão', 'planeta', 'espaço', 'universo', 'física', 'química', 'biologia', 'laboratório', 'estudo', 'científico', 'fóssil', 'oceano'],
+        'low': []
+    },
+    'health': {
+        'high': ['hospital', 'médico', 'medicina', 'vacina', 'pandemia', 'covid', 'câncer', 'diabetes', 'sus'],
+        'medium': ['saúde', 'doença', 'tratamento', 'vírus', 'clínica', 'paciente', 'cirurgia', 'terapia', 'sintoma', 'diagnóstico', 'farmacêutico', 'nutrição', 'exercício', 'bem-estar', 'coração', 'cérebro'],
+        'low': []
+    },
+    'sports': {
+        'high': ['flamengo', 'corinthians', 'palmeiras', 'brasileirão', 'copa libertadores', 'copa do mundo'],
+        'medium': ['futebol', 'liga', 'champions', 'copa', 'olimpíadas', 'esporte', 'time', 'jogador', 'jogo', 'gol', 'tênis', 'basquete', 'vôlei', 'técnico', 'estádio', 'torneio', 'campeonato', 'árbitro'],
+        'low': []
+    },
+    'brasil': {
+        'high': ['brasil', 'governo', 'presidente', 'lula', 'congresso', 'câmara', 'senado', 'brasília', 'são paulo', 'rio de janeiro'],
+        'medium': ['pt', 'psdb', 'pmdb', 'pl', 'psol', 'portugal', 'lisboa', 'porto', 'assembléia', 'republica', 'ps', 'psd', 'be', 'cds'],
+        'low': []
+    },
+    'world': {
+        'high': ['ucrânia', 'rússia', 'guerra', 'crise', 'gaza', 'israel', 'putin'],
+        'medium': ['china', 'irã', 'israel', 'gaza', 'médio oriente', 'europa', 'ásia', 'áfrica', 'américa latina', 'diplomático', 'imigração', 'refugiado', 'mundial', 'internacional', 'onu', 'otan', 'conflito', 'militar', 'exército', 'paz', 'acordo', 'tratado', 'sanções'],
+        'low': []
+    },
+    'entertainment': {
+        'high': ['oscar', 'globo', 'netflix', 'disney', 'hollywood', 'spotify'],
+        'medium': ['filme', 'cinema', 'ator', 'atriz', 'celebridade', 'música', 'álbum', 'show', 'turnê', 'streaming', 'bilheteria', 'teatro', 'série', 'temporada', 'final de temporada', 'cantor', 'banda', 'prêmio', 'tapete vermelho', 'comédia', 'drama', 'terror', 'jogo', 'gaming', 'youtube', 'tiktok', 'influenciador', 'viral', 'podcast', 'best-seller', 'livro', 'televisão', 'programa', 'novela'],
+        'low': []
+    },
+}
 
 UI_STRINGS = {
     'subtitle': 'Escolha seu viés | Serviços de notícias e outros feeds | Últimas 24 horas',
