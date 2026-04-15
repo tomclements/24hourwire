@@ -1297,6 +1297,7 @@
             document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
             document.getElementById(catId).style.display = 'block';
             document.querySelector(`.tab[href="#${catId}"]`).classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         // Scroll tabs left/right

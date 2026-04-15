@@ -200,7 +200,11 @@ def logout_view(request):
 
 
 def different_angle(request, story_id):
-    """Show related stories with different bias for a given story."""
+    """Show related stories with different bias for a given story.
+    
+    Uses StoryCluster to find stories covering the same event from different sources,
+    then presents up to one story from each different bias category.
+    """
     from django.http import JsonResponse
     import json
     
@@ -214,55 +218,35 @@ def different_angle(request, story_id):
     lang_source_info = LANGUAGE_SOURCE_INFO.get(language, LANGUAGE_SOURCE_INFO['en'])
     story_bias = lang_source_info.get(story.source, ('Unknown', '#999', ''))[0]
     
-    # Find opposite biases
-    bias_order = ['Left', 'Left-Center', 'Center', 'Right-Center', 'Right']
-    opposite_biases = []
-    if story_bias in bias_order:
-        story_idx = bias_order.index(story_bias)
-        # Get biases that are different (prioritize farther ones)
-        for i, bias in enumerate(bias_order):
-            if bias != story_bias:
-                opposite_biases.append(bias)
+    # Find clusters this story belongs to
+    clusters = story.clusters.filter(language=language)
     
-    # Get search terms from story title
-    search_terms = story.get_search_terms().split('+')
-    
-    # Find related stories from different biases
-    cutoff = timezone.now() - timedelta(hours=48)  # Wider time window
+    # Collect all stories from these clusters (stories covering the same event)
     related_stories = []
+    seen_biases = set()
     
-    all_recent_stories = Story.objects.filter(
-        published__gte=cutoff,
-        language=language
-    ).exclude(id=story_id)
-    
-    for related in all_recent_stories:
-        related_bias = lang_source_info.get(related.source, ('Unknown', '#999', ''))[0]
-        if related_bias not in opposite_biases:
-            continue
-            
-        # Check for keyword overlap
-        related_title_lower = related.title.lower()
-        match_score = 0
-        for term in search_terms:
-            if term.lower() in related_title_lower:
-                match_score += 1
+    for cluster in clusters:
+        # Get all stories in this cluster except the current one
+        cluster_stories = cluster.stories.exclude(id=story_id)
         
-        # Include if at least 2 keywords match or high similarity
-        if match_score >= 2 or match_score >= len(search_terms) * 0.5:
+        for related in cluster_stories:
+            related_bias = lang_source_info.get(related.source, ('Unknown', '#999', ''))[0]
+            
+            # Skip if same bias as original story or already have a story from this bias
+            if related_bias == story_bias or related_bias in seen_biases:
+                continue
+            
             bias_info = lang_source_info.get(related.source, ('Unknown', '#999', ''))
             related.bias_label = bias_info[0]
             related.bias_color = bias_info[1]
             related.is_paywalled = related.source in PAYWALLED_SOURCES
             related.story_categories = get_story_categories(related.title, language)
-            related.match_score = match_score
             related_stories.append(related)
+            seen_biases.add(related_bias)
     
-    # Sort by match score (highest first) then by published date
-    related_stories.sort(key=lambda x: (-x.match_score, x.published), reverse=False)
-    
-    # Limit to top 10
-    related_stories = related_stories[:10]
+    # Sort by bias (Left to Right) for consistent presentation
+    bias_order = {'Left': 0, 'Left-Center': 1, 'Center': 2, 'Right-Center': 3, 'Right': 4, 'Unknown': 5}
+    related_stories.sort(key=lambda x: bias_order.get(x.bias_label, 5))
     
     # Return JSON for AJAX requests
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
