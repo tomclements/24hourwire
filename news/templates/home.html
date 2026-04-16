@@ -1506,6 +1506,7 @@
         
         // Different Angle functionality
         let currentDifferentAngleId = null;
+        let currentAbortController = null;
         
         function showDifferentAngle(storyId, storyTitle, storySource, storyBias) {
             const modal = document.getElementById('different-angle-modal');
@@ -1515,7 +1516,15 @@
             const title = document.getElementById('different-angle-original-title');
             const source = document.getElementById('different-angle-original-source');
             
-            // Track the current story ID to prevent race conditions
+            // Cancel any pending fetch from a previous story
+            if (currentAbortController) {
+                currentAbortController.abort();
+            }
+            
+            // Create new abort controller for this request
+            currentAbortController = new AbortController();
+            
+            // Track the current story ID
             currentDifferentAngleId = storyId;
             
             // Show modal with loading state
@@ -1525,20 +1534,29 @@
             title.textContent = storyTitle;
             source.textContent = storySource + ' (' + storyBias + ')';
             
-            // Fetch related stories
+            // Fetch related stories with abort signal
             fetch('/different-angle/' + storyId + '/', {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
-                }
+                },
+                signal: currentAbortController.signal
             })
-            .then(response => response.json())
-            .then(data => {
-                // Only update if this is still the current story (prevent race conditions)
-                if (currentDifferentAngleId !== storyId) {
-                    return;
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
                 }
+                return response.json();
+            })
+            .then(data => {
+                // Clear abort controller since request completed
+                currentAbortController = null;
                 
                 loading.style.display = 'none';
+                
+                if (data.error) {
+                    list.innerHTML = '<div class="no-different-angle">' + data.error + '</div>';
+                    return;
+                }
                 
                 if (data.related_stories && data.related_stories.length > 0) {
                     data.related_stories.forEach(story => {
@@ -1559,11 +1577,12 @@
                 }
             })
             .catch(error => {
-                // Only update if this is still the current story
-                if (currentDifferentAngleId !== storyId) {
+                // Don't show error if request was aborted (user clicked another story)
+                if (error.name === 'AbortError') {
                     return;
                 }
                 
+                currentAbortController = null;
                 loading.style.display = 'none';
                 list.innerHTML = '<div class="no-different-angle">Error loading related stories. Please try again.</div>';
                 console.error('Error:', error);
