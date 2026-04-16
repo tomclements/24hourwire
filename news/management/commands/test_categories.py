@@ -40,10 +40,10 @@ class Command(BaseCommand):
             
             if is_correct:
                 passed += 1
-                status = self.style.SUCCESS("✓ PASS")
+                status = self.style.SUCCESS("[PASS]")
             else:
                 failed += 1
-                status = self.style.ERROR("✗ FAIL")
+                status = self.style.ERROR("[FAIL]")
             
             if verbose or not is_correct:
                 self.stdout.write(f"\n{status} {title}")
@@ -68,7 +68,7 @@ class Command(BaseCommand):
         self.stdout.write(f"  Accuracy: {accuracy:.1f}%")
         
         if failed > 0:
-            self.stdout.write(self.style.WARNING("\n⚠ Some tests failed. Review failures above."))
+            self.stdout.write(self.style.WARNING("\n[!] Some tests failed. Review failures above."))
             sys.exit(1)
         else:
-            self.stdout.write(self.style.SUCCESS("\n✓ All tests passed! Ready to deploy."))
+            self.stdout.write(self.style.SUCCESS("\n[OK] All tests passed! Ready to deploy."))

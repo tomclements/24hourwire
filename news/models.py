@@ -5,6 +5,13 @@ from urllib.parse import urlparse, parse_qs, urlencode
 from django.db import models
 
 
+# Pre-compile regex patterns for excerpt cleaning
+GOOGLE_NEWS_URL_PATTERN = re.compile(r'<a\s+href="https?://news\.google\.com/rss/articles/[^"]*"[^>]*>.*?</a>', re.IGNORECASE | re.DOTALL)
+HTML_TAG_PATTERN = re.compile(r'<[^>]+>')
+URL_PATTERN = re.compile(r'https?://\S+')
+WHITESPACE_PATTERN = re.compile(r'\s+')
+
+
 def normalize_url(url):
     """Normalize URL for dedup comparison - strips tracking params, normalizes scheme."""
     parsed = urlparse(url)
@@ -84,13 +91,13 @@ class Story(models.Model):
         text = self.excerpt
         
         # Remove Google News RSS reference URLs (e.g., <a href="https://news.google.com/rss/articles/CBMi2...")
-        text = re.sub(r'<a\s+href="https?://news\.google\.com/rss/articles/[^"]*"[^>]*>.*?</a>', ' ', text, flags=re.IGNORECASE | re.DOTALL)
+        text = GOOGLE_NEWS_URL_PATTERN.sub(' ', text)
         
         # Remove all HTML tags more aggressively
-        text = re.sub(r'<[^>]+>', ' ', text)
+        text = HTML_TAG_PATTERN.sub(' ', text)
         
         # Remove URLs that might be left over
-        text = re.sub(r'https?://\S+', ' ', text)
+        text = URL_PATTERN.sub(' ', text)
         
         # Remove source attribution at end
         attribution = SOURCE_ATTRIBUTION.get(self.language, SOURCE_ATTRIBUTION['en'])
@@ -106,7 +113,7 @@ class Story(models.Model):
         text = re.sub(r'&[a-zA-Z0-9]+;', '', text)  # Remove any remaining entities
         
         # Clean up whitespace
-        text = re.sub(r'\s+', ' ', text).strip()
+        text = WHITESPACE_PATTERN.sub(' ', text).strip()
         
         # Filter out generic text
         generic = GENERIC_TEXT.get(self.language, GENERIC_TEXT['en'])

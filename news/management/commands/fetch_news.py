@@ -13,6 +13,13 @@ from news.models import Story, normalize_url, title_fingerprint
 from news.sources_config import LANGUAGE_FEEDS, SUPPORTED_LANGUAGES
 from news.categorization import categorize_story
 
+
+# Pre-compile regex patterns for efficiency
+GOOGLE_NEWS_URL_PATTERN = re.compile(r'<a\s+href="https?://news\.google\.com/rss/articles/[^"]*"[^>]*>.*?</a>', re.IGNORECASE | re.DOTALL)
+HTML_TAG_PATTERN = re.compile(r'<[^>]+>')
+URL_PATTERN = re.compile(r'https?://\S+')
+WHITESPACE_PATTERN = re.compile(r'\s+')
+
 logger = logging.getLogger('news.fetch')
 logger.setLevel(logging.INFO)
 handler = logging.FileHandler('fetch_news.log')
@@ -164,17 +171,16 @@ class Command(BaseCommand):
                     continue
 
                 # Create excerpt - clean HTML and Google News reference URLs
-                import re
                 rss_excerpt = entry.get('summary', '')[:500]  # Reduced from 800
                 
                 # Clean Google News RSS reference URLs immediately
-                rss_excerpt = re.sub(r'<a\s+href="https?://news\.google\.com/rss/articles/[^"]*"[^>]*>.*?</a>', ' ', rss_excerpt, flags=re.IGNORECASE | re.DOTALL)
+                rss_excerpt = GOOGLE_NEWS_URL_PATTERN.sub(' ', rss_excerpt)
                 # Remove all HTML tags
-                rss_excerpt = re.sub(r'<[^>]+>', ' ', rss_excerpt)
+                rss_excerpt = HTML_TAG_PATTERN.sub(' ', rss_excerpt)
                 # Remove leftover URLs
-                rss_excerpt = re.sub(r'https?://\S+', ' ', rss_excerpt)
+                rss_excerpt = URL_PATTERN.sub(' ', rss_excerpt)
                 # Clean up whitespace
-                rss_excerpt = re.sub(r'\s+', ' ', rss_excerpt).strip()
+                rss_excerpt = WHITESPACE_PATTERN.sub(' ', rss_excerpt).strip()
                 
                 title_words = set(title.lower().split())
                 if rss_excerpt:

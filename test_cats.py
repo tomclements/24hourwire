@@ -37,8 +37,8 @@ failed = 0
 
 for title, expected in test_titles:
     cats = get_story_categories(title)
-    status = '✓' if all(e in cats for e in expected) else '✗'
-    if status == '✓':
+    status = '[PASS]' if all(e in cats for e in expected) else '[FAIL]'
+    if status == '[PASS]':
         passed += 1
     else:
         failed += 1
