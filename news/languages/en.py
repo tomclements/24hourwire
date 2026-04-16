@@ -442,8 +442,8 @@ CATEGORY_KEYWORDS = {
 CATEGORY_KEYWORDS_WEIGHTED = {
     'politics': {
         'high': ['supreme court', 'white house', 'congress', 'parliament', 'prime minister', 'kremlin', 'executive order', 'capitol hill'],
-        'medium': ['election', 'senator', 'president', 'legislation', 'vote', 'campaign', 'senate', 'government', 'minister', 'bill', 'policy'],
-        'low': ['political', 'ruling', 'convention', 'democrat', 'republican', 'bipartisan', 'partisan', 'coalition'],
+        'medium': ['election', 'senator', 'president', 'legislation', 'vote', 'campaign', 'senate', 'government', 'minister', 'bill', 'policy', 'summit', 'meets', 'meeting', 'visits', 'diplomatic', 'bilateral'],
+        'low': ['political', 'ruling', 'convention', 'democrat', 'republican', 'bipartisan', 'partisan', 'coalition', 'talks', 'negotiations'],
     },
     'business': {
         'high': ['stock market', 'federal reserve', 'ipo', 'merger', 'acquisition', 'nasdaq', 'dow jones', 'trade war', 'economic policy'],
