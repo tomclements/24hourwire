@@ -80,22 +80,39 @@ class Story(models.Model):
         from news.sources_config import SOURCE_ATTRIBUTION, GENERIC_TEXT
         if not self.excerpt:
             return ''
-        text = re.sub(r'<[^>]+>', ' ', self.excerpt)
+        
+        text = self.excerpt
+        
+        # Remove Google News RSS reference URLs (e.g., <a href="https://news.google.com/rss/articles/CBMi2...")
+        text = re.sub(r'<a\s+href="https?://news\.google\.com/rss/articles/[^"]*"[^>]*>.*?</a>', ' ', text, flags=re.IGNORECASE | re.DOTALL)
+        
+        # Remove all HTML tags more aggressively
+        text = re.sub(r'<[^>]+>', ' ', text)
+        
+        # Remove URLs that might be left over
+        text = re.sub(r'https?://\S+', ' ', text)
+        
         # Remove source attribution at end
         attribution = SOURCE_ATTRIBUTION.get(self.language, SOURCE_ATTRIBUTION['en'])
         text = re.sub(attribution, '', text, flags=re.IGNORECASE)
-        # Remove common artifacts
+        
+        # Decode HTML entities
         text = re.sub(r'&nbsp;', ' ', text)
         text = re.sub(r'&amp;', '&', text)
         text = re.sub(r'&lt;', '<', text)
         text = re.sub(r'&gt;', '>', text)
         text = re.sub(r'&#39;', "'", text)
-        text = re.sub(r'&[a-z]+;', '', text)
+        text = re.sub(r'&quot;', '"', text)
+        text = re.sub(r'&[a-zA-Z0-9]+;', '', text)  # Remove any remaining entities
+        
+        # Clean up whitespace
         text = re.sub(r'\s+', ' ', text).strip()
+        
         # Filter out generic text
         generic = GENERIC_TEXT.get(self.language, GENERIC_TEXT['en'])
         if any(g in text.lower() for g in generic):
             return ''
+        
         # Filter out if too similar to title
         title_lower = self.title.lower()
         text_lower = text.lower()

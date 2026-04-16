@@ -163,8 +163,19 @@ class Command(BaseCommand):
                     total_dupes += 1
                     continue
 
-                # Create excerpt
+                # Create excerpt - clean HTML and Google News reference URLs
+                import re
                 rss_excerpt = entry.get('summary', '')[:500]  # Reduced from 800
+                
+                # Clean Google News RSS reference URLs immediately
+                rss_excerpt = re.sub(r'<a\s+href="https?://news\.google\.com/rss/articles/[^"]*"[^>]*>.*?</a>', ' ', rss_excerpt, flags=re.IGNORECASE | re.DOTALL)
+                # Remove all HTML tags
+                rss_excerpt = re.sub(r'<[^>]+>', ' ', rss_excerpt)
+                # Remove leftover URLs
+                rss_excerpt = re.sub(r'https?://\S+', ' ', rss_excerpt)
+                # Clean up whitespace
+                rss_excerpt = re.sub(r'\s+', ' ', rss_excerpt).strip()
+                
                 title_words = set(title.lower().split())
                 if rss_excerpt:
                     rss_words = set(rss_excerpt.lower().split())
