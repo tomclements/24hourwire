@@ -240,7 +240,7 @@ def different_angle(request, story_id):
             related.bias_label = bias_info[0]
             related.bias_color = bias_info[1]
             related.is_paywalled = related.source in PAYWALLED_SOURCES
-            related.story_categories = get_story_categories(related.title, language)
+            # Note: skip get_story_categories() here for performance - not needed for JSON response
             related_stories.append(related)
             seen_biases.add(related_bias)
     
