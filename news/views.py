@@ -199,6 +199,38 @@ def logout_view(request):
     return redirect('home')
 
 
+def story_share(request, story_id):
+    """Display a story sharing page with proper OG/Twitter Card meta tags.
+    
+    This page is designed to be shared on social media. It shows the story
+    preview with full Open Graph and Twitter Card metadata, then redirects
+    to the original article.
+    """
+    from django.http import Http404
+    
+    try:
+        story = Story.objects.get(id=story_id)
+    except Story.DoesNotExist:
+        raise Http404("Story not found")
+    
+    # Get language and bias info
+    language = story.language
+    lang_source_info = LANGUAGE_SOURCE_INFO.get(language, LANGUAGE_SOURCE_INFO['en'])
+    bias_info = lang_source_info.get(story.source, ('Unknown', '#999', ''))
+    story.bias_label = bias_info[0]
+    story.bias_color = bias_info[1]
+    story.is_paywalled = story.source in PAYWALLED_SOURCES
+    
+    # Get UI strings
+    ui_strings = UI_STRINGS.get(language, UI_STRINGS['en'])
+    
+    return render(request, 'story_share.html', {
+        'story': story,
+        'language': language,
+        't': ui_strings,
+    })
+
+
 def different_angle(request, story_id):
     """Show related stories with different bias for a given story.
     
