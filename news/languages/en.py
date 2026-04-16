@@ -441,14 +441,14 @@ CATEGORY_KEYWORDS = {
 # Low weight (1): General terms
 CATEGORY_KEYWORDS_WEIGHTED = {
     'politics': {
-        'high': ['supreme court', 'white house', 'congress', 'parliament', 'prime minister', 'kremlin', 'executive order'],
-        'medium': ['election', 'senator', 'president', 'legislation', 'vote', 'campaign', 'senate'],
-        'low': ['policy', 'political', 'government', 'ruling', 'convention'],
+        'high': ['supreme court', 'white house', 'congress', 'parliament', 'prime minister', 'kremlin', 'executive order', 'capitol hill'],
+        'medium': ['election', 'senator', 'president', 'legislation', 'vote', 'campaign', 'senate', 'government', 'minister', 'bill', 'policy'],
+        'low': ['political', 'ruling', 'convention', 'democrat', 'republican', 'bipartisan', 'partisan', 'coalition'],
     },
     'business': {
-        'high': ['stock market', 'federal reserve', 'ipo', 'merger', 'acquisition', 'nasdaq', 'dow jones'],
-        'medium': ['economy', 'inflation', 'earnings', 'revenue', 'profit', 'investment', 'startup'],
-        'low': ['market', 'business', 'corporate', 'trade', 'economic'],
+        'high': ['stock market', 'federal reserve', 'ipo', 'merger', 'acquisition', 'nasdaq', 'dow jones', 'trade war', 'economic policy'],
+        'medium': ['economy', 'inflation', 'earnings', 'revenue', 'profit', 'investment', 'startup', 'infrastructure', 'trade', 'tariff', 'sanctions'],
+        'low': ['market', 'business', 'corporate', 'economic', 'financial', 'commerce', 'industry'],
     },
     'technology': {
         'high': ['artificial intelligence', 'cybersecurity', 'cyberattack', 'data breach', 'semiconductor', 'quantum computing', 'openai', 'gpt', 'tesla', 'augmented reality'],
@@ -456,9 +456,9 @@ CATEGORY_KEYWORDS_WEIGHTED = {
         'low': ['tech', 'digital', 'app', 'software', 'online', 'model'],
     },
     'science': {
-        'high': ['study finds', 'researchers say', 'peer-reviewed', 'breakthrough', 'published in', 'nasa', 'spacex'],
-        'medium': ['climate change', 'researcher', 'experiment', 'discovery', 'species', 'genetic'],
-        'low': ['research', 'scientist', 'study', 'analysis', 'space'],
+        'high': ['study finds', 'researchers say', 'peer-reviewed', 'breakthrough', 'published in', 'nasa', 'spacex', 'space mission', 'spacecraft', 'telescope'],
+        'medium': ['climate change', 'researcher', 'experiment', 'discovery', 'species', 'genetic', 'launch', 'orbit', 'mars', 'moon landing'],
+        'low': ['research', 'scientist', 'study', 'analysis', 'space', 'rocket', 'satellite', 'galaxy', 'planet'],
     },
     'health': {
         'high': ['fda approves', 'clinical trial', 'vaccine', 'pandemic', 'outbreak', 'hospital'],
@@ -471,29 +471,29 @@ CATEGORY_KEYWORDS_WEIGHTED = {
         'low': ['game', 'match', 'score', 'team', 'league', 'season'],
     },
     'united-states': {
-        'high': ['white house', 'capitol hill', 'fbi', 'cia', 'pentagon', 'supreme court'],
-        'medium': ['congress', 'senate', 'federal', 'u.s.', 'united states', 'american'],
-        'low': ['america', 'usa', 'federal'],
+        'high': ['white house', 'capitol hill', 'fbi', 'cia', 'pentagon', 'supreme court', 'biden', 'trump'],
+        'medium': ['congress', 'senate', 'federal', 'u.s.', 'united states', 'american', 'americans', 'president', 'administration'],
+        'low': ['america', 'usa', 'federal', 'washington', 'new york'],
     },
     'united-kingdom': {
-        'high': ['downing street', 'parliament', 'westminster', 'house of commons', 'prime minister'],
-        'medium': ['uk ', 'british', 'britain', 'united kingdom', 'london'],
-        'low': ['england', 'scotland', 'wales'],
+        'high': ['downing street', 'parliament', 'westminster', 'house of commons', 'prime minister', 'starmer', 'sunak'],
+        'medium': ['uk ', 'british', 'britain', 'united kingdom', 'london', 'cabinet', 'general election'],
+        'low': ['england', 'scotland', 'wales', 'manchester', 'birmingham'],
     },
     'europe': {
-        'high': ['european union', 'european commission', 'brussels', 'european parliament'],
-        'medium': ['euro', 'eu ', 'france', 'germany', 'italy', 'macron', 'scholz'],
-        'low': ['europe', 'european', 'eurozone'],
+        'high': ['european union', 'european commission', 'brussels', 'european parliament', 'eu leaders'],
+        'medium': ['euro', 'eu ', 'france', 'germany', 'italy', 'macron', 'scholz', 'meloni', 'berlin', 'paris', 'bundestag', 'rome', 'madrid'],
+        'low': ['europe', 'european', 'eurozone', 'eastern europe', 'western europe'],
     },
     'asia-pacific': {
-        'high': ['china', 'japan', 'south korea', 'india', 'australia', 'xi jinping', 'modi'],
-        'medium': ['asean', 'hong kong', 'taiwan', 'singapore', 'indonesia', 'thailand'],
-        'low': ['asia', 'pacific', 'east asia', 'southeast asia'],
+        'high': ['china', 'japan', 'south korea', 'india', 'australia', 'xi jinping', 'modi', 'albanese'],
+        'medium': ['asean', 'hong kong', 'taiwan', 'singapore', 'indonesia', 'thailand', 'space mission', 'rocket', 'satellite'],
+        'low': ['asia', 'pacific', 'east asia', 'southeast asia', 'beijing', 'tokyo', 'seoul', 'new delhi'],
     },
     'world': {
-        'high': ['ukraine', 'russia', 'china', 'iran', 'israel', 'gaza', 'nato', 'united nations'],
-        'medium': ['european union', 'war', 'diplomat', 'sanctions', 'embassy', 'military'],
-        'low': ['international', 'global', 'foreign', 'border', 'crisis'],
+        'high': ['ukraine', 'russia', 'israel', 'gaza', 'nato', 'united nations', 'syria', 'afghanistan', 'iraq', 'lebanon', 'yemen', 'palestine', 'venezuela', 'north korea', 'myanmar'],
+        'medium': ['war', 'diplomat', 'sanctions', 'embassy', 'military', 'ceasefire', 'conflict', 'earthquake', 'tsunami', 'natural disaster', 'refugee', 'humanitarian'],
+        'low': ['international', 'global', 'foreign', 'border', 'crisis', 'summit', 'treaty', 'alliance'],
     },
     'entertainment': {
         'high': ['oscar', 'grammy', 'emmy', 'netflix', 'hollywood', 'box office', 'taylor swift'],
