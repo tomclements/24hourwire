@@ -99,10 +99,9 @@ if DATABASE_URL:
             # Reduces connection overhead and prevents SSL handshake issues
             'CONN_MAX_AGE': 600,
             # SSL configuration for Render
-            # Use 'prefer' on Render to allow fallback if SSL fails
-            # This is a workaround for Render's intermittent SSL issues
+            # Try 'disable' as a last resort workaround for Render's SSL issues
             'OPTIONS': {
-                'sslmode': 'prefer' if is_render else 'require',
+                'sslmode': 'disable' if is_render else 'require',
             },
         }
     }
