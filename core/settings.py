@@ -80,6 +80,7 @@ DATABASE_URL = os.environ.get('DATABASE_URL', '')
 
 if DATABASE_URL:
     # Parse DATABASE_URL (format: postgresql://user:pass@host:port/dbname)
+    # Optimized for Render.com managed PostgreSQL with SSL and connection pooling
     from urllib.parse import urlparse
     _parsed = urlparse(DATABASE_URL)
     DATABASES = {
@@ -90,6 +91,13 @@ if DATABASE_URL:
             'PASSWORD': _parsed.password or '',
             'HOST': _parsed.hostname or '',
             'PORT': _parsed.port or '5432',
+            # Connection pooling - keep connections alive longer (10 minutes)
+            # Reduces connection overhead and prevents SSL handshake issues
+            'CONN_MAX_AGE': 600,
+            # SSL mode required for Render.com PostgreSQL
+            'OPTIONS': {
+                'sslmode': 'require',
+            },
         }
     }
 else:
