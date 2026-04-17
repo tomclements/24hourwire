@@ -5,10 +5,12 @@ import re
 import logging
 import hashlib
 import gc
+import time
 from datetime import datetime, timedelta
 from difflib import SequenceMatcher
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+from django.db import OperationalError, connection
 from news.models import Story, normalize_url, title_fingerprint
 from news.sources_config import LANGUAGE_FEEDS, SUPPORTED_LANGUAGES
 from news.categorization import categorize_story
@@ -21,6 +23,32 @@ URL_PATTERN = re.compile(r'https?://\S+')
 WHITESPACE_PATTERN = re.compile(r'\s+')
 
 logger = logging.getLogger('news.fetch')
+
+
+def retry_on_db_error(max_retries=3, delay=2):
+    """Decorator to retry database operations on connection errors."""
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            last_error = None
+            for attempt in range(max_retries):
+                try:
+                    return func(*args, **kwargs)
+                except OperationalError as e:
+                    last_error = e
+                    logger.warning(f'Database connection error (attempt {attempt + 1}/{max_retries}): {e}')
+                    if attempt < max_retries - 1:
+                        time.sleep(delay * (attempt + 1))  # Exponential backoff
+                        # Try to reconnect
+                        try:
+                            connection.close()
+                            connection.connect()
+                        except Exception:
+                            pass
+                    else:
+                        raise last_error
+            return None
+        return wrapper
+    return decorator
 logger.setLevel(logging.INFO)
 handler = logging.FileHandler('fetch_news.log')
 handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
@@ -234,15 +262,24 @@ class Command(BaseCommand):
 
         return total_new, total_dupes, url_dupes, title_dupes, fuzzy_dupes
 
+    @retry_on_db_error(max_retries=3, delay=2)
+    def clean_old_stories(self):
+        """Clean stories older than 24 hours with retry logic."""
+        cutoff = timezone.now() - timedelta(hours=24)
+        deleted = Story.objects.filter(published__lt=cutoff).delete()
+        return deleted[0]
+
     def handle(self, *args, **options):
         language = options['language']
         logger.info(f'Starting news fetch (language: {language})')
 
-        cutoff = timezone.now() - timedelta(hours=24)
-
-        deleted = Story.objects.filter(published__lt=cutoff).delete()
-        logger.info(f'Cleaned old stories: {deleted[0]} removed')
-        self.safe_write(f"Cleaned old stories: {deleted[0]} removed")
+        try:
+            deleted_count = self.clean_old_stories()
+            logger.info(f'Cleaned old stories: {deleted_count} removed')
+            self.safe_write(f"Cleaned old stories: {deleted_count} removed")
+        except Exception as e:
+            logger.error(f'Failed to clean old stories: {e}')
+            self.safe_write(self.style.WARNING(f"Warning: Could not clean old stories: {e}"))
 
         total_new = 0
         total_dupes = 0
