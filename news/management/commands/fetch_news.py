@@ -95,6 +95,37 @@ class Command(BaseCommand):
         """Calculate similarity ratio between two titles."""
         return SequenceMatcher(None, title1.lower(), title2.lower()).ratio()
 
+    def load_existing_hashes_with_retry(self, language, recent_cutoff, max_retries=3):
+        """Load existing URL hashes with retry logic for database connection issues."""
+        for attempt in range(max_retries):
+            try:
+                # Load URL hashes (only recent ones to save memory)
+                existing_url_hashes = set(
+                    Story.objects.filter(language=language, published__gte=recent_cutoff)
+                    .values_list('url_hash', flat=True)
+                )
+                
+                # Load source+fingerprint combos (only recent ones)
+                existing_source_fps = set(
+                    Story.objects.filter(language=language, published__gte=recent_cutoff)
+                    .values_list('source', 'title_fingerprint')
+                )
+                
+                return existing_url_hashes, existing_source_fps
+            except OperationalError as e:
+                logger.warning(f'Database connection error loading hashes (attempt {attempt + 1}/{max_retries}): {e}')
+                if attempt < max_retries - 1:
+                    time.sleep(2 * (attempt + 1))
+                    try:
+                        connection.close()
+                        connection.connect()
+                    except Exception:
+                        pass
+                else:
+                    logger.error(f'Failed to load hashes after {max_retries} attempts')
+                    raise
+        return set(), set()
+
     def fetch_language(self, language):
         feeds = LANGUAGE_FEEDS.get(language, [])
         logger.info(f'Fetching {language} news from {len(feeds)} sources')
@@ -109,17 +140,8 @@ class Command(BaseCommand):
         logger.info(f'Loading existing hashes for {language}...')
         self.safe_write(f"  Loading existing hashes...", ending=" ")
         
-        # Load URL hashes (only recent ones to save memory)
-        existing_url_hashes = set(
-            Story.objects.filter(language=language, published__gte=recent_cutoff)
-            .values_list('url_hash', flat=True)
-        )
-        
-        # Load source+fingerprint combos (only recent ones)
-        existing_source_fps = set(
-            Story.objects.filter(language=language, published__gte=recent_cutoff)
-            .values_list('source', 'title_fingerprint')
-        )
+        # Load URL hashes with retry logic
+        existing_url_hashes, existing_source_fps = self.load_existing_hashes_with_retry(language, recent_cutoff)
         
         self.safe_write(f"OK ({len(existing_url_hashes)} hashes, {len(existing_source_fps)} fingerprints)")
         logger.info(f'Loaded {len(existing_url_hashes)} URL hashes, {len(existing_source_fps)} fingerprints')
@@ -269,9 +291,35 @@ class Command(BaseCommand):
         deleted = Story.objects.filter(published__lt=cutoff).delete()
         return deleted[0]
 
+    def check_db_connection(self, max_retries=3):
+        """Check if database connection is working."""
+        for attempt in range(max_retries):
+            try:
+                # Try a simple query
+                Story.objects.first()
+                return True
+            except OperationalError as e:
+                logger.warning(f'Database connection check failed (attempt {attempt + 1}/{max_retries}): {e}')
+                if attempt < max_retries - 1:
+                    time.sleep(2 * (attempt + 1))
+                    try:
+                        connection.close()
+                        connection.connect()
+                    except Exception:
+                        pass
+                else:
+                    return False
+        return False
+
     def handle(self, *args, **options):
         language = options['language']
         logger.info(f'Starting news fetch (language: {language})')
+
+        # Check database connection before starting
+        if not self.check_db_connection():
+            logger.error('Database connection failed - cannot proceed with fetch')
+            self.safe_write(self.style.ERROR("ERROR: Database connection failed. Cannot fetch news."))
+            return
 
         try:
             deleted_count = self.clean_old_stories()
