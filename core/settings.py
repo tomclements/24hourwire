@@ -83,6 +83,10 @@ if DATABASE_URL:
     # Optimized for Render.com managed PostgreSQL with SSL and connection pooling
     from urllib.parse import urlparse
     _parsed = urlparse(DATABASE_URL)
+    
+    # Detect if running on Render ( Render hosts have 'render.com' in the hostname)
+    is_render = 'render.com' in (_parsed.hostname or '')
+    
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -94,9 +98,11 @@ if DATABASE_URL:
             # Connection pooling - keep connections alive longer (10 minutes)
             # Reduces connection overhead and prevents SSL handshake issues
             'CONN_MAX_AGE': 600,
-            # SSL mode required for Render.com PostgreSQL
+            # SSL configuration for Render
+            # Use 'prefer' on Render to allow fallback if SSL fails
+            # This is a workaround for Render's intermittent SSL issues
             'OPTIONS': {
-                'sslmode': 'require',
+                'sslmode': 'prefer' if is_render else 'require',
             },
         }
     }
