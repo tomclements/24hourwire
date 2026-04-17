@@ -1,11 +1,17 @@
 #!/bin/bash
 # Pre-deployment testing script for 24HourWire
 # Run this before committing/pushing to catch errors locally
+# 
+# ⚠️  CRITICAL: ALWAYS TEST BEFORE DEPLOYING  ⚠️
+# This script will BLOCK commits if tests fail
 
 echo "================================"
 echo "24HourWire Pre-Deploy Checklist"
 echo "================================"
 echo ""
+echo "⚠️  WARNING: DO NOT DEPLOY IF TESTS FAIL  ⚠️"
+echo ""
+sleep 1
 
 # Colors for output
 RED='\033[0;31m'
@@ -81,6 +87,31 @@ if echo "$SYS_CHECK" | grep -q "System check identified no issues"; then
 else
     echo -e "${YELLOW}⚠ Django issues found:${NC}"
     echo "$SYS_CHECK" | grep -A2 "WARNINGS\|ERRORS" | head -20
+    WARNINGS=$((WARNINGS + 1))
+fi
+echo ""
+
+# 5b. Run categorization tests (CRITICAL)
+echo "5b. Running categorization tests..."
+CAT_TEST_OUTPUT=$($PYTHON_CMD manage.py test_categories 2>&1)
+CAT_TEST_EXIT=$?
+
+# Extract pass/fail counts
+if echo "$CAT_TEST_OUTPUT" | grep -q "passed"; then
+    PASSED=$(echo "$CAT_TEST_OUTPUT" | grep -oP '\d+(?= passed)' | tail -1)
+    FAILED=$(echo "$CAT_TEST_OUTPUT" | grep -oP '\d+(?= failed)' | tail -1)
+    TOTAL=$((PASSED + FAILED))
+    
+    if [ "$FAILED" -eq 0 ]; then
+        echo -e "${GREEN}✓ All $TOTAL categorization tests passed${NC}"
+    else
+        echo -e "${RED}✗ Categorization tests failed: $PASSED/$TOTAL passed${NC}"
+        echo "$CAT_TEST_OUTPUT" | grep -A2 "Failing"
+        ERRORS=$((ERRORS + 1))
+    fi
+else
+    echo -e "${YELLOW}⚠ Could not parse categorization test results${NC}"
+    echo "$CAT_TEST_OUTPUT" | tail -20
     WARNINGS=$((WARNINGS + 1))
 fi
 echo ""
@@ -174,14 +205,25 @@ echo "================================"
 if [ $ERRORS -eq 0 ] && [ $WARNINGS -eq 0 ]; then
     echo -e "${GREEN}✓ ALL CHECKS PASSED${NC}"
     echo "Safe to deploy!"
+    echo ""
+    echo "Remember: This script runs automatically on git commit"
     exit 0
 elif [ $ERRORS -eq 0 ]; then
     echo -e "${YELLOW}⚠ $WARNINGS warning(s) found${NC}"
     echo "Review warnings, but should be safe to deploy"
+    echo ""
     exit 0
 else
+    echo -e "${RED}✗✗✗ DEPLOYMENT BLOCKED ✗✗✗${NC}"
     echo -e "${RED}✗ $ERRORS error(s) found${NC}"
     [ $WARNINGS -gt 0 ] && echo -e "${YELLOW}⚠ $WARNINGS warning(s)${NC}"
-    echo "Fix errors before deploying!"
+    echo ""
+    echo "⛔ DO NOT DEPLOY WITH FAILING TESTS ⛔"
+    echo ""
+    echo "Fix the errors above, then run tests again:"
+    echo "  python manage.py test_categories"
+    echo "  python manage.py test"
+    echo ""
+    echo "To bypass (NOT RECOMMENDED): git commit --no-verify"
     exit 1
 fi
