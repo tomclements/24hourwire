@@ -1768,16 +1768,12 @@
             // Track the current story ID
             currentDifferentAngleId = storyId;
             
-            // CRITICAL: Clear ALL previous content before showing new story
-            list.innerHTML = '';
-            title.textContent = '';
-            source.textContent = '';
-            
-            // Show modal with loading state
+            // Show modal immediately with new story info (don't wait for fetch)
             modal.classList.add('active');
             loading.style.display = 'block';
+            list.innerHTML = '';
             
-            // Set new story info
+            // Set new story info immediately
             title.textContent = storyTitle;
             source.textContent = storySource + ' (' + storyBias + ')';
             
@@ -1833,6 +1829,11 @@
             .catch(error => {
                 // Don't show error if request was aborted (user clicked another story)
                 if (error.name === 'AbortError') {
+                    return;
+                }
+                
+                // Check again if this is still the current story
+                if (currentDifferentAngleId !== storyId) {
                     return;
                 }
                 
