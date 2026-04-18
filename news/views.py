@@ -239,10 +239,15 @@ def different_angle(request, story_id):
     """
     from django.http import JsonResponse
     import json
+    import logging
+    
+    logger = logging.getLogger('news.different_angle')
     
     try:
         story = Story.objects.get(id=story_id)
+        logger.info(f"Different Angle requested for story {story_id}: '{story.title}' from {story.source}")
     except Story.DoesNotExist:
+        logger.error(f"Story {story_id} not found")
         return JsonResponse({'error': 'Story not found'}, status=404)
     
     # Get story's bias
@@ -252,6 +257,8 @@ def different_angle(request, story_id):
     
     # Find clusters this story belongs to
     clusters = story.clusters.filter(language=language)
+    cluster_count = clusters.count()
+    logger.info(f"Story {story_id} belongs to {cluster_count} cluster(s)")
     
     # Collect all stories from these clusters (stories covering the same event)
     related_stories = []
@@ -295,6 +302,7 @@ def different_angle(request, story_id):
                 'is_paywalled': s.is_paywalled,
                 'excerpt': s.get_clean_excerpt()[:200] if s.get_clean_excerpt() else '',
             })
+        logger.info(f"Returning {len(stories_data)} related stories for story {story_id}")
         return JsonResponse({
             'original_story': {
                 'id': story.id,

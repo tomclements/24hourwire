@@ -1768,10 +1768,16 @@
             // Track the current story ID
             currentDifferentAngleId = storyId;
             
+            // CRITICAL: Clear ALL previous content before showing new story
+            list.innerHTML = '';
+            title.textContent = '';
+            source.textContent = '';
+            
             // Show modal with loading state
             modal.classList.add('active');
             loading.style.display = 'block';
-            list.innerHTML = '';
+            
+            // Set new story info
             title.textContent = storyTitle;
             source.textContent = storySource + ' (' + storyBias + ')';
             
@@ -1789,6 +1795,13 @@
                 return response.json();
             })
             .then(data => {
+                // CRITICAL: Check if user clicked a different story while this was loading
+                // If so, ignore this response and don't update the UI
+                if (currentDifferentAngleId !== storyId) {
+                    console.log('Ignoring stale response for story', storyId, '- user clicked story', currentDifferentAngleId);
+                    return;
+                }
+                
                 // Clear abort controller since request completed
                 currentAbortController = null;
                 

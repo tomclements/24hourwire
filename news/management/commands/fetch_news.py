@@ -87,10 +87,9 @@ class Command(BaseCommand):
             with urllib.request.urlopen(req, context=ctx, timeout=15) as response:
                 return feedparser.parse(response.read())
         except Exception:
-            try:
-                return feedparser.parse(url)
-            except Exception:
-                return feedparser.parse('')
+            # Don't use feedparser.parse(url) directly as it has no timeout
+            # Return empty feed instead to prevent hanging
+            return feedparser.parse('')
 
     def title_similarity(self, title1, title2):
         """Calculate similarity ratio between two titles."""
