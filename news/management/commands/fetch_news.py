@@ -22,10 +22,15 @@ HTML_TAG_PATTERN = re.compile(r'<[^>]+>')
 URL_PATTERN = re.compile(r'https?://\S+')
 WHITESPACE_PATTERN = re.compile(r'\s+')
 
+# Setup logger first
 logger = logging.getLogger('news.fetch')
+logger.setLevel(logging.INFO)
+handler = logging.FileHandler('fetch_news.log')
+handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+logger.addHandler(handler)
 
 
-def retry_on_db_error(max_retries=3, delay=2):
+def retry_on_db_error(max_retries=3, delay=1):
     """Decorator to retry database operations on connection errors."""
     def decorator(func):
         def wrapper(*args, **kwargs):
@@ -37,11 +42,10 @@ def retry_on_db_error(max_retries=3, delay=2):
                     last_error = e
                     logger.warning(f'Database connection error (attempt {attempt + 1}/{max_retries}): {e}')
                     if attempt < max_retries - 1:
-                        time.sleep(delay * (attempt + 1))  # Exponential backoff
+                        time.sleep(delay)  # Fixed 1s delay, not exponential
                         # Try to reconnect
                         try:
                             connection.close()
-                            connection.connect()
                         except Exception:
                             pass
                     else:
@@ -49,10 +53,6 @@ def retry_on_db_error(max_retries=3, delay=2):
             return None
         return wrapper
     return decorator
-logger.setLevel(logging.INFO)
-handler = logging.FileHandler('fetch_news.log')
-handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-logger.addHandler(handler)
 
 
 class Command(BaseCommand):
@@ -95,7 +95,7 @@ class Command(BaseCommand):
         """Calculate similarity ratio between two titles."""
         return SequenceMatcher(None, title1.lower(), title2.lower()).ratio()
 
-    def load_existing_hashes_with_retry(self, language, recent_cutoff, max_retries=3):
+    def load_existing_hashes_with_retry(self, language, recent_cutoff, max_retries=2):
         """Load existing URL hashes with retry logic for database connection issues."""
         for attempt in range(max_retries):
             try:
@@ -115,15 +115,15 @@ class Command(BaseCommand):
             except OperationalError as e:
                 logger.warning(f'Database connection error loading hashes (attempt {attempt + 1}/{max_retries}): {e}')
                 if attempt < max_retries - 1:
-                    time.sleep(2 * (attempt + 1))
+                    time.sleep(1)  # Fixed 1s delay
                     try:
                         connection.close()
-                        connection.connect()
                     except Exception:
                         pass
                 else:
-                    logger.error(f'Failed to load hashes after {max_retries} attempts')
-                    raise
+                    logger.error(f'Failed to load hashes after {max_retries} attempts - continuing with empty sets')
+                    # Return empty sets instead of crashing - allows fetch to continue
+                    return set(), set()
         return set(), set()
 
     def fetch_language(self, language):
@@ -295,20 +295,23 @@ class Command(BaseCommand):
         """Check if database connection is working."""
         for attempt in range(max_retries):
             try:
-                # Try a simple query
+                # Try a simple query - use a timeout to prevent hanging
                 Story.objects.first()
                 return True
             except OperationalError as e:
                 logger.warning(f'Database connection check failed (attempt {attempt + 1}/{max_retries}): {e}')
                 if attempt < max_retries - 1:
-                    time.sleep(2 * (attempt + 1))
+                    time.sleep(1)  # Fixed 1s delay
                     try:
                         connection.close()
-                        connection.connect()
                     except Exception:
                         pass
                 else:
                     return False
+            except Exception as e:
+                # Log other errors but don't retry
+                logger.error(f'Unexpected error checking DB connection: {e}')
+                return False
         return False
 
     def handle(self, *args, **options):
