@@ -25,7 +25,8 @@ WHITESPACE_PATTERN = re.compile(r'\s+')
 # Setup logger first
 logger = logging.getLogger('news.fetch')
 logger.setLevel(logging.INFO)
-handler = logging.FileHandler('fetch_news.log')
+# Use UTF-8 encoding to handle international characters (Arabic, Cyrillic, Chinese, etc.)
+handler = logging.FileHandler('fetch_news.log', encoding='utf-8')
 handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
 logger.addHandler(handler)
 
@@ -274,7 +275,12 @@ class Command(BaseCommand):
             if to_create:
                 Story.objects.bulk_create(to_create, ignore_conflicts=True)
 
-            logger.info(f'{source_name}: {source_count} stories')
+            # Safe logging for Unicode source names
+            try:
+                logger.info(f'{source_name}: {source_count} stories')
+            except UnicodeEncodeError:
+                safe_name = source_name.encode('ascii', 'replace').decode('ascii')
+                logger.info(f'{safe_name}: {source_count} stories')
             self.safe_write(f"OK ({source_count} new)")
             
             # Force garbage collection after each source to prevent memory buildup
