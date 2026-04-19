@@ -102,7 +102,7 @@
         
         .header-top {
             display: flex;
-            align-items: center;
+            align-items: flex-end;
             justify-content: flex-start;
             margin-bottom: 12px;
             flex-wrap: wrap;
@@ -164,6 +164,19 @@
             }
             
             .header-logo-text .logo-tagline {
+                display: none;
+            }
+            
+            .bias-filters {
+                justify-content: center;
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                padding-bottom: 4px;
+            }
+            
+            .bias-filters::-webkit-scrollbar {
                 display: none;
             }
             
@@ -269,12 +282,10 @@
         .bias-filters {
             display: flex;
             gap: 8px;
-            flex-wrap: nowrap;
+            flex-wrap: wrap;
             align-items: center;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-            padding-bottom: 4px;
+            flex: 1;
+            min-width: 0;
         }
         
         .bias-filters::-webkit-scrollbar {
@@ -1293,9 +1304,7 @@
                         <span class="logo-tagline">News from all angles</span>
                     </div>
                 </a>
-            </div>
-            
-            <div class="header-controls-row">
+                
                 <div class="bias-filters">
                     <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;" id="filter-label">
                         Filter: <span id="active-filters">All Sources</span>
@@ -1307,7 +1316,9 @@
                     <button type="button" class="bias-pill right-center" data-bias="right-center" onclick="toggleBiasFilter('right-center')">Right-Center</button>
                     <button type="button" class="bias-pill right" data-bias="right" onclick="toggleBiasFilter('right')">Right</button>
                 </div>
-                
+            </div>
+            
+            <div class="header-controls-row">
                 <div class="header-actions">
                     <div class="search-container">
                         <span class="search-icon">
