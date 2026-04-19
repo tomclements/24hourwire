@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>24HourWire | The Latest News from All Angles</title>
     <meta name="description" content="Get the latest news from all angles with 24HourWire. Unbiased news aggregator showing current events from multiple perspectives. 24 hour news coverage from diverse sources.">
+    
     <!-- Open Graph / Facebook -->
     <meta property="og:title" content="24HourWire | The Latest News from All Angles">
     <meta property="og:description" content="Unbiased news aggregator showing current events from multiple perspectives. 24 hour news coverage from diverse sources.">
@@ -15,6 +16,7 @@
     <meta property="og:image" content="https://24hourwire.com{% static 'news/images/logo.jpg' %}">
     <meta property="og:image:alt" content="24HourWire - News from all angles">
     <meta property="og:locale" content="{{ language }}_{{ language|upper }}">
+    
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary">
     <meta name="twitter:site" content="@24HourWire">
@@ -23,6 +25,7 @@
     <meta name="twitter:description" content="Unbiased news aggregator showing current events from multiple perspectives. 24 hour news coverage from diverse sources.">
     <meta name="twitter:image" content="https://24hourwire.com{% static 'news/images/logo.jpg' %}">
     <meta name="twitter:image:alt" content="24HourWire - News from all angles">
+    
     <link rel="canonical" href="https://24hourwire.com">
     <link rel="icon" type="image/jpeg" href="{% static 'news/images/logo.jpg' %}">
     <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -33,10 +36,11 @@
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-FLFN6ZYCPX"></script>
     <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-FLFN6ZYCPX');
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-FLFN6ZYCPX');
     </script>
     <style>
         :root {
@@ -54,6 +58,7 @@
             --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
             --radius: 8px;
             --radius-lg: 12px;
+            
             /* Bias colors */
             --bias-left: #3b82f6;
             --bias-left-center: #60a5fa;
@@ -61,19 +66,18 @@
             --bias-right-center: #f87171;
             --bias-right: #ef4444;
         }
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            line-height: 1.6;
-            color: var(--text-primary);
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            line-height: 1.6; 
+            color: var(--text-primary); 
             background: var(--bg-primary);
             min-height: 100vh;
             overflow-x: hidden;
         }
+        
         /* Sticky Header */
         .header-container {
             position: sticky;
@@ -83,16 +87,19 @@
             border-bottom: 1px solid var(--border);
             box-shadow: var(--shadow);
         }
+        
         header {
             max-width: 1200px;
             margin: 0 auto;
             padding: 12px 16px;
         }
+        
         @media (max-width: 640px) {
             header {
                 padding: 10px 12px;
             }
         }
+        
         .header-top {
             display: flex;
             align-items: center;
@@ -101,6 +108,7 @@
             flex-wrap: nowrap;
             gap: 16px;
         }
+        
         .header-filters-row {
             display: flex;
             align-items: center;
@@ -108,22 +116,26 @@
             padding: 8px 0;
             border-bottom: 1px solid var(--border);
         }
+        
         .header-logo {
             display: flex;
             align-items: center;
             gap: 10px;
             margin-right: auto;
         }
+        
         .header-logo img {
             width: 40px;
             height: 40px;
             border-radius: 8px;
             object-fit: cover;
         }
+        
         .header-logo-text {
             display: flex;
             flex-direction: column;
         }
+        
         .header-logo-text .logo-title {
             font-size: 1.4rem;
             font-weight: 700;
@@ -131,11 +143,13 @@
             line-height: 1.2;
             letter-spacing: -0.5px;
         }
+        
         .header-logo-text .logo-tagline {
             font-size: 0.75rem;
             color: var(--text-secondary);
             line-height: 1.2;
         }
+        
         @media (max-width: 640px) {
             .header-top {
                 flex-direction: row;
@@ -144,20 +158,25 @@
                 flex-wrap: nowrap;
                 margin-bottom: 8px;
             }
+            
             .header-logo {
                 justify-content: center;
                 margin-right: 0;
             }
+            
             .header-logo img {
                 width: 36px;
                 height: 36px;
             }
+            
             .header-logo-text .logo-title {
                 font-size: 1.2rem;
             }
+            
             .header-logo-text .logo-tagline {
                 display: none;
             }
+            
             .bias-filters {
                 justify-content: flex-start;
                 overflow-x: auto;
@@ -167,66 +186,199 @@
                 padding-bottom: 0;
                 gap: 6px;
             }
+            
             .bias-filters::-webkit-scrollbar {
                 display: none;
             }
+            
             .bias-filters > span {
                 display: none;
             }
+            
             .bias-pill {
                 padding: 4px 8px;
                 font-size: 0.7rem;
                 white-space: nowrap;
             }
-            /* FIX: Ensure search and language dropdown stay side-by-side on mobile */
-            .header-actions {
-                flex-wrap: nowrap;
-                gap: 8px;
-                order: -1;
+        }
+            
+            .bias-filters::-webkit-scrollbar {
+                display: none;
             }
-            .search-container {
+            
+            .bias-filters > span {
+                display: none;
+            }
+            
+            .bias-pill {
+                padding: 4px 8px;
+                font-size: 0.7rem;
+            }
+            
+            .header-top {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+            
+            .header-logo {
                 flex: 1;
                 min-width: 0;
-                max-width: none;
-                width: auto;
             }
-            .header-controls {
+            
+            .header-logo-text .logo-tagline {
+                display: block;
+                font-size: 0.65rem;
+            }
+            
+            .header-actions {
+                flex-direction: row;
+                flex-wrap: nowrap;
+                width: auto;
                 flex-shrink: 0;
+            }
+            
+            .search-container {
+                max-width: 150px;
+            }
+            
+            .search-input {
+                padding: 8px 12px 8px 36px;
+                font-size: 0.85rem;
+            }
+            
+            .search-icon {
+                left: 10px;
+            }
+            
+            .header-controls {
                 gap: 6px;
                 flex-direction: row;
                 flex-wrap: nowrap;
                 display: flex;
             }
-            .search-input {
-                padding: 8px 14px 8px 36px;
-                font-size: 0.85rem;
-            }
-            .search-icon {
-                left: 12px;
-            }
-            .search-icon svg {
-                width: 16px;
-                height: 16px;
-            }
+            
             #lang-select {
                 padding: 6px 24px 6px 10px;
                 font-size: 0.8rem;
             }
+            
             .theme-toggle {
                 width: 32px;
                 height: 32px;
                 font-size: 1rem;
             }
+            
             .header-filters-row {
                 padding: 6px 0;
             }
         }
+
+        .header-actions {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 12px;
+        }
+
+        @media (max-width: 640px) {
+            .header-actions {
+                width: auto;
+                gap: 8px;
+                order: -1;
+                flex-direction: row;
+                flex-wrap: nowrap;
+            }
+        }
+        
+        /* Search Bar */
+        .search-container {
+            position: relative;
+            flex: 0 0 auto;
+            width: 200px;
+            max-width: 200px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            font-size: 0.9rem;
+            background: var(--bg-secondary);
+            transition: all 0.2s;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: var(--bg-primary);
+            box-shadow: 0 0 0 3px rgba(0,102,204,0.1);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+        
+        .search-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+        
+        @media (max-width: 640px) {
+            .search-container {
+                max-width: none;
+            }
+            
+            .search-input {
+                padding: 8px 14px 8px 36px;
+                font-size: 0.85rem;
+            }
+            
+            .search-icon {
+                left: 12px;
+            }
+            
+            .search-icon svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+        
+        /* Bias Filter Pills */
+        .bias-filters {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            width: 100%;
+        }
+        
         .bias-filters::-webkit-scrollbar {
             display: none;
         }
-        .bias-filters > span {
-            display: none;
+        
+        @media (max-width: 640px) {
+            .bias-filters {
+                gap: 6px;
+            }
+            
+            .bias-filters > span {
+                display: none;
+            }
+            
+            .bias-pill {
+                padding: 5px 10px;
+                font-size: 0.75rem;
+                white-space: nowrap;
+            }
         }
+        
         .bias-pill {
             padding: 6px 14px;
             border-radius: 20px;
@@ -242,21 +394,25 @@
             background: transparent;
             font-family: inherit;
         }
+
         .bias-pill:hover {
             transform: translateY(-1px);
             box-shadow: var(--shadow);
         }
+
         .bias-pill.apply-btn {
             background: var(--primary) !important;
             color: white !important;
             border-color: var(--primary) !important;
             animation: pulse 0.3s ease;
         }
+
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.05); }
             100% { transform: scale(1); }
         }
+        
         .bias-pill.active {
             border-color: currentColor;
             box-shadow: var(--shadow-md);
@@ -264,6 +420,7 @@
             position: relative;
             padding-left: 28px;
         }
+
         .bias-pill.active::before {
             content: "✓";
             position: absolute;
@@ -271,43 +428,22 @@
             font-weight: 700;
             font-size: 0.9rem;
         }
-        .bias-pill.left {
-            background: rgba(59,130,246,0.1);
-            color: var(--bias-left);
-        }
-        .bias-pill.left-center {
-            background: rgba(96,165,250,0.1);
-            color: var(--bias-left-center);
-        }
-        .bias-pill.center {
-            background: rgba(107,114,128,0.1);
-            color: var(--bias-center);
-        }
-        .bias-pill.right-center {
-            background: rgba(248,113,113,0.1);
-            color: var(--bias-right-center);
-        }
-        .bias-pill.right {
-            background: rgba(239,68,68,0.1);
-            color: var(--bias-right);
-        }
-        .bias-pill.all {
-            background: var(--bg-tertiary);
-            color: var(--text-secondary);
-        }
+        
+        .bias-pill.left { background: rgba(59,130,246,0.1); color: var(--bias-left); }
+        .bias-pill.left-center { background: rgba(96,165,250,0.1); color: var(--bias-left-center); }
+        .bias-pill.center { background: rgba(107,114,128,0.1); color: var(--bias-center); }
+        .bias-pill.right-center { background: rgba(248,113,113,0.1); color: var(--bias-right-center); }
+        .bias-pill.right { background: rgba(239,68,68,0.1); color: var(--bias-right); }
+        .bias-pill.all { background: var(--bg-tertiary); color: var(--text-secondary); }
+        
         /* Language & Theme Toggle */
-        .header-actions {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            gap: 12px;
-        }
         .header-controls {
             display: flex;
             flex-direction: row;
             align-items: center;
             gap: 12px;
         }
+        
         #lang-select {
             padding: 8px 12px;
             border: 1px solid var(--border);
@@ -316,6 +452,7 @@
             background: var(--bg-primary);
             cursor: pointer;
         }
+        
         .theme-toggle {
             background: var(--bg-tertiary);
             border: 1px solid var(--border);
@@ -330,109 +467,905 @@
             justify-content: center;
             transition: all 0.2s;
         }
+        
         .theme-toggle:hover {
             background: var(--bg-secondary);
             transform: scale(1.05);
         }
-        /* Search Bar */
-        .search-container {
+        
+        /* Main Content */
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        @media (min-width: 640px) {
+            main {
+                padding: 24px;
+            }
+        }
+        
+        /* Tabs */
+        .tabs-wrapper {
             position: relative;
-            flex: 0 0 auto;
-            width: 200px;
-            max-width: 200px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--border);
         }
-        .search-input {
-            width: 100%;
-            padding: 10px 16px 10px 40px;
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            font-size: 0.9rem;
-            background: var(--bg-secondary);
-            transition: all 0.2s;
+
+        .tabs-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+            padding: 0 40px;
         }
-        .search-input:focus {
-            outline: none;
-            border-color: var(--accent);
-            background: var(--bg-primary);
-            box-shadow: 0 0 0 3px rgba(0,102,204,0.1);
+
+        .tabs-container::-webkit-scrollbar {
+            height: 6px;
         }
-        .search-icon {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            pointer-events: none;
+
+        .tabs-container::-webkit-scrollbar-track {
+            background: transparent;
         }
-        .search-icon svg {
-            width: 18px;
-            height: 18px;
-            fill: currentColor;
+
+        .tabs-container::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
         }
-        /* Bias Filter Pills */
-        .bias-filters {
+
+        .tabs-container::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        .tabs {
             display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            align-items: center;
-            width: 100%;
+            gap: 4px;
+            min-width: min-content;
         }
-        .bias-pill {
-            padding: 6px 14px;
-            border-radius: 20px;
+
+        .scroll-btn {
+            position: absolute;
+            top: 0;
+            bottom: 2px;
+            width: 40px;
+            background: var(--bg-primary);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            transition: opacity 0.2s;
+        }
+
+        .scroll-btn:hover {
+            background: var(--bg-secondary);
+        }
+
+        .scroll-btn.left {
+            left: 0;
+            border-right: 1px solid var(--border);
+        }
+
+        .scroll-btn.right {
+            right: 0;
+            border-left: 1px solid var(--border);
+        }
+
+        .scroll-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--text-secondary);
+        }
+
+        .scroll-btn:hover svg {
+            fill: var(--primary);
+        }
+        
+        .tab {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
             font-size: 0.8rem;
             font-weight: 500;
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: all 0.2s;
+            color: var(--text-muted);
             text-decoration: none;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .tab:hover {
+            color: var(--text-primary);
+            background: var(--bg-secondary);
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+        
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .tab-count {
+            background: var(--bg-tertiary);
+            color: var(--text-muted);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin-left: 6px;
+        }
+        
+        /* Story Cards Grid */
+        .stories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            max-width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .stories-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+        }
+        
+        .story-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        @media (min-width: 640px) {
+            .story-card {
+                padding: 20px;
+            }
+        }
+
+        .story-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+            border-color: var(--accent);
+        }
+        
+        .story-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .story-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            line-height: 1.4;
+            color: var(--text-primary);
+            text-decoration: none;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .story-title:hover {
+            color: var(--accent);
+        }
+        
+        .story-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+            font-size: 0.8rem;
+        }
+        
+        .source-tag {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            background: transparent;
-            font-family: inherit;
+            gap: 4px;
+            padding: 4px 10px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            font-weight: 500;
+            color: var(--text-secondary);
         }
-        /* Rest of your existing styles (unchanged) */
-        .tabs-wrapper { position: relative; margin-bottom: 24px; border-bottom: 2px solid var(--border); }
-        .tabs-container { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: var(--border) transparent; padding: 0 40px; }
-        .tabs-container::-webkit-scrollbar { height: 6px; }
-        .tabs-container::-webkit-scrollbar-track { background: transparent; }
-        .tabs-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-        .tabs-container::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
-        .tabs { display: flex; gap: 4px; min-width: min-content; }
-        .scroll-btn { position: absolute; top: 0; bottom: 2px; width: 40px; background: var(--bg-primary); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; transition: opacity 0.2s; }
-        .scroll-btn:hover { background: var(--bg-secondary); }
-        .scroll-btn.left { left: 0; border-right: 1px solid var(--border); }
-        .scroll-btn.right { right: 0; border-left: 1px solid var(--border); }
-        .scroll-btn svg { width: 20px; height: 20px; fill: var(--text-secondary); }
-        .scroll-btn:hover svg { fill: var(--primary); }
-        .tab { padding: 8px 16px; background: transparent; border: none; border-bottom: 3px solid transparent; cursor: pointer; font-size: 0.8rem; font-weight: 500; color: var(--text-muted); text-decoration: none; transition: all 0.2s; white-space: nowrap; }
-        .tab:hover { color: var(--text-primary); background: var(--bg-secondary); border-radius: var(--radius) var(--radius) 0 0; }
-        .tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
-        .tab-count { background: var(--bg-tertiary); color: var(--text-muted); padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; margin-left: 6px; }
-        /* Story Cards Grid (unchanged - omitted for brevity but fully present in original) */
-        .stories-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; max-width: 100%; }
-        @media (max-width: 768px) { .stories-grid { grid-template-columns: 1fr; gap: 12px; } }
-        /* All remaining styles from your original code are unchanged below this point */
-        .story-card { background: var(--bg-primary); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; transition: all 0.2s; display: flex; flex-direction: column; height: 100%; max-width: 100%; overflow-x: hidden; }
-        @media (min-width: 640px) { .story-card { padding: 20px; } }
-        .story-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: var(--accent); }
-        /* ... (all other styles - different-angle-modal, featured-section, category-section, footer, dark mode, share overlay, cookie banner, etc. - are identical to your original) ... */
-        [data-theme="dark"] { /* unchanged */ }
+        
+        .paywall-badge {
+            color: #e65100;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .bias-badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .bias-badge.left { background: rgba(59,130,246,0.15); color: var(--bias-left); }
+        .bias-badge.left-center { background: rgba(96,165,250,0.15); color: var(--bias-left-center); }
+        .bias-badge.center { background: rgba(107,114,128,0.15); color: var(--bias-center); }
+        .bias-badge.right-center { background: rgba(248,113,113,0.15); color: var(--bias-right-center); }
+        .bias-badge.right { background: rgba(239,68,68,0.15); color: var(--bias-right); }
+        
+        .time-badge {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+        
+        .covered-badge {
+            background: rgba(34,197,94,0.1);
+            color: #16a34a;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        
+        .story-excerpt {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 16px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            flex-grow: 1;
+        }
+        
+        .story-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+        
+        .story-links {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        
+        @media (max-width: 640px) {
+            .story-links {
+                gap: 8px;
+            }
+            
+            .story-links a {
+                font-size: 0.75rem;
+            }
+        }
+        
+        .story-links a {
+            font-size: 0.8rem;
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .story-links a:hover {
+            text-decoration: underline;
+        }
+        
+        .share-btn {
+            background: var(--bg-tertiary);
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        
+        .share-btn:hover {
+            background: var(--bg-secondary);
+            transform: scale(1.1);
+        }
+        
+        .different-angle-btn {
+            background: transparent;
+            border: 1px solid var(--accent);
+            border-radius: 4px;
+            padding: 4px 10px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--accent);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .different-angle-btn:hover {
+            background: var(--accent);
+            color: white;
+        }
+        
+        /* Different Angle Modal */
+        .different-angle-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .different-angle-modal.active {
+            display: flex;
+        }
+        
+        .different-angle-content {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .different-angle-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
+        .different-angle-header h3 {
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            margin: 0;
+        }
+        
+        .different-angle-header .original-story {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close-modal:hover {
+            color: var(--text-primary);
+        }
+        
+        .different-angle-list {
+            padding: 20px;
+        }
+        
+        .different-angle-item {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
+        }
+        
+        .different-angle-item:last-child {
+            border-bottom: none;
+        }
+        
+        .different-angle-item:hover {
+            background: var(--bg-secondary);
+        }
+        
+        .different-angle-item a {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        .different-angle-item a:hover {
+            color: var(--accent);
+        }
+        
+        .different-angle-meta {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+        
+        .no-different-angle {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+        
+        /* Featured Section for Most Covered */
+        .featured-section {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .featured-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .featured-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .featured-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+        }
+        
+        .featured-card {
+            background: var(--bg-primary);
+            border-radius: var(--radius);
+            padding: 16px;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .featured-card:hover {
+            border-color: var(--accent);
+            box-shadow: var(--shadow-md);
+        }
+        
+        /* Category Section */
+        .category-section {
+            margin-bottom: 40px;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        @media (min-width: 1024px) {
+            .category-section {
+                margin-bottom: 24px;
+            }
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        @media (min-width: 1024px) {
+            .category-header {
+                margin-bottom: 16px;
+                padding-bottom: 8px;
+            }
+        }
+        
+        .category-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .category-count {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        /* Footer */
+        footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            margin-top: 60px;
+            padding: 40px 24px;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 32px;
+        }
+        
+        .footer-section h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .footer-section p, .footer-section a {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            line-height: 1.8;
+        }
+        
+        .footer-section a:hover {
+            color: var(--accent);
+        }
+        
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 32px auto 0;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        
+        /* Dark Mode */
+        [data-theme="dark"] {
+            --primary: #60a5fa;
+            --primary-light: #3b82f6;
+            --accent: #60a5fa;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --border: #475569;
+            --shadow: 0 1px 3px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.4);
+        }
+        
+        [data-theme="dark"] .story-card {
+            background: var(--bg-secondary);
+        }
+        
+        [data-theme="dark"] .source-tag {
+            background: var(--bg-tertiary);
+        }
+        
+        [data-theme="dark"] .search-input {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-color: var(--border);
+        }
+        
+        [data-theme="dark"] .search-input::placeholder {
+            color: var(--text-muted);
+        }
+        
+        [data-theme="dark"] .search-input:focus {
+            background: var(--bg-secondary);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(96,165,250,0.2);
+        }
+
+        [data-theme="dark"] #lang-select {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-color: var(--border);
+        }
+
+        [data-theme="dark"] #lang-select option {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .scroll-btn {
+            background: var(--bg-primary);
+        }
+
+        [data-theme="dark"] .scroll-btn:hover {
+            background: var(--bg-secondary);
+        }
+
+        [data-theme="dark"] .scroll-btn svg {
+            fill: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .scroll-btn:hover svg {
+            fill: var(--primary);
+        }
+
+        /* Share Overlay */
+        #share-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .share-overlay-backdrop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+        
+        .share-overlay-content {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            max-width: 400px;
+            width: 90%;
+            position: relative;
+            box-shadow: var(--shadow-lg);
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .share-overlay-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .share-overlay-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+        
+        .close-overlay {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close-overlay:hover {
+            color: var(--text-primary);
+        }
+        
+        .share-overlay-preview {
+            padding: 20px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .share-preview-text {
+            margin: 0 0 8px 0;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .share-preview-source {
+            margin: 0;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        
+        .share-overlay-buttons {
+            padding: 16px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .share-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .share-option:hover {
+            transform: translateY(-1px);
+        }
+        
+        .share-option.twitter {
+            background: #000;
+            color: white;
+        }
+        
+        .share-option.facebook {
+            background: #1877F2;
+            color: white;
+        }
+        
+        .share-option.linkedin {
+            background: #0A66C2;
+            color: white;
+        }
+        
+        .share-option.copy {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+        
+        .share-option.copy:hover {
+            background: var(--border);
+        }
+        
+        @media (max-width: 400px) {
+            .share-overlay-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Cookie Banner */
+        #cookie-banner {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 16px 24px;
+            z-index: 1000;
+            box-shadow: var(--shadow-md);
+        }
+        
+        #cookie-banner > div {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        
+        /* Admin Link */
+        .admin-link {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        .admin-link a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .admin-link a:hover {
+            text-decoration: underline;
+        }
+        
         /* Mobile-specific fixes */
         @media (max-width: 768px) {
-            body { overflow-x: hidden; }
-            main { padding: 0 12px; max-width: 100vw; box-sizing: border-box; }
-            .header-container { max-width: 100vw; overflow-x: hidden; }
-            .category-section { width: 100%; max-width: 100%; box-sizing: border-box; padding: 0; margin-left: 0; margin-right: 0; }
-            .category-header { width: 100%; box-sizing: border-box; }
-            .stories-grid { width: 100%; max-width: 100%; box-sizing: border-box; display: grid; grid-template-columns: 1fr; gap: 12px; }
-            .story-card { width: 100%; max-width: 100%; box-sizing: border-box; }
+            body {
+                overflow-x: hidden;
+            }
+            
+            main {
+                padding: 0 12px;
+                max-width: 100vw;
+                box-sizing: border-box;
+            }
+            
+            .header-container {
+                max-width: 100vw;
+                overflow-x: hidden;
+            }
+            
+            .category-section {
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+                padding: 0;
+                margin-left: 0;
+                margin-right: 0;
+            }
+            
+            .category-header {
+                width: 100%;
+                box-sizing: border-box;
+            }
+            
+            .stories-grid {
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .story-card {
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+            
+            .header-controls-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .bias-filters {
+                max-width: 100vw;
+                overflow-x: auto;
+                padding-bottom: 8px;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- The rest of your HTML body is 100% unchanged -->
     <div class="header-container">
         <header>
             <div class="header-top">
@@ -443,6 +1376,7 @@
                         <span class="logo-tagline">News from all angles</span>
                     </div>
                 </a>
+                
                 <div class="header-actions">
                     <div class="search-container">
                         <span class="search-icon">
@@ -452,6 +1386,7 @@
                         </span>
                         <input type="text" class="search-input" placeholder="Search news..." id="search-input">
                     </div>
+                    
                     <div class="header-controls">
                         <select id="lang-select">
                             {% for code, name in language_names.items %}
@@ -462,10 +1397,12 @@
                     </div>
                 </div>
             </div>
-            <!-- All other header content (bias filters, tabs, etc.) is unchanged -->
+            
             <div class="header-filters-row">
                 <div class="bias-filters">
-                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;" id="filter-label"> Filter: <span id="active-filters">All Sources</span> </span>
+                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;" id="filter-label">
+                        Filter: <span id="active-filters">All Sources</span>
+                    </span>
                     <button type="button" class="bias-pill all" data-bias="all" onclick="toggleBiasFilter('all')">All</button>
                     <button type="button" class="bias-pill left" data-bias="left" onclick="toggleBiasFilter('left')">Left</button>
                     <button type="button" class="bias-pill left-center" data-bias="left-center" onclick="toggleBiasFilter('left-center')">Left-Center</button>
@@ -474,15 +1411,564 @@
                     <button type="button" class="bias-pill right" data-bias="right" onclick="toggleBiasFilter('right')">Right</button>
                 </div>
             </div>
-            <!-- tabs-wrapper and everything below is unchanged -->
-            <div class="tabs-wrapper"> ... </div>
+            
+            <div class="tabs-wrapper">
+                <button class="scroll-btn left" onclick="scrollTabs('left')" aria-label="Scroll left">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                    </svg>
+                </button>
+                <div class="tabs-container">
+                    <nav class="tabs">
+                        {% for cat_id, cat_data in grouped.items %}
+                            {% if cat_data.stories|length > 0 %}
+                            <a href="#{{ cat_id }}" class="tab {% if forloop.first %}active{% endif %}" onclick="showCategory('{{ cat_id }}'); return false;">
+                                {{ cat_data.name }}
+                                <span class="tab-count">{{ cat_data.stories|length }}</span>
+                            </a>
+                            {% endif %}
+                        {% endfor %}
+                    </nav>
+                </div>
+                <button class="scroll-btn right" onclick="scrollTabs('right')" aria-label="Scroll right">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                    </svg>
+                </button>
+            </div>
         </header>
     </div>
-    <main> ... </main>
-    <footer> ... </footer>
-    <!-- All scripts and modals unchanged -->
-    <script> ... (your full JavaScript remains exactly the same) ... </script>
+
+    <main>
+        {% for cat_id, cat_data in grouped.items %}
+        {% if cat_data.stories|length > 0 %}
+        <section id="{{ cat_id }}" class="category-section" data-count="{{ cat_data.stories|length }}">
+            <div class="category-header">
+                <h2 class="category-title">{{ cat_data.name }}</h2>
+                <span class="category-count">{{ cat_data.stories|length }} stories</span>
+            </div>
+            
+            {% if cat_data.stories %}
+                <div class="stories-grid">
+                    {% for story in cat_data.stories %}
+                    <article class="story-card" data-title="{{ story.title|lower }}" data-source="{{ story.source|lower }}" itemscope itemtype="https://schema.org/NewsArticle">
+                        <div class="story-header">
+                            <a href="{{ story.url }}" target="_blank" class="story-title" itemprop="headline">{{ story.title }}</a>
+                        </div>
+                        
+                        <div class="story-meta">
+                            <span class="source-tag">{{ story.source }}{% if story.is_paywalled %}<span class="paywall-badge" title="{{ t.paywall_title }}">$</span>{% endif %}</span>
+                            
+                            {% if story.covered_by_count %}
+                            <span class="covered-badge">{{ story.covered_by_count }} sources</span>
+                            {% endif %}
+                            
+                            <span class="bias-badge {{ story.bias_class|default:'center' }}">{{ story.bias_label }}</span>
+                            
+                            <span class="time-badge" itemprop="datePublished" content="{{ story.published|date:'c' }}">{{ story.published|timesince }} {{ t.ago }}</span>
+                        </div>
+                        
+                        {% with story.get_clean_excerpt as clean_excerpt %}
+                        {% if clean_excerpt %}
+                            <p class="story-excerpt" itemprop="description">{{ clean_excerpt|truncatechars:180 }}</p>
+                        {% endif %}
+                        {% endwith %}
+                        
+                        <div class="story-actions">
+                            <div class="story-links">
+                                <a href="{{ story.url }}" target="_blank" itemprop="url">Read full story ↗</a>
+                                <a href="https://www.bing.com/news/search?q={{ story.get_search_terms }}" target="_blank" title="{{ t.search_related }}">Find coverage ↗</a>
+                                <button class="different-angle-btn" onclick="showDifferentAngle({{ story.id }}, '{{ story.title|escapejs }}', '{{ story.source }}', '{{ story.bias_label }}')" title="See different perspectives">Different Angle ↗</button>
+                            </div>
+                            <button class="share-btn" onclick="shareStory('{{ story.title|escapejs }}', '{{ story.url|escapejs }}', '{{ story.source|escapejs }}')" title="Share"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-primary);"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+                
+                {% if cat_data.stories|length > 20 %}
+                <button class="load-more" onclick="loadMore(this)" style="width: 100%; margin-top: 24px; padding: 14px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; font-size: 0.9rem; font-weight: 500; color: var(--text-secondary); transition: all 0.2s;">
+                    Load more stories ({{ cat_data.stories|length }} total)
+                </button>
+                {% endif %}
+            {% else %}
+                <p class="empty" style="text-align: center; padding: 60px 20px; color: var(--text-muted);">{{ t.no_stories }}</p>
+            {% endif %}
+        </section>
+        {% endif %}
+        {% endfor %}
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>About 24HourWire</h4>
+                <p>Aggregating news from across the political spectrum to give you the full picture. Updated every 15 minutes.</p>
+                <p style="margin-top: 12px;"><a href="/about/?lang={{ language }}">Learn how it works</a></p>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Sources</h4>
+                <p>{{ selected_sources|join:", " }}</p>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Contact</h4>
+                <p><a href="mailto:admin@24hourwire.news">admin@24hourwire.news</a></p>
+                <p><a href="https://x.com/24HourWire" target="_blank">@24HourWire on X</a></p>
+            </div>
+            
+            <div class="footer-section">
+                <h4>Legal</h4>
+                <p><a href="/terms/?lang={{ language }}">Terms of Service</a></p>
+                <p><a href="/privacy/?lang={{ language }}">Privacy Policy</a></p>
+                <p><a href="/copyright/">Copyright Policy</a></p>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2026 24HourWire. News content &copy; respective publishers.</p>
+            <p class="admin-link">
+                {% if user.is_authenticated %}
+                    {{ user.username }} | <a href="/logout/">Logout</a>
+                {% else %}
+                    <a href="/login/">Admin Login</a>
+                {% endif %}
+            </p>
+        </div>
+    </footer>
+
+    <div id="cookie-banner">
+        <div>
+            <span>{{ t.privacy_text }} <a href="{% url 'privacy' %}?lang={{ language }}" style="color: var(--accent);">{{ t.privacy_link }}</a></span>
+            <button onclick="acceptCookies()" style="background: var(--primary); color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: var(--radius); font-weight: 500;">
+                {{ t.got_it }}
+            </button>
+        </div>
+    </div>
+
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1306415581374425" crossorigin="anonymous"></script>
+
+    <script>
+        // Language selector
+        document.getElementById('lang-select').addEventListener('change', function() {
+            var url = new URL(window.location);
+            url.searchParams.set('lang', this.value);
+            window.location.href = url.toString();
+        });
+
+        // Category tabs
+        function showCategory(catId) {
+            document.querySelectorAll('.category-section').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+            document.getElementById(catId).style.display = 'block';
+            document.querySelector(`.tab[href="#${catId}"]`).classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Scroll tabs left/right
+        function scrollTabs(direction) {
+            const container = document.querySelector('.tabs-container');
+            const scrollAmount = 300;
+            if (direction === 'left') {
+                container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+            } else {
+                container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+            }
+        }
+
+        // Load more stories
+        function loadMore(btn) {
+            const section = btn.closest('.category-section');
+            section.querySelectorAll('.story-card').forEach(el => el.style.display = 'flex');
+            btn.style.display = 'none';
+        }
+
+        // Search functionality
+        document.getElementById('search-input').addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            const visibleSection = document.querySelector('.category-section:not([style*="none"])');
+            if (!visibleSection) return;
+            
+            visibleSection.querySelectorAll('.story-card').forEach(card => {
+                const title = card.getAttribute('data-title');
+                const source = card.getAttribute('data-source');
+                if (title.includes(query) || source.includes(query)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        // Share story
+        function shareStory(title, url, source) {
+            // Construct share text with clear attribution to both source and 24HourWire
+            const shareText = `${title}\n\nSource: ${source} | via @24HourWire`;
+            
+            if (navigator.share) {
+                // Use native share API
+                navigator.share({
+                    title: title,
+                    text: shareText,
+                    url: url
+                }).catch(err => {
+                    // If native share fails, open share overlay
+                    openShareOverlay(title, url, source);
+                });
+            } else {
+                // Open share overlay with sharing options
+                openShareOverlay(title, url, source);
+            }
+        }
+        
+        // Share overlay for platforms without native share
+        function openShareOverlay(title, url, source) {
+            const overlay = document.createElement('div');
+            overlay.id = 'share-overlay';
+            overlay.innerHTML = `
+                <div class="share-overlay-backdrop" onclick="closeShareOverlay()"></div>
+                <div class="share-overlay-content">
+                    <div class="share-overlay-header">
+                        <h3>Share Story</h3>
+                        <button class="close-overlay" onclick="closeShareOverlay()">&times;</button>
+                    </div>
+                    <div class="share-overlay-preview">
+                        <p class="share-preview-text">${title}</p>
+                        <p class="share-preview-source">${source} | via @24HourWire</p>
+                    </div>
+                    <div class="share-overlay-buttons">
+                        <button class="share-option twitter" onclick="shareToTwitter('${encodeURIComponent(title)}', '${encodeURIComponent(url)}')">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                            <span>Share on X</span>
+                        </button>
+                        <button class="share-option facebook" onclick="shareToFacebook('${encodeURIComponent(url)}')">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                            <span>Facebook</span>
+                        </button>
+                        <button class="share-option linkedin" onclick="shareToLinkedIn('${encodeURIComponent(url)}')">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                            <span>LinkedIn</span>
+                        </button>
+                        <button class="share-option copy" onclick="copyShareLink('${encodeURIComponent(title)}', '${encodeURIComponent(url)}', '${encodeURIComponent(source)}')">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            <span>Copy Link</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeShareOverlay() {
+            const overlay = document.getElementById('share-overlay');
+            if (overlay) {
+                overlay.remove();
+                document.body.style.overflow = '';
+            }
+        }
+        
+        function shareToTwitter(title, url) {
+            const text = decodeURIComponent(title) + '\n\nvia @24HourWire';
+            window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + url, '_blank', 'width=600,height=400');
+            closeShareOverlay();
+        }
+        
+        function shareToFacebook(url) {
+            window.open('https://www.facebook.com/sharer/sharer.php?u=' + url, '_blank', 'width=600,height=400');
+            closeShareOverlay();
+        }
+        
+        function shareToLinkedIn(url) {
+            window.open('https://www.linkedin.com/sharing/share-offsite/?url=' + url, '_blank', 'width=600,height=400');
+            closeShareOverlay();
+        }
+        
+        function copyShareLink(title, url, source) {
+            const text = decodeURIComponent(title) + '\n' + decodeURIComponent(url) + '\n\nSource: ' + decodeURIComponent(source) + ' | via @24HourWire';
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.querySelector('.share-option.copy');
+                btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg><span>Copied!</span>';
+                setTimeout(() => {
+                    closeShareOverlay();
+                }, 1000);
+            });
+        }
+
+        // Multi-select bias filter - reloads immediately on click
+        let selectedBiases = new Set(['all']);
+        
+        function toggleBiasFilter(bias) {
+            const btn = document.querySelector(`.bias-pill[data-bias="${bias}"]`);
+            
+            if (bias === 'all') {
+                // Selecting "All" clears other selections and reloads immediately
+                window.location.href = '?sources=all';
+                return;
+            }
+            
+            // For specific biases, toggle and reload
+            selectedBiases.delete('all');
+            
+            // Toggle this bias
+            if (selectedBiases.has(bias)) {
+                selectedBiases.delete(bias);
+            } else {
+                selectedBiases.add(bias);
+            }
+            
+            // If nothing selected, go to "All"
+            if (selectedBiases.size === 0) {
+                window.location.href = '?sources=all';
+                return;
+            }
+            
+            // Update visual feedback immediately
+            updateBiasButtons();
+            
+            // Reload with selected biases
+            const biases = Array.from(selectedBiases).join(',');
+            window.location.href = `?sources=${biases}`;
+        }
+        
+        function updateBiasButtons() {
+            // Update visual state of all buttons
+            document.querySelectorAll('.bias-pill').forEach(pill => {
+                const bias = pill.getAttribute('data-bias');
+                if (bias === 'all') {
+                    if (selectedBiases.has('all')) {
+                        pill.classList.add('active');
+                    } else {
+                        pill.classList.remove('active');
+                    }
+                } else {
+                    if (selectedBiases.has(bias)) {
+                        pill.classList.add('active');
+                    } else {
+                        pill.classList.remove('active');
+                    }
+                }
+            });
+        }
+        
+        // Initialize bias filters from URL
+        function initBiasFilters() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sources = urlParams.get('sources');
+            
+            if (sources && sources !== 'all') {
+                selectedBiases.clear();
+                const biases = sources.split(',');
+                biases.forEach(bias => {
+                    selectedBiases.add(bias.trim());
+                });
+            }
+            
+            // Update visual state
+            updateBiasButtons();
+            
+            // Update label
+            const label = document.getElementById('active-filters');
+            if (selectedBiases.has('all')) {
+                label.textContent = 'All Sources';
+            } else {
+                const biasNames = Array.from(selectedBiases).map(b => {
+                    const map = {
+                        'left': 'Left',
+                        'left-center': 'Left-Center',
+                        'center': 'Center',
+                        'right-center': 'Right-Center',
+                        'right': 'Right'
+                    };
+                    return map[b] || b;
+                });
+                label.textContent = biasNames.join(', ');
+            }
+        }
+        
+        // Initialize on page load
+        initBiasFilters();
+
+        // Cookie banner
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+        
+        function acceptCookies() {
+            document.cookie = 'cookie_consent=accepted; max-age=31536000; path=/';
+            document.getElementById('cookie-banner').style.display = 'none';
+        }
+        
+        if (!getCookie('cookie_consent')) {
+            document.getElementById('cookie-banner').style.display = 'block';
+        }
+
+        // Theme toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const btn = document.querySelector('.theme-toggle');
+            btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        }
+
+        // Initialize - show first category that has stories
+        document.querySelectorAll('.category-section').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+        const firstSection = document.querySelector('.category-section');
+        const firstTab = document.querySelector('.tab');
+        if (firstSection) {
+            firstSection.style.display = 'block';
+            if (firstTab) firstTab.classList.add('active');
+        }
+        
+        loadTheme();
+        
+        // Different Angle functionality - v2 cache-bust
+        let currentDifferentAngleId = null;
+        let currentRequestTimestamp = null;
+        
+        function showDifferentAngle(storyId, storyTitle, storySource, storyBias) {
+            // Get elements fresh each time (avoid stale references)
+            const modal = document.getElementById('different-angle-modal');
+            const loading = document.getElementById('different-angle-loading');
+            const list = document.getElementById('different-angle-list');
+            const title = document.getElementById('different-angle-original-title');
+            const source = document.getElementById('different-angle-original-source');
+            
+            // Debug logging
+            console.log('Different Angle clicked:', storyId, storyTitle);
+            
+            // Safety check - ensure elements exist
+            if (!modal || !loading || !list || !title || !source) {
+                console.error('Missing DOM elements:', {modal, loading, list, title, source});
+                alert('Error: Modal elements not found. Please refresh the page.');
+                return;
+            }
+            
+            // Track this request with a unique timestamp
+            const requestTimestamp = Date.now();
+            currentDifferentAngleId = storyId;
+            currentRequestTimestamp = requestTimestamp;
+            
+            // Show modal immediately with new story info (don't wait for fetch)
+            modal.classList.add('active');
+            loading.style.display = 'block';
+            list.style.display = 'none';
+            list.innerHTML = '';
+            
+            // Set new story info immediately
+            title.textContent = storyTitle;
+            source.textContent = storySource + ' (' + storyBias + ')';
+            
+            // Fetch related stories
+            fetch('/different-angle/' + storyId + '/', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // CRITICAL: Only update UI if this is still the most recent request
+                // Check both story ID and timestamp to prevent race conditions
+                if (currentDifferentAngleId !== storyId || currentRequestTimestamp !== requestTimestamp) {
+                    console.log('Ignoring stale response for story', storyId);
+                    return;
+                }
+                
+                loading.style.display = 'none';
+                list.style.display = 'block';
+                
+                if (data.error) {
+                    list.innerHTML = '<div class="no-different-angle">' + data.error + '</div>';
+                    return;
+                }
+                
+                if (data.related_stories && data.related_stories.length > 0) {
+                    data.related_stories.forEach(story => {
+                        const item = document.createElement('div');
+                        item.className = 'different-angle-item';
+                        item.innerHTML = `
+                            <a href="${story.url}" target="_blank">${story.title}</a>
+                            <div class="different-angle-meta">
+                                <span class="source-tag">${story.source}${story.is_paywalled ? '<span class="paywall-badge">$</span>' : ''}</span>
+                                <span class="bias-badge" style="background: ${story.bias_color}20; color: ${story.bias_color};">${story.bias_label}</span>
+                            </div>
+                            ${story.excerpt ? `<p style="margin-top: 8px; font-size: 0.85rem; color: var(--text-secondary);">${story.excerpt}</p>` : ''}
+                        `;
+                        list.appendChild(item);
+                    });
+                } else {
+                    list.innerHTML = '<div class="no-different-angle">No related stories from different perspectives found.</div>';
+                }
+            })
+            .catch(error => {
+                // Only show error if this is still the current story
+                if (currentDifferentAngleId !== storyId || currentRequestTimestamp !== requestTimestamp) {
+                    return;
+                }
+                
+                loading.style.display = 'none';
+                list.style.display = 'block';
+                list.innerHTML = '<div class="no-different-angle">Error loading related stories. Please try again.</div>';
+                console.error('Error:', error);
+            });
+        }
+        
+        function closeDifferentAngle() {
+            document.getElementById('different-angle-modal').classList.remove('active');
+            currentDifferentAngleId = null;
+        }
+        
+        // Close modal when clicking outside - use DOMContentLoaded to ensure element exists
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('different-angle-modal');
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeDifferentAngle();
+                    }
+                });
+            }
+        });
+    </script>
+    
     <!-- Different Angle Modal -->
-    <div class="different-angle-modal" id="different-angle-modal"> ... </div>
+    <div class="different-angle-modal" id="different-angle-modal">
+        <div class="different-angle-content" id="different-angle-content">
+            <div class="different-angle-header">
+                <div>
+                    <h3>Different Angle</h3>
+                    <div class="original-story">Original: <span id="different-angle-original-title"></span><br><span id="different-angle-original-source" style="color: var(--text-muted);"></span></div>
+                </div>
+                <button class="close-modal" onclick="closeDifferentAngle()">&times;</button>
+            </div>
+            <div id="different-angle-loading" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                Loading related stories...
+            </div>
+            <div class="different-angle-list" id="different-angle-list">
+            </div>
+        </div>
+    </div>
 </body>
 </html>
