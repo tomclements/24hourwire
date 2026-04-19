@@ -226,10 +226,13 @@
             }
             
             .header-logo-text .logo-tagline {
-                display: none;
+                display: block;
+                font-size: 0.65rem;
             }
             
             .header-actions {
+                flex-direction: row;
+                flex-wrap: nowrap;
                 width: auto;
                 flex-shrink: 0;
             }
@@ -249,6 +252,9 @@
             
             .header-controls {
                 gap: 6px;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                display: flex;
             }
             
             #lang-select {
