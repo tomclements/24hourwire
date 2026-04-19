@@ -1745,16 +1745,27 @@
         
         loadTheme();
         
-        // Different Angle functionality
+        // Different Angle functionality - v2 cache-bust
         let currentDifferentAngleId = null;
         let currentRequestTimestamp = null;
         
         function showDifferentAngle(storyId, storyTitle, storySource, storyBias) {
+            // Get elements fresh each time (avoid stale references)
             const modal = document.getElementById('different-angle-modal');
             const loading = document.getElementById('different-angle-loading');
             const list = document.getElementById('different-angle-list');
             const title = document.getElementById('different-angle-original-title');
             const source = document.getElementById('different-angle-original-source');
+            
+            // Debug logging
+            console.log('Different Angle clicked:', storyId, storyTitle);
+            
+            // Safety check - ensure elements exist
+            if (!modal || !loading || !list || !title || !source) {
+                console.error('Missing DOM elements:', {modal, loading, list, title, source});
+                alert('Error: Modal elements not found. Please refresh the page.');
+                return;
+            }
             
             // Track this request with a unique timestamp
             const requestTimestamp = Date.now();
