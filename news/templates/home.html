@@ -1775,6 +1775,7 @@
             // Show modal immediately with new story info (don't wait for fetch)
             modal.classList.add('active');
             loading.style.display = 'block';
+            list.style.display = 'none';
             list.innerHTML = '';
             
             // Set new story info immediately
@@ -1802,6 +1803,7 @@
                 }
                 
                 loading.style.display = 'none';
+                list.style.display = 'block';
                 
                 if (data.error) {
                     list.innerHTML = '<div class="no-different-angle">' + data.error + '</div>';
@@ -1833,6 +1835,7 @@
                 }
                 
                 loading.style.display = 'none';
+                list.style.display = 'block';
                 list.innerHTML = '<div class="no-different-angle">Error loading related stories. Please try again.</div>';
                 console.error('Error:', error);
             });
@@ -1866,10 +1869,10 @@
                 </div>
                 <button class="close-modal" onclick="closeDifferentAngle()">&times;</button>
             </div>
+            <div id="different-angle-loading" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                Loading related stories...
+            </div>
             <div class="different-angle-list" id="different-angle-list">
-                <div id="different-angle-loading" style="text-align: center; padding: 40px; color: var(--text-muted);">
-                    Loading related stories...
-                </div>
             </div>
         </div>
     </div>
