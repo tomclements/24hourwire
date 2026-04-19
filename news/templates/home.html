@@ -177,34 +177,6 @@
             }
         }
         
-        .header-banner {
-            width: 100%;
-            margin-bottom: 16px;
-            background: linear-gradient(to right, #e8f4fc 0%, #ffffff 50%, #e8f4fc 100%);
-            max-height: 80px;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .header-banner .banner-img {
-            height: auto;
-            max-height: 80px;
-            object-fit: contain;
-            display: block;
-            transform: scale(2);
-        }
-
-        @media (max-width: 640px) {
-            .header-banner {
-                max-height: 60px;
-            }
-            .header-banner .banner-img {
-                max-height: 60px;
-            }
-        }
-
         .header-controls-row {
             display: flex;
             align-items: center;
@@ -1315,7 +1287,7 @@
         <header>
             <div class="header-top">
                 <a href="/" class="header-logo">
-                    <img src="{% static 'news/images/logo.jpg' %}" alt="24HourWire">
+                    <img src="{% static 'news/images/logo.jpg' %}?v=2" alt="24HourWire">
                     <div class="header-logo-text">
                         <span class="logo-title">24HourWire</span>
                         <span class="logo-tagline">News from all angles</span>
