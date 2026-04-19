@@ -30,7 +30,7 @@ class TestDifferentAngle:
         expect(first_button).to_be_visible()
         
         # Get the story title for verification
-        story_title = page.locator(".story-card").first.locator("h3").text_content()
+        story_title = page.locator(".story-card").first.locator(".story-title").text_content()
         
         # Click the button
         first_button.click()
@@ -66,16 +66,12 @@ class TestDifferentAngle:
         page.goto(base_url)
         page.wait_for_selector(".story-card", timeout=10000)
         
-        # Get first two story titles
-        stories = page.locator(".story-card").all()
-        if len(stories) < 2:
-            pytest.skip("Need at least 2 stories to test switching")
-        
-        story_a_title = stories[0].locator("h3").text_content()
-        story_b_title = stories[1].locator("h3").text_content()
+        # Get first two story titles using direct selectors
+        story_a_title = page.locator(".story-card >> nth=0 >> .story-title").text_content()
+        story_b_title = page.locator(".story-card >> nth=1 >> .story-title").text_content()
         
         # Click Story A's Different Angle
-        stories[0].locator("button:has-text('Different Angle')").click()
+        page.locator(".story-card >> nth=0 >> button:has-text('Different Angle')").click()
         
         # Verify Story A is shown
         modal_title = page.locator("#different-angle-original-title")
@@ -84,8 +80,12 @@ class TestDifferentAngle:
         # Wait for fetch to complete
         page.wait_for_timeout(2000)
         
+        # Close the modal first
+        page.locator(".close-modal").click()
+        page.wait_for_timeout(500)
+        
         # Click Story B's Different Angle
-        stories[1].locator("button:has-text('Different Angle')").click()
+        page.locator(".story-card >> nth=1 >> button:has-text('Different Angle')").click()
         
         # Verify Story B is now shown
         expect(modal_title).to_contain_text(story_b_title[:30])

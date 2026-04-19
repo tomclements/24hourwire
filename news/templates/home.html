@@ -103,32 +103,67 @@
         .header-top {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-start;
             margin-bottom: 12px;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 16px;
+        }
+        
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-right: auto;
+        }
+        
+        .header-logo img {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+        
+        .header-logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header-logo-text .logo-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.2;
+            letter-spacing: -0.5px;
+        }
+        
+        .header-logo-text .logo-tagline {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            line-height: 1.2;
         }
         
         @media (max-width: 640px) {
             .header-top {
                 flex-direction: column;
                 align-items: stretch;
+                gap: 12px;
             }
             
-            .brand {
+            .header-logo {
                 justify-content: center;
+                margin-right: 0;
             }
             
-            .brand img {
+            .header-logo img {
                 width: 36px;
                 height: 36px;
             }
             
-            .brand-text h1 {
-                font-size: 1.25rem;
+            .header-logo-text .logo-title {
+                font-size: 1.2rem;
             }
             
-            .brand-text .tagline {
+            .header-logo-text .logo-tagline {
                 display: none;
             }
             
@@ -1278,9 +1313,13 @@
 <body>
     <div class="header-container">
         <header>
-            <div class="header-banner">
-                <a href="/">
-                    <img src="{% static 'news/images/banner.jpg' %}" alt="24HourWire" class="banner-img">
+            <div class="header-top">
+                <a href="/" class="header-logo">
+                    <img src="{% static 'news/images/logo.jpg' %}" alt="24HourWire">
+                    <div class="header-logo-text">
+                        <span class="logo-title">24HourWire</span>
+                        <span class="logo-tagline">News from all angles</span>
+                    </div>
                 </a>
             </div>
             
