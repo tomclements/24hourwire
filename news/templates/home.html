@@ -185,9 +185,28 @@
             .header-actions {
                 width: auto;
                 gap: 8px;
-                order: -1;
                 flex-direction: row;
                 flex-wrap: nowrap;
+                flex-shrink: 0;
+            }
+            
+            .header-logo {
+                flex: 1;
+                min-width: 0;
+                justify-content: flex-start;
+                margin-right: 0;
+            }
+            
+            .header-logo-text {
+                min-width: 0;
+                overflow: hidden;
+            }
+            
+            .header-logo-text .logo-title {
+                font-size: 1.1rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
             
             .bias-filters {
