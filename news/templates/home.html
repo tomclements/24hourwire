@@ -1747,26 +1747,19 @@
         
         // Different Angle functionality
         let currentDifferentAngleId = null;
-        let currentAbortController = null;
+        let currentRequestTimestamp = null;
         
         function showDifferentAngle(storyId, storyTitle, storySource, storyBias) {
             const modal = document.getElementById('different-angle-modal');
-            const content = document.getElementById('different-angle-content');
             const loading = document.getElementById('different-angle-loading');
             const list = document.getElementById('different-angle-list');
             const title = document.getElementById('different-angle-original-title');
             const source = document.getElementById('different-angle-original-source');
             
-            // Cancel any pending fetch from a previous story
-            if (currentAbortController) {
-                currentAbortController.abort();
-            }
-            
-            // Create new abort controller for this request
-            currentAbortController = new AbortController();
-            
-            // Track the current story ID
+            // Track this request with a unique timestamp
+            const requestTimestamp = Date.now();
             currentDifferentAngleId = storyId;
+            currentRequestTimestamp = requestTimestamp;
             
             // Show modal immediately with new story info (don't wait for fetch)
             modal.classList.add('active');
@@ -1777,12 +1770,11 @@
             title.textContent = storyTitle;
             source.textContent = storySource + ' (' + storyBias + ')';
             
-            // Fetch related stories with abort signal
+            // Fetch related stories
             fetch('/different-angle/' + storyId + '/', {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
-                },
-                signal: currentAbortController.signal
+                }
             })
             .then(response => {
                 if (!response.ok) {
@@ -1791,15 +1783,12 @@
                 return response.json();
             })
             .then(data => {
-                // CRITICAL: Check if user clicked a different story while this was loading
-                // If so, ignore this response and don't update the UI
-                if (currentDifferentAngleId !== storyId) {
-                    console.log('Ignoring stale response for story', storyId, '- user clicked story', currentDifferentAngleId);
+                // CRITICAL: Only update UI if this is still the most recent request
+                // Check both story ID and timestamp to prevent race conditions
+                if (currentDifferentAngleId !== storyId || currentRequestTimestamp !== requestTimestamp) {
+                    console.log('Ignoring stale response for story', storyId);
                     return;
                 }
-                
-                // Clear abort controller since request completed
-                currentAbortController = null;
                 
                 loading.style.display = 'none';
                 
@@ -1827,17 +1816,11 @@
                 }
             })
             .catch(error => {
-                // Don't show error if request was aborted (user clicked another story)
-                if (error.name === 'AbortError') {
+                // Only show error if this is still the current story
+                if (currentDifferentAngleId !== storyId || currentRequestTimestamp !== requestTimestamp) {
                     return;
                 }
                 
-                // Check again if this is still the current story
-                if (currentDifferentAngleId !== storyId) {
-                    return;
-                }
-                
-                currentAbortController = null;
                 loading.style.display = 'none';
                 list.innerHTML = '<div class="no-different-angle">Error loading related stories. Please try again.</div>';
                 console.error('Error:', error);
