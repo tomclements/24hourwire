@@ -102,11 +102,19 @@
         
         .header-top {
             display: flex;
-            align-items: flex-end;
-            justify-content: flex-start;
+            align-items: center;
+            justify-content: space-between;
             margin-bottom: 12px;
             flex-wrap: nowrap;
             gap: 16px;
+        }
+        
+        .header-filters-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
         }
         
         .header-logo {
@@ -148,6 +156,7 @@
                 align-items: center;
                 gap: 8px;
                 flex-wrap: nowrap;
+                margin-bottom: 8px;
             }
             
             .header-logo {
@@ -175,8 +184,7 @@
                 -webkit-overflow-scrolling: touch;
                 scrollbar-width: none;
                 padding-bottom: 0;
-                flex: 1;
-                min-width: 0;
+                gap: 6px;
             }
             
             .bias-filters::-webkit-scrollbar {
@@ -190,6 +198,35 @@
             .bias-pill {
                 padding: 4px 8px;
                 font-size: 0.7rem;
+                white-space: nowrap;
+            }
+        }
+            
+            .bias-filters::-webkit-scrollbar {
+                display: none;
+            }
+            
+            .bias-filters > span {
+                display: none;
+            }
+            
+            .bias-pill {
+                padding: 4px 8px;
+                font-size: 0.7rem;
+            }
+            
+            .header-top {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+            
+            .header-logo {
+                flex: 1;
+                min-width: 0;
+            }
+            
+            .header-logo-text .logo-tagline {
+                display: none;
             }
             
             .header-actions {
@@ -223,6 +260,10 @@
                 width: 32px;
                 height: 32px;
                 font-size: 1rem;
+            }
+            
+            .header-filters-row {
+                padding: 6px 0;
             }
         }
 
@@ -306,8 +347,7 @@
             gap: 8px;
             flex-wrap: wrap;
             align-items: center;
-            flex: 1;
-            min-width: 0;
+            width: 100%;
         }
         
         .bias-filters::-webkit-scrollbar {
@@ -1327,18 +1367,6 @@
                     </div>
                 </a>
                 
-                <div class="bias-filters">
-                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;" id="filter-label">
-                        Filter: <span id="active-filters">All Sources</span>
-                    </span>
-                    <button type="button" class="bias-pill all" data-bias="all" onclick="toggleBiasFilter('all')">All</button>
-                    <button type="button" class="bias-pill left" data-bias="left" onclick="toggleBiasFilter('left')">Left</button>
-                    <button type="button" class="bias-pill left-center" data-bias="left-center" onclick="toggleBiasFilter('left-center')">Left-Center</button>
-                    <button type="button" class="bias-pill center" data-bias="center" onclick="toggleBiasFilter('center')">Center</button>
-                    <button type="button" class="bias-pill right-center" data-bias="right-center" onclick="toggleBiasFilter('right-center')">Right-Center</button>
-                    <button type="button" class="bias-pill right" data-bias="right" onclick="toggleBiasFilter('right')">Right</button>
-                </div>
-                
                 <div class="header-actions">
                     <div class="search-container">
                         <span class="search-icon">
@@ -1357,6 +1385,20 @@
                         </select>
                         <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">🌙</button>
                     </div>
+                </div>
+            </div>
+            
+            <div class="header-filters-row">
+                <div class="bias-filters">
+                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;" id="filter-label">
+                        Filter: <span id="active-filters">All Sources</span>
+                    </span>
+                    <button type="button" class="bias-pill all" data-bias="all" onclick="toggleBiasFilter('all')">All</button>
+                    <button type="button" class="bias-pill left" data-bias="left" onclick="toggleBiasFilter('left')">Left</button>
+                    <button type="button" class="bias-pill left-center" data-bias="left-center" onclick="toggleBiasFilter('left-center')">Left-Center</button>
+                    <button type="button" class="bias-pill center" data-bias="center" onclick="toggleBiasFilter('center')">Center</button>
+                    <button type="button" class="bias-pill right-center" data-bias="right-center" onclick="toggleBiasFilter('right-center')">Right-Center</button>
+                    <button type="button" class="bias-pill right" data-bias="right" onclick="toggleBiasFilter('right')">Right</button>
                 </div>
             </div>
             
