@@ -275,15 +275,18 @@
 
         .header-actions {
             display: flex;
+            flex-direction: row;
             align-items: center;
             gap: 12px;
         }
 
         @media (max-width: 640px) {
             .header-actions {
-                width: 100%;
+                width: auto;
                 gap: 8px;
                 order: -1;
+                flex-direction: row;
+                flex-wrap: nowrap;
             }
         }
         
@@ -436,6 +439,7 @@
         /* Language & Theme Toggle */
         .header-controls {
             display: flex;
+            flex-direction: row;
             align-items: center;
             gap: 12px;
         }
