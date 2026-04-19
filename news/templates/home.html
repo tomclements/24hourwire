@@ -105,7 +105,7 @@
             align-items: flex-end;
             justify-content: flex-start;
             margin-bottom: 12px;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             gap: 16px;
         }
         
@@ -144,9 +144,10 @@
         
         @media (max-width: 640px) {
             .header-top {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 12px;
+                flex-direction: row;
+                align-items: center;
+                gap: 8px;
+                flex-wrap: nowrap;
             }
             
             .header-logo {
@@ -168,40 +169,60 @@
             }
             
             .bias-filters {
-                justify-content: center;
+                justify-content: flex-start;
                 overflow-x: auto;
                 flex-wrap: nowrap;
                 -webkit-overflow-scrolling: touch;
                 scrollbar-width: none;
-                padding-bottom: 4px;
+                padding-bottom: 0;
+                flex: 1;
+                min-width: 0;
             }
             
             .bias-filters::-webkit-scrollbar {
                 display: none;
             }
             
+            .bias-filters > span {
+                display: none;
+            }
+            
+            .bias-pill {
+                padding: 4px 8px;
+                font-size: 0.7rem;
+            }
+            
             .header-actions {
-                width: 100%;
+                width: auto;
+                flex-shrink: 0;
             }
             
             .search-container {
-                max-width: none;
-                flex: 1;
+                max-width: 150px;
             }
-        }
-        
-        .header-controls-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-
-        @media (max-width: 640px) {
-            .header-controls-row {
-                flex-direction: column;
-                align-items: stretch;
+            
+            .search-input {
+                padding: 8px 12px 8px 36px;
+                font-size: 0.85rem;
+            }
+            
+            .search-icon {
+                left: 10px;
+            }
+            
+            .header-controls {
+                gap: 6px;
+            }
+            
+            #lang-select {
+                padding: 6px 24px 6px 10px;
+                font-size: 0.8rem;
+            }
+            
+            .theme-toggle {
+                width: 32px;
+                height: 32px;
+                font-size: 1rem;
             }
         }
 
@@ -1316,9 +1337,7 @@
                     <button type="button" class="bias-pill right-center" data-bias="right-center" onclick="toggleBiasFilter('right-center')">Right-Center</button>
                     <button type="button" class="bias-pill right" data-bias="right" onclick="toggleBiasFilter('right')">Right</button>
                 </div>
-            </div>
-            
-            <div class="header-controls-row">
+                
                 <div class="header-actions">
                     <div class="search-container">
                         <span class="search-icon">
