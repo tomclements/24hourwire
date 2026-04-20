@@ -1533,7 +1533,9 @@
         function shareStory(title, url, source) {
             // Use original article URL (stories expire after 24h, so 24HourWire links would break)
             // Include 24HourWire branding in the share text instead
-            const shareText = `${title}\n\nSource: ${source} | Curated by @24HourWire`;
+            const shareText = `${title}\n\nSource: ${source}\nCurated by @24HourWire`;
+            
+            console.log('Sharing:', {title, shareText, url});
             
             if (navigator.share) {
                 // Use native share API
@@ -1542,6 +1544,7 @@
                     text: shareText,
                     url: url
                 }).catch(err => {
+                    console.log('Native share failed:', err);
                     // If native share fails, open share overlay
                     openShareOverlay(title, url, source);
                 });
@@ -1599,8 +1602,11 @@
         }
         
         function shareToTwitter(title, url) {
-            const text = decodeURIComponent(title) + '\n\nCurated by @24HourWire';
-            window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(url), '_blank', 'width=600,height=400');
+            const decodedTitle = decodeURIComponent(title);
+            const text = decodedTitle + '\n\nSource article - Curated by @24HourWire';
+            const twitterUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(url);
+            console.log('Twitter share URL:', twitterUrl);
+            window.open(twitterUrl, '_blank', 'width=600,height=400');
             closeShareOverlay();
         }
         
