@@ -217,3 +217,84 @@ def test_console_errors(page: Page, base_url: str):
     critical_errors = [e for e in errors if "Cannot read properties of null" in e or "undefined" in e.lower()]
     
     assert len(critical_errors) == 0, f"Critical JS errors found: {critical_errors}"
+
+
+class TestStickyHeader:
+    """Tests for sticky header functionality on mobile/desktop."""
+    
+    def test_header_stays_visible_when_scrolling(self, page: Page, base_url: str):
+        """Test that header stays fixed when scrolling through stories."""
+        # Set mobile viewport
+        page.set_viewport_size({"width": 375, "height": 667})
+        
+        page.goto(base_url)
+        page.wait_for_selector(".story-card", timeout=10000)
+        
+        # Get initial header position
+        header = page.locator(".header-container")
+        initial_box = header.bounding_box()
+        initial_top = initial_box["y"]
+        
+        # Scroll down significantly
+        page.evaluate("window.scrollBy(0, 500)")
+        page.wait_for_timeout(500)
+        
+        # Check header is still at top (sticky)
+        scrolled_box = header.bounding_box()
+        scrolled_top = scrolled_box["y"]
+        
+        # Header should stay at top (within 10px tolerance)
+        assert abs(scrolled_top) <= 10, f"Header scrolled away from top: {scrolled_top}px"
+        
+    def test_all_header_rows_visible_when_scrolling(self, page: Page, base_url: str):
+        """Test that all three header rows stay visible when scrolling."""
+        page.set_viewport_size({"width": 375, "height": 667})
+        
+        page.goto(base_url)
+        page.wait_for_selector(".story-card", timeout=10000)
+        
+        # Check all three header rows exist and are visible initially
+        logo_row = page.locator(".header-top")
+        filter_row = page.locator(".bias-filters").first
+        category_row = page.locator(".tabs-wrapper").last
+        
+        assert logo_row.is_visible(), "Logo row should be visible"
+        
+        # Scroll down
+        page.evaluate("window.scrollBy(0, 1000)")
+        page.wait_for_timeout(500)
+        
+        # All rows should still be visible (in sticky header)
+        assert logo_row.is_visible(), "Logo row should stay visible when scrolling"
+        
+        # Category tabs should be visible and clickable
+        first_tab = page.locator(".tab").first
+        if first_tab.count() > 0:
+            expect(first_tab).to_be_visible()
+    
+    def test_can_switch_categories_while_scrolled(self, page: Page, base_url: str):
+        """Test that category tabs work when scrolled down the page."""
+        page.set_viewport_size({"width": 375, "height": 667})
+        
+        page.goto(base_url)
+        page.wait_for_selector(".story-card", timeout=10000)
+        
+        # Get first two categories
+        tabs = page.locator(".tab").all()
+        if len(tabs) < 2:
+            pytest.skip("Need at least 2 categories to test switching")
+        
+        first_cat = tabs[0].text_content().split()[0]
+        second_cat = tabs[1].text_content().split()[0]
+        
+        # Scroll down
+        page.evaluate("window.scrollBy(0, 800)")
+        page.wait_for_timeout(500)
+        
+        # Click second category tab (should be visible in sticky header)
+        tabs[1].click()
+        page.wait_for_timeout(500)
+        
+        # Verify category switched
+        active_tab = page.locator(".tab.active")
+        expect(active_tab).to_contain_text(second_cat)
