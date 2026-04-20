@@ -329,9 +329,10 @@
         }, 1000);
         
         // Social sharing functions
-        const shareUrl = 'https://24hourwire.com/story/{{ story.id }}/';
+        // Use original story URL since 24HourWire stories expire after 24 hours
+        const shareUrl = '{{ story.url|escapejs }}';
         const shareTitle = '{{ story.title|escapejs }}';
-        const shareText = `{{ story.title|escapejs }}\n\nvia @24HourWire`;
+        const shareText = `{{ story.title|escapejs }}\n\nCurated by @24HourWire`;
         
         function shareToTwitter() {
             const url = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent(shareUrl);
@@ -349,7 +350,8 @@
         }
         
         function copyLink() {
-            navigator.clipboard.writeText(shareUrl).then(() => {
+            const fullText = shareTitle + '\n' + shareUrl + '\n\nCurated by @24HourWire';
+            navigator.clipboard.writeText(fullText).then(() => {
                 alert('Link copied to clipboard!');
             });
         }
