@@ -1397,7 +1397,7 @@
                                 <a href="https://www.bing.com/news/search?q={{ story.get_search_terms }}" target="_blank" title="{{ t.search_related }}">Find coverage ↗</a>
                                 <button class="different-angle-btn" onclick="showDifferentAngle({{ story.id }}, '{{ story.title|escapejs }}', '{{ story.source }}', '{{ story.bias_label }}')" title="See different perspectives">Different Angle ↗</button>
                             </div>
-                            <button class="share-btn" onclick="shareStory('{{ story.title|escapejs }}', '{{ story.url|escapejs }}', '{{ story.source|escapejs }}')" title="Share"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-primary);"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button>
+                            <button class="share-btn" onclick="shareStory('{{ story.title|escapejs }}', '{{ story.id }}', '{{ story.source|escapejs }}')" title="Share"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-primary);"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button>
                         </div>
                     </article>
                     {% endfor %}
@@ -1530,7 +1530,9 @@
         });
 
         // Share story
-        function shareStory(title, url, source) {
+        function shareStory(title, storyId, source) {
+            // Use 24HourWire share URL for proper attribution
+            const shareUrl = `https://24hourwire.com/story/${storyId}/`;
             // Construct share text with clear attribution to both source and 24HourWire
             const shareText = `${title}\n\nSource: ${source} | via @24HourWire`;
             
@@ -1539,14 +1541,14 @@
                 navigator.share({
                     title: title,
                     text: shareText,
-                    url: url
+                    url: shareUrl
                 }).catch(err => {
                     // If native share fails, open share overlay
-                    openShareOverlay(title, url, source);
+                    openShareOverlay(title, shareUrl, source);
                 });
             } else {
                 // Open share overlay with sharing options
-                openShareOverlay(title, url, source);
+                openShareOverlay(title, shareUrl, source);
             }
         }
         
