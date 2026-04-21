@@ -368,6 +368,37 @@ UI_STRINGS = {
     'footer_terms': '利用規約',
     'footer_privacy': 'プライバシー',
     'footer_about': 'について',
+    # Header translations
+    'logo_tagline': '多角的な視点からのニュース',
+    'search_placeholder': 'ニュースを検索...',
+    'toggle_theme': 'テーマ切り替え',
+    'filter_label': 'フィルター:',
+    # Bias filter buttons
+    'filter_all': 'すべて',
+    'filter_left': '左派',
+    'filter_left_center': '中道左派',
+    'filter_center': '中道',
+    'filter_right_center': '中道右派',
+    'filter_right': '右派',
+    # Story card buttons
+    'find_coverage_btn': '報道を探す',
+    'different_angle_btn': '別の視点',
+    'share_btn': '共有',
+    'different_perspectives': '異なる視点',
+    # Different Angle modal
+    'different_angle_title': '別の角度から',
+    'original_label': '元記事:',
+    'loading_related': '関連記事を読み込み中...',
+    'no_related_stories': '関連記事が見つかりません',
+    'error_loading': '読み込みエラー',
+    # Share modal
+    'share_story_title': '記事を共有',
+    'share_on_x': 'Xで共有',
+    'share_facebook': 'Facebookで共有',
+    'share_linkedin': 'LinkedInで共有',
+    'copy_link': 'リンクをコピー',
+    'copied': 'コピーしました！',
+    'close': '閉じる',
 }
 
 PAYWALLED_SOURCES = {

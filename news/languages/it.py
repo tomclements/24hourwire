@@ -388,6 +388,37 @@ UI_STRINGS = {
     'footer_terms': 'Termini',
     'footer_privacy': 'Privacy',
     'footer_about': 'Chi siamo',
+    # Header translations
+    'logo_tagline': 'Notizie da diverse prospettive',
+    'search_placeholder': 'Cerca notizie...',
+    'toggle_theme': 'Cambia tema',
+    'filter_label': 'Filtra per:',
+    # Bias filter buttons
+    'filter_all': 'Tutti',
+    'filter_left': 'Sinistra',
+    'filter_left_center': 'Centro-sinistra',
+    'filter_center': 'Centro',
+    'filter_right_center': 'Centro-destra',
+    'filter_right': 'Destra',
+    # Story card buttons
+    'find_coverage_btn': 'Trova copertura',
+    'different_angle_btn': 'Un altro angolo',
+    'share_btn': 'Condividi',
+    'different_perspectives': 'Altre prospettive',
+    # Different Angle modal
+    'different_angle_title': 'Un\'altra prospettiva',
+    'original_label': 'Originale:',
+    'loading_related': 'Caricamento articoli correlati...',
+    'no_related_stories': 'Nessun articolo correlato trovato',
+    'error_loading': 'Errore di caricamento',
+    # Share modal
+    'share_story_title': 'Condividi articolo',
+    'share_on_x': 'Condividi su X',
+    'share_facebook': 'Condividi su Facebook',
+    'share_linkedin': 'Condividi su LinkedIn',
+    'copy_link': 'Copia link',
+    'copied': 'Copiato!',
+    'close': 'Chiudi',
 }
 
 PAYWALLED_SOURCES = {

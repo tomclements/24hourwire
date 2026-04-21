@@ -346,6 +346,37 @@ UI_STRINGS = {
     'footer_terms': '条款',
     'footer_privacy': '隐私',
     'footer_about': '关于',
+    # Header translations
+    'logo_tagline': '多角度新闻',
+    'search_placeholder': '搜索新闻...',
+    'toggle_theme': '切换主题',
+    'filter_label': '筛选：',
+    # Bias filter buttons
+    'filter_all': '全部',
+    'filter_left': '左派',
+    'filter_left_center': '中左',
+    'filter_center': '中间',
+    'filter_right_center': '中右',
+    'filter_right': '右派',
+    # Story card buttons
+    'find_coverage_btn': '查找报道',
+    'different_angle_btn': '另一角度',
+    'share_btn': '分享',
+    'different_perspectives': '不同视角',
+    # Different Angle modal
+    'different_angle_title': '换个角度看',
+    'original_label': '原文：',
+    'loading_related': '正在加载相关报道...',
+    'no_related_stories': '未找到相关报道',
+    'error_loading': '加载错误',
+    # Share modal
+    'share_story_title': '分享文章',
+    'share_on_x': '分享到X',
+    'share_facebook': '分享到Facebook',
+    'share_linkedin': '分享到LinkedIn',
+    'copy_link': '复制链接',
+    'copied': '已复制！',
+    'close': '关闭',
 }
 
 PAYWALLED_SOURCES = {

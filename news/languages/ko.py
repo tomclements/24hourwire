@@ -376,6 +376,37 @@ UI_STRINGS = {
     'footer_terms': '이용약관',
     'footer_privacy': '개인정보',
     'footer_about': '소개',
+    # Header translations
+    'logo_tagline': '다양한 관점에서 보는 뉴스',
+    'search_placeholder': '뉴스 검색...',
+    'toggle_theme': '테마 전환',
+    'filter_label': '필터:',
+    # Bias filter buttons
+    'filter_all': '전체',
+    'filter_left': '좌파',
+    'filter_left_center': '중도좌파',
+    'filter_center': '중도',
+    'filter_right_center': '중도우파',
+    'filter_right': '우파',
+    # Story card buttons
+    'find_coverage_btn': '보도 찾기',
+    'different_angle_btn': '다른 관점',
+    'share_btn': '공유',
+    'different_perspectives': '다른 시각',
+    # Different Angle modal
+    'different_angle_title': '다른 관점에서 보기',
+    'original_label': '원본:',
+    'loading_related': '관련 기사 로딩 중...',
+    'no_related_stories': '관련 기사를 찾을 수 없습니다',
+    'error_loading': '로딩 오류',
+    # Share modal
+    'share_story_title': '기사 공유',
+    'share_on_x': 'X에서 공유',
+    'share_facebook': 'Facebook에서 공유',
+    'share_linkedin': 'LinkedIn에서 공유',
+    'copy_link': '링크 복사',
+    'copied': '복사됨!',
+    'close': '닫기',
 }
 
 PAYWALLED_SOURCES = {

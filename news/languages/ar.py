@@ -390,6 +390,37 @@ UI_STRINGS = {
     'footer_terms': 'الشروط',
     'footer_privacy': 'الخصوصية',
     'footer_about': 'حول',
+    # Header translations
+    'logo_tagline': 'أخبار من منظور مختلف',
+    'search_placeholder': 'البحث في الأخبار...',
+    'toggle_theme': 'تبديل السمة',
+    'filter_label': 'تصفية حسب:',
+    # Bias filter buttons
+    'filter_all': 'الكل',
+    'filter_left': 'اليسار',
+    'filter_left_center': 'الوسط اليسار',
+    'filter_center': 'الوسط',
+    'filter_right_center': 'الوسط اليمين',
+    'filter_right': 'اليمين',
+    # Story card buttons
+    'find_coverage_btn': 'البحث عن تغطية',
+    'different_angle_btn': 'زاوية أخرى',
+    'share_btn': 'مشاركة',
+    'different_perspectives': 'منظور مختلف',
+    # Different Angle modal
+    'different_angle_title': 'منظور مختلف',
+    'original_label': 'الأصل:',
+    'loading_related': 'جاري تحميل الأخبار ذات الصلة...',
+    'no_related_stories': 'لم يتم العثور على أخبار ذات صلة',
+    'error_loading': 'خطأ في التحميل',
+    # Share modal
+    'share_story_title': 'مشاركة الخبر',
+    'share_on_x': 'المشاركة على X',
+    'share_facebook': 'المشاركة على Facebook',
+    'share_linkedin': 'المشاركة على LinkedIn',
+    'copy_link': 'نسخ الرابط',
+    'copied': 'تم النسخ!',
+    'close': 'إغلاق',
 }
 
 PAYWALLED_SOURCES = set()

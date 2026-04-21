@@ -377,6 +377,37 @@ UI_STRINGS = {
     'footer_terms': 'Koşullar',
     'footer_privacy': 'Gizlilik',
     'footer_about': 'Hakkında',
+    # Header translations
+    'logo_tagline': 'Farklı perspektiflerden haberler',
+    'search_placeholder': 'Haber ara...',
+    'toggle_theme': 'Temayı değiştir',
+    'filter_label': 'Filtre:',
+    # Bias filter buttons
+    'filter_all': 'Tümü',
+    'filter_left': 'Sol',
+    'filter_left_center': 'Sol-merkez',
+    'filter_center': 'Merkez',
+    'filter_right_center': 'Sağ-merkez',
+    'filter_right': 'Sağ',
+    # Story card buttons
+    'find_coverage_btn': 'Haber bul',
+    'different_angle_btn': 'Farklı açı',
+    'share_btn': 'Paylaş',
+    'different_perspectives': 'Farklı bakış açıları',
+    # Different Angle modal
+    'different_angle_title': 'Farklı bir bakış açısı',
+    'original_label': 'Orijinal:',
+    'loading_related': 'İlgili haberler yükleniyor...',
+    'no_related_stories': 'İlgili haber bulunamadı',
+    'error_loading': 'Yükleme hatası',
+    # Share modal
+    'share_story_title': 'Haberi paylaş',
+    'share_on_x': 'X\'te paylaş',
+    'share_facebook': 'Facebook\'ta paylaş',
+    'share_linkedin': 'LinkedIn\'de paylaş',
+    'copy_link': 'Bağlantıyı kopyala',
+    'copied': 'Kopyalandı!',
+    'close': 'Kapat',
 }
 
 PAYWALLED_SOURCES = {

@@ -375,6 +375,37 @@ UI_STRINGS = {
     'footer_terms': 'Условия',
     'footer_privacy': 'Конфиденциальность',
     'footer_about': 'О нас',
+    # Header translations
+    'logo_tagline': 'Новости с разных сторон',
+    'search_placeholder': 'Поиск новостей...',
+    'toggle_theme': 'Переключить тему',
+    'filter_label': 'Фильтр:',
+    # Bias filter buttons
+    'filter_all': 'Все',
+    'filter_left': 'Левые',
+    'filter_left_center': 'Левоцентристские',
+    'filter_center': 'Центристские',
+    'filter_right_center': 'Правоцентристские',
+    'filter_right': 'Правые',
+    # Story card buttons
+    'find_coverage_btn': 'Найти освещение',
+    'different_angle_btn': 'Другой ракурс',
+    'share_btn': 'Поделиться',
+    'different_perspectives': 'Другие перспективы',
+    # Different Angle modal
+    'different_angle_title': 'Другая точка зрения',
+    'original_label': 'Оригинал:',
+    'loading_related': 'Загрузка связанных статей...',
+    'no_related_stories': 'Связанные статьи не найдены',
+    'error_loading': 'Ошибка загрузки',
+    # Share modal
+    'share_story_title': 'Поделиться статьёй',
+    'share_on_x': 'Поделиться в X',
+    'share_facebook': 'Поделиться в Facebook',
+    'share_linkedin': 'Поделиться в LinkedIn',
+    'copy_link': 'Копировать ссылку',
+    'copied': 'Скопировано!',
+    'close': 'Закрыть',
 }
 
 PAYWALLED_SOURCES = {

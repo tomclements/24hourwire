@@ -352,6 +352,37 @@ UI_STRINGS = {
     'footer_terms': 'शर्तें',
     'footer_privacy': 'गोपनीयता',
     'footer_about': 'के बारे में',
+    # Header translations
+    'logo_tagline': 'विभिन्न दृष्टिकोणों से समाचार',
+    'search_placeholder': 'समाचार खोजें...',
+    'toggle_theme': 'थीम बदलें',
+    'filter_label': 'फिल्टर:',
+    # Bias filter buttons
+    'filter_all': 'सभी',
+    'filter_left': 'वाम',
+    'filter_left_center': 'मध्य-वाम',
+    'filter_center': 'केंद्र',
+    'filter_right_center': 'मध्य-दक्षिण',
+    'filter_right': 'दक्षिण',
+    # Story card buttons
+    'find_coverage_btn': 'कवरेज खोजें',
+    'different_angle_btn': 'दूसरा एंगल',
+    'share_btn': 'साझा करें',
+    'different_perspectives': 'अलग-अलग नजरिए',
+    # Different Angle modal
+    'different_angle_title': 'एक अलग दृष्टिकोण',
+    'original_label': 'मूल:',
+    'loading_related': 'संबंधित खबरें लोड हो रही हैं...',
+    'no_related_stories': 'कोई संबंधित खबर नहीं मिली',
+    'error_loading': 'लोडिंग में त्रुटि',
+    # Share modal
+    'share_story_title': 'खबर साझा करें',
+    'share_on_x': 'X पर साझा करें',
+    'share_facebook': 'Facebook पर साझा करें',
+    'share_linkedin': 'LinkedIn पर साझा करें',
+    'copy_link': 'लिंक कॉपी करें',
+    'copied': 'कॉपी किया गया!',
+    'close': 'बंद करें',
 }
 
 PAYWALLED_SOURCES = set()
