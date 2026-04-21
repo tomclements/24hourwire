@@ -453,6 +453,37 @@ UI_STRINGS = {
     'footer_terms': 'Términos',
     'footer_privacy': 'Privacidad',
     'footer_about': 'Acerca de',
+    # Header translations
+    'logo_tagline': 'Noticias desde todos los ángulos',
+    'search_placeholder': 'Buscar noticias...',
+    'toggle_theme': 'Cambiar modo oscuro',
+    'filter_label': 'Filtrar:',
+    # Bias filter buttons
+    'filter_all': 'Todas',
+    'filter_left': 'Izquierda',
+    'filter_left_center': 'Centro-Izquierda',
+    'filter_center': 'Centro',
+    'filter_right_center': 'Centro-Derecha',
+    'filter_right': 'Derecha',
+    # Story card buttons
+    'find_coverage_btn': 'Encontrar cobertura ↗',
+    'different_angle_btn': 'Ángulo Diferente ↗',
+    'share_btn': 'Compartir',
+    'different_perspectives': 'Ver diferentes perspectivas',
+    # Different Angle modal
+    'different_angle_title': 'Ángulo Diferente',
+    'original_label': 'Original:',
+    'loading_related': 'Cargando historias relacionadas...',
+    'no_related_stories': 'No se encontraron historias relacionadas desde diferentes perspectivas.',
+    'error_loading': 'Error al cargar historias relacionadas. Por favor intenta de nuevo.',
+    # Share modal
+    'share_story_title': 'Compartir Historia',
+    'share_on_x': 'Compartir en X',
+    'share_facebook': 'Facebook',
+    'share_linkedin': 'LinkedIn',
+    'copy_link': 'Copiar Enlace',
+    'copied': '¡Copiado!',
+    'close': 'Cerrar',
 }
 
 PAYWALLED_SOURCES = {

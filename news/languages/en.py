@@ -580,6 +580,37 @@ UI_STRINGS = {
     'footer_terms': 'Terms',
     'footer_privacy': 'Privacy',
     'footer_about': 'About',
+    # Header translations
+    'logo_tagline': 'News from all angles',
+    'search_placeholder': 'Search news...',
+    'toggle_theme': 'Toggle dark mode',
+    'filter_label': 'Filter:',
+    # Bias filter buttons
+    'filter_all': 'All',
+    'filter_left': 'Left',
+    'filter_left_center': 'Left-Center',
+    'filter_center': 'Center',
+    'filter_right_center': 'Right-Center',
+    'filter_right': 'Right',
+    # Story card buttons
+    'find_coverage_btn': 'Find coverage ↗',
+    'different_angle_btn': 'Different Angle ↗',
+    'share_btn': 'Share',
+    'different_perspectives': 'See different perspectives',
+    # Different Angle modal
+    'different_angle_title': 'Different Angle',
+    'original_label': 'Original:',
+    'loading_related': 'Loading related stories...',
+    'no_related_stories': 'No related stories from different perspectives found.',
+    'error_loading': 'Error loading related stories. Please try again.',
+    # Share modal
+    'share_story_title': 'Share Story',
+    'share_on_x': 'Share on X',
+    'share_facebook': 'Facebook',
+    'share_linkedin': 'LinkedIn',
+    'copy_link': 'Copy Link',
+    'copied': 'Copied!',
+    'close': 'Close',
 }
 
 PAYWALLED_SOURCES = {

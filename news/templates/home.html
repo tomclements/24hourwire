@@ -14,7 +14,7 @@
     <meta property="og:url" content="https://24hourwire.com">
     <meta property="og:site_name" content="24HourWire">
     <meta property="og:image" content="https://24hourwire.com{% static 'news/images/logo.jpg' %}">
-    <meta property="og:image:alt" content="24HourWire - News from all angles">
+    <meta property="og:image:alt" content="24HourWire - {{ t.logo_tagline }}">
     <meta property="og:locale" content="{{ language }}_{{ language|upper }}">
     
     <!-- Twitter Card -->
@@ -24,7 +24,7 @@
     <meta name="twitter:title" content="24HourWire | The Latest News from All Angles">
     <meta name="twitter:description" content="Unbiased news aggregator showing current events from multiple perspectives. 24 hour news coverage from diverse sources.">
     <meta name="twitter:image" content="https://24hourwire.com{% static 'news/images/logo.jpg' %}">
-    <meta name="twitter:image:alt" content="24HourWire - News from all angles">
+    <meta name="twitter:image:alt" content="24HourWire - {{ t.logo_tagline }}">
     
     <link rel="canonical" href="https://24hourwire.com">
     <link rel="icon" type="image/jpeg" href="{% static 'news/images/logo.jpg' %}">
@@ -1281,10 +1281,10 @@
         <header>
             <div class="header-top">
                 <a href="/" class="header-logo">
-                    <img src="{% static 'news/images/logo.jpg' %}?v=2" alt="24HourWire">
+                    <img src="{% static 'news/images/logo.jpg' %}?v=2" alt="24HourWire" title="24HourWire">
                     <div class="header-logo-text">
                         <span class="logo-title">24HourWire</span>
-                        <span class="logo-tagline">News from all angles</span>
+                        <span class="logo-tagline">{{ t.logo_tagline }}</span>
                     </div>
                 </a>
                 
@@ -1295,7 +1295,7 @@
                                 <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
                             </svg>
                         </span>
-                        <input type="text" class="search-input" placeholder="Search news..." id="search-input">
+                        <input type="text" class="search-input" placeholder="{{ t.search_placeholder }}" id="search-input">
                     </div>
                     
                     <div class="header-controls">
@@ -1304,7 +1304,7 @@
                                 <option value="{{ code }}" {% if code == language %}selected{% endif %}>{{ name }}</option>
                             {% endfor %}
                         </select>
-                        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">🌙</button>
+                        <button class="theme-toggle" onclick="toggleTheme()" title="{{ t.toggle_theme }}">🌙</button>
                     </div>
                 </div>
             </div>
@@ -1317,13 +1317,13 @@
                 </button>
                 <div class="tabs-container">
                     <div class="bias-filters">
-                        <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500; flex-shrink: 0;" id="filter-label">Filter: <span id="active-filters">All Sources</span></span>
-                        <button type="button" class="bias-pill all" data-bias="all" onclick="toggleBiasFilter('all')">All</button>
-                        <button type="button" class="bias-pill left" data-bias="left" onclick="toggleBiasFilter('left')">Left</button>
-                        <button type="button" class="bias-pill left-center" data-bias="left-center" onclick="toggleBiasFilter('left-center')">Left-Center</button>
-                        <button type="button" class="bias-pill center" data-bias="center" onclick="toggleBiasFilter('center')">Center</button>
-                        <button type="button" class="bias-pill right-center" data-bias="right-center" onclick="toggleBiasFilter('right-center')">Right-Center</button>
-                        <button type="button" class="bias-pill right" data-bias="right" onclick="toggleBiasFilter('right')">Right</button>
+                        <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500; flex-shrink: 0;" id="filter-label">{{ t.filter_label }} <span id="active-filters">{{ t.all_sources }}</span></span>
+                        <button type="button" class="bias-pill all" data-bias="all" onclick="toggleBiasFilter('all')">{{ t.filter_all }}</button>
+                        <button type="button" class="bias-pill left" data-bias="left" onclick="toggleBiasFilter('left')">{{ t.filter_left }}</button>
+                        <button type="button" class="bias-pill left-center" data-bias="left-center" onclick="toggleBiasFilter('left-center')">{{ t.filter_left_center }}</button>
+                        <button type="button" class="bias-pill center" data-bias="center" onclick="toggleBiasFilter('center')">{{ t.filter_center }}</button>
+                        <button type="button" class="bias-pill right-center" data-bias="right-center" onclick="toggleBiasFilter('right-center')">{{ t.filter_right_center }}</button>
+                        <button type="button" class="bias-pill right" data-bias="right" onclick="toggleBiasFilter('right')">{{ t.filter_right }}</button>
                     </div>
                 </div>
                 <button class="scroll-btn right" onclick="scrollFilters('right')" aria-label="Scroll filters right">
@@ -1398,10 +1398,10 @@
                         <div class="story-actions">
                             <div class="story-links">
                                 <a href="{{ story.url }}" target="_blank" itemprop="url">Read full story ↗</a>
-                                <a href="https://www.bing.com/news/search?q={{ story.get_search_terms }}" target="_blank" title="{{ t.search_related }}">Find coverage ↗</a>
-                                <button class="different-angle-btn" onclick="showDifferentAngle({{ story.id }}, '{{ story.title|escapejs }}', '{{ story.source }}', '{{ story.bias_label }}')" title="See different perspectives">Different Angle ↗</button>
+                                <a href="https://www.bing.com/news/search?q={{ story.get_search_terms }}" target="_blank" title="{{ t.search_related }}">{{ t.find_coverage_btn }}</a>
+                                <button class="different-angle-btn" onclick="showDifferentAngle({{ story.id }}, '{{ story.title|escapejs }}', '{{ story.source }}', '{{ story.bias_label }}')" title="{{ t.different_perspectives }}">{{ t.different_angle_btn }}</button>
                             </div>
-                            <button class="share-btn" onclick="shareStory('{{ story.title|escapejs }}', '{{ story.url|escapejs }}', '{{ story.source|escapejs }}')" title="Share"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-primary);"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button>
+                            <button class="share-btn" onclick="shareStory('{{ story.title|escapejs }}', '{{ story.url|escapejs }}', '{{ story.source|escapejs }}')" title="{{ t.share_btn }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-primary);"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button>
                         </div>
                     </article>
                     {% endfor %}
@@ -1566,7 +1566,7 @@
                 <div class="share-overlay-backdrop" onclick="closeShareOverlay()"></div>
                 <div class="share-overlay-content">
                     <div class="share-overlay-header">
-                        <h3>Share Story</h3>
+                        <h3>{{ t.share_story_title }}</h3>
                         <button class="close-overlay" onclick="closeShareOverlay()">&times;</button>
                     </div>
                     <div class="share-overlay-preview">
@@ -1576,19 +1576,19 @@
                     <div class="share-overlay-buttons">
                         <button class="share-option twitter" onclick="shareToTwitter('${encodeURIComponent(title)}', '${encodeURIComponent(url)}')">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                            <span>Share on X</span>
+                            <span>{{ t.share_on_x }}</span>
                         </button>
                         <button class="share-option facebook" onclick="shareToFacebook('${encodeURIComponent(url)}')">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                            <span>Facebook</span>
+                            <span>{{ t.share_facebook }}</span>
                         </button>
                         <button class="share-option linkedin" onclick="shareToLinkedIn('${encodeURIComponent(url)}')">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-                            <span>LinkedIn</span>
+                            <span>{{ t.share_linkedin }}</span>
                         </button>
                         <button class="share-option copy" onclick="copyShareLink('${encodeURIComponent(title)}', '${encodeURIComponent(url)}', '${encodeURIComponent(source)}')">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                            <span>Copy Link</span>
+                            <span>{{ t.copy_link }}</span>
                         </button>
                     </div>
                 </div>
@@ -1628,7 +1628,7 @@
             const text = decodeURIComponent(title) + '\n' + decodeURIComponent(url) + '\n\nSource: ' + decodeURIComponent(source) + ' | Curated by @24HourWire';
             navigator.clipboard.writeText(text).then(() => {
                 const btn = document.querySelector('.share-option.copy');
-                btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg><span>Copied!</span>';
+                btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg><span>{{ t.copied }}</span>';
                 setTimeout(() => {
                     closeShareOverlay();
                 }, 1000);
@@ -1858,7 +1858,7 @@
                         list.appendChild(item);
                     });
                 } else {
-                    list.innerHTML = '<div class="no-different-angle">No related stories from different perspectives found.</div>';
+                    list.innerHTML = '<div class="no-different-angle">{{ t.no_related_stories }}</div>';
                 }
             })
             .catch(error => {
@@ -1869,7 +1869,7 @@
                 
                 loading.style.display = 'none';
                 list.style.display = 'block';
-                list.innerHTML = '<div class="no-different-angle">Error loading related stories. Please try again.</div>';
+                list.innerHTML = '<div class="no-different-angle">{{ t.error_loading }}</div>';
                 console.error('Error:', error);
             });
         }
@@ -1897,13 +1897,13 @@
         <div class="different-angle-content" id="different-angle-content">
             <div class="different-angle-header">
                 <div>
-                    <h3>Different Angle</h3>
-                    <div class="original-story">Original: <span id="different-angle-original-title"></span><br><span id="different-angle-original-source" style="color: var(--text-muted);"></span></div>
+                    <h3>{{ t.different_angle_title }}</h3>
+                    <div class="original-story">{{ t.original_label }} <span id="different-angle-original-title"></span><br><span id="different-angle-original-source" style="color: var(--text-muted);"></span></div>
                 </div>
                 <button class="close-modal" onclick="closeDifferentAngle()">&times;</button>
             </div>
             <div id="different-angle-loading" style="text-align: center; padding: 40px; color: var(--text-muted);">
-                Loading related stories...
+                {{ t.loading_related }}
             </div>
             <div class="different-angle-list" id="different-angle-list">
             </div>
