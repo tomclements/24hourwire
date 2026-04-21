@@ -10,6 +10,8 @@
     <link rel="icon" type="image/jpeg" href="{% static 'news/images/logo.jpg' %}">
     <link rel="alternate" type="application/rss+xml" title="24HourWire - {{ language_name }} Feed" href="{{ language_rss }}">
     <link rel="alternate" type="application/json" title="24HourWire - {{ language_name }} JSON Feed" href="{{ language_json }}">
+    <link rel="alternate" type="application/rss+xml" title="24HourWire - Global Feed" href="/feed/">
+    <link rel="alternate" type="application/json" title="24HourWire - Global JSON Feed" href="/feed.json">
     <style>
         :root {
             --primary: #0A2540;
@@ -194,21 +196,6 @@
     <div class="intro">
         <p><strong>{{ t.what_are_feeds|default:"What are news feeds?" }}</strong></p>
         <p>{{ t.feeds_explanation|default:"RSS feeds let you subscribe to website updates and read them in a feed reader app. Get all your news in one place without visiting multiple websites." }}</p>
-    </div>
-    
-    <h2>🌍 {{ t.global_feeds|default:"Global Feed" }}</h2>
-    <div class="feed-card">
-        <h3>{{ t.all_languages|default:"All Languages" }}</h3>
-        <div class="feed-links">
-            <a href="{{ global_rss }}" class="feed-link" target="_blank">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6.503 20.752c0 2.07-1.678 3.748-3.75 3.748S-.997 22.82-.997 20.75c0-2.07 1.68-3.748 3.75-3.748s3.75 1.678 3.75 3.75zm8.024-7.738c0 2.07-1.678 3.748-3.75 3.748s-3.75-1.679-3.75-3.748c0-2.07 1.678-3.748 3.75-3.748s3.75 1.679 3.75 3.75zm8.023-7.74c0 2.07-1.678 3.748-3.75 3.748s-3.75-1.678-3.75-3.748 1.678-3.748 3.75-3.748 3.75 1.678 3.75 3.75z"/></svg>
-                RSS
-            </a>
-            <a href="{{ global_json }}" class="feed-link json" target="_blank">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM6 20V4h5v7h7v9H6z"/></svg>
-                JSON
-            </a>
-        </div>
     </div>
     
     <h2>🌐 {{ language_name }} {{ t.feeds|default:"Feeds" }}</h2>

@@ -354,8 +354,6 @@ def feeds_view(request):
         'language': language,
         'language_name': LANGUAGE_NAMES.get(language, language.upper()),
         'category_feeds': category_feeds,
-        'global_rss': '/feed/',
-        'global_json': '/feed.json',
         'language_rss': f'/feed/{language}/',
         'language_json': f'/feed/{language}.json',
     }
