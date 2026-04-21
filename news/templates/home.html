@@ -1448,7 +1448,7 @@
         </div>
         
         <div class="footer-bottom">
-            <p>&copy; 2026 24HourWire. News content &copy; respective publishers.</p>
+            <p>&copy; 2026 24HourWire. News content &copy; respective publishers. | <a href="{% url 'feeds' %}?lang={{ language }}">RSS Feeds</a></p>
             <p class="admin-link">
                 {% if user.is_authenticated %}
                     {{ user.username }} | <a href="/logout/">Logout</a>

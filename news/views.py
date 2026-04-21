@@ -322,3 +322,52 @@ def different_angle(request, story_id):
         'language_names': LANGUAGE_NAMES,
         't': UI_STRINGS.get(language, UI_STRINGS['en']),
     })
+
+
+def feeds_view(request):
+    """Display available RSS and JSON feeds."""
+    language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))
+    t = UI_STRINGS.get(language, UI_STRINGS['en'])
+    
+    # Get all supported languages
+    languages = []
+    for code, name in LANGUAGE_NAMES.items():
+        languages.append({
+            'code': code,
+            'name': name,
+            'rss_url': f'/feed/{code}/',
+            'json_url': f'/feed/{code}.json',
+        })
+    
+    # Get active categories from recent stories
+    cutoff = timezone.now() - timedelta(hours=24)
+    categories = Story.objects.filter(
+        published__gte=cutoff
+    ).values('language', 'category').distinct().order_by('language', 'category')
+    
+    # Organize categories by language
+    category_feeds = {}
+    for item in categories:
+        lang = item['language']
+        cat = item['category']
+        if lang not in category_feeds:
+            category_feeds[lang] = []
+        if cat:
+            category_feeds[lang].append({
+                'category': cat,
+                'name': cat.replace('-', ' ').title(),
+                'rss_url': f'/feed/{lang}/{cat}/',
+                'json_url': f'/feed/{lang}/{cat}.json',
+            })
+    
+    context = {
+        't': t,
+        'language': language,
+        'language_name': LANGUAGE_NAMES.get(language, language.upper()),
+        'languages': languages,
+        'category_feeds': category_feeds,
+        'global_rss': '/feed/',
+        'global_json': '/feed.json',
+    }
+    
+    return render(request, 'feeds.html', context)

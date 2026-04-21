@@ -1,0 +1,314 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ t.feeds_title|default:"RSS & JSON Feeds" }} | 24HourWire</title>
+    <meta name="description" content="Subscribe to 24HourWire news feeds in RSS or JSON format. Get news from all angles in your preferred language.">
+    <link rel="canonical" href="https://24hourwire.com/feeds/">
+    <link rel="icon" type="image/jpeg" href="{% static 'news/images/logo.jpg' %}">
+    <link rel="alternate" type="application/rss+xml" title="24HourWire - Global News Feed" href="/feed/">
+    <link rel="alternate" type="application/json" title="24HourWire - JSON Feed" href="/feed.json">
+    <style>
+        :root {
+            --primary: #0A2540;
+            --accent: #0066cc;
+            --text-primary: #1a1a1a;
+            --text-secondary: #4a5568;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f7fafc;
+            --border: #e2e8f0;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--bg-primary);
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        h1 {
+            color: var(--primary);
+            margin-bottom: 8px;
+            font-size: 2rem;
+        }
+        
+        .subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            font-size: 1.1rem;
+        }
+        
+        .intro {
+            background: var(--bg-secondary);
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 32px;
+            border-left: 4px solid var(--accent);
+        }
+        
+        .intro p {
+            margin-bottom: 12px;
+        }
+        
+        .intro p:last-child {
+            margin-bottom: 0;
+        }
+        
+        h2 {
+            color: var(--primary);
+            margin: 32px 0 16px;
+            font-size: 1.5rem;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border);
+        }
+        
+        h3 {
+            color: var(--text-secondary);
+            margin: 24px 0 12px;
+            font-size: 1.2rem;
+        }
+        
+        .feed-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        
+        .feed-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            transition: all 0.2s;
+        }
+        
+        .feed-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .feed-card h4 {
+            color: var(--primary);
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+        }
+        
+        .feed-links {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .feed-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .feed-link:hover {
+            background: var(--accent);
+            transform: translateY(-1px);
+        }
+        
+        .feed-link.json {
+            background: #6b7280;
+        }
+        
+        .feed-link.json:hover {
+            background: #4b5563;
+        }
+        
+        .global-feed {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 32px;
+        }
+        
+        .global-feed h2 {
+            color: white;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            margin-top: 0;
+        }
+        
+        .global-feed .feed-link {
+            background: white;
+            color: var(--primary);
+        }
+        
+        .global-feed .feed-link:hover {
+            background: var(--bg-secondary);
+        }
+        
+        .global-feed .feed-link.json {
+            background: rgba(255,255,255,0.9);
+            color: var(--text-primary);
+        }
+        
+        .language-section {
+            margin-bottom: 24px;
+        }
+        
+        .language-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .language-flag {
+            font-size: 1.5rem;
+        }
+        
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 24px;
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        .what-is-rss {
+            background: var(--bg-secondary);
+            padding: 24px;
+            border-radius: 8px;
+            margin-top: 40px;
+        }
+        
+        .what-is-rss h2 {
+            margin-top: 0;
+        }
+        
+        .what-is-rss ul {
+            margin: 16px 0 0 20px;
+        }
+        
+        .what-is-rss li {
+            margin-bottom: 8px;
+        }
+        
+        @media (max-width: 600px) {
+            body {
+                padding: 20px 16px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .feed-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/?lang={{ language }}" class="back-link">← {{ t.back_to_news|default:"Back to News" }}</a>
+    
+    <h1>📡 {{ t.feeds_title|default:"RSS & JSON Feeds" }}</h1>
+    <p class="subtitle">{{ t.feeds_subtitle|default:"Subscribe to 24HourWire news feeds" }}</p>
+    
+    <div class="intro">
+        <p><strong>{{ t.what_are_feeds|default:"What are news feeds?" }}</strong></p>
+        <p>{{ t.feeds_explanation|default:"News feeds (also called RSS feeds) allow you to subscribe to website updates and read them in a feed reader app. Instead of visiting multiple websites, you get all your news in one place." }}</p>
+        <p>{{ t.feeds_updated|default:"Our feeds are updated every 15 minutes with fresh stories from the last 24 hours." }}</p>
+    </div>
+    
+    <div class="global-feed">
+        <h2>🌍 {{ t.global_feeds|default:"Global Feeds" }}</h2>
+        <p style="margin-bottom: 16px; opacity: 0.9;">{{ t.global_feeds_desc|default:"All stories from all languages" }}</p>
+        <div class="feed-links">
+            <a href="{{ global_rss }}" class="feed-link" target="_blank">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6.503 20.752c0 2.07-1.678 3.748-3.75 3.748S-.997 22.82-.997 20.75c0-2.07 1.68-3.748 3.75-3.748s3.75 1.678 3.75 3.75zm8.024-7.738c0 2.07-1.678 3.748-3.75 3.748s-3.75-1.679-3.75-3.748c0-2.07 1.678-3.748 3.75-3.748s3.75 1.679 3.75 3.75zm8.023-7.74c0 2.07-1.678 3.748-3.75 3.748s-3.75-1.678-3.75-3.748 1.678-3.748 3.75-3.748 3.75 1.678 3.75 3.75z"/></svg>
+                RSS Feed
+            </a>
+            <a href="{{ global_json }}" class="feed-link json" target="_blank">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM6 20V4h5v7h7v9H6z"/></svg>
+                JSON Feed
+            </a>
+        </div>
+    </div>
+    
+    <h2>🌐 {{ t.language_feeds|default:"Language-Specific Feeds" }}</h2>
+    <p style="margin-bottom: 24px; color: var(--text-secondary);">{{ t.language_feeds_desc|default:"Choose your preferred language" }}</p>
+    
+    <div class="feed-grid">
+        {% for lang in languages %}
+        <div class="feed-card">
+            <h4>{{ lang.name }}</h4>
+            <div class="feed-links">
+                <a href="{{ lang.rss_url }}" class="feed-link" target="_blank">RSS</a>
+                <a href="{{ lang.json_url }}" class="feed-link json" target="_blank">JSON</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    {% if category_feeds %}
+    <h2>📂 {{ t.category_feeds|default:"Category Feeds" }}</h2>
+    <p style="margin-bottom: 24px; color: var(--text-secondary);">{{ t.category_feeds_desc|default:"Feeds for specific news categories" }}</p>
+    
+    {% for lang_code, categories in category_feeds.items %}
+    <div class="language-section">
+        <div class="language-header">
+            <span class="language-flag">{{ languages|get_item:lang_code|default:lang_code|upper }}</span>
+            <h3>{{ LANGUAGE_NAMES|get_item:lang_code|default:lang_code|upper }}</h3>
+        </div>
+        <div class="feed-grid">
+            {% for cat in categories %}
+            <div class="feed-card">
+                <h4>{{ cat.name }}</h4>
+                <div class="feed-links">
+                    <a href="{{ cat.rss_url }}" class="feed-link" target="_blank">RSS</a>
+                    <a href="{{ cat.json_url }}" class="feed-link json" target="_blank">JSON</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+    
+    <div class="what-is-rss">
+        <h2>📖 {{ t.how_to_use|default:"How to Use These Feeds" }}</h2>
+        <ul>
+            <li><strong>RSS Readers:</strong> {{ t.rss_readers|default:"Copy the RSS feed URL and paste it into any RSS reader like Feedly, Inoreader, or NewsBlur" }}</li>
+            <li><strong>Browser Extensions:</strong> {{ t.browser_extensions|default:"Use browser extensions like "Feedbro" for Firefox or "RSS Feed Reader" for Chrome" }}</li>
+            <li><strong>Email:</strong> {{ t.email_services|default:"Services like Blogtrottr can email you new articles from any RSS feed" }}</li>
+            <li><strong>JSON:</strong> {{ t.json_feeds|default:"JSON feeds work with modern feed readers and can be easily parsed by developers" }}</li>
+        </ul>
+    </div>
+    
+    <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center; color: var(--text-secondary);">
+        <p>24HourWire - {{ t.logo_tagline }}</p>
+    </footer>
+</body>
+</html>
