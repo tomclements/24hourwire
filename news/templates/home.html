@@ -28,6 +28,10 @@
     
     <link rel="canonical" href="https://24hourwire.com">
     <link rel="icon" type="image/jpeg" href="{% static 'news/images/logo.jpg' %}">
+    <!-- RSS Feed Auto-Discovery -->
+    <link rel="alternate" type="application/rss+xml" title="24HourWire - Global News Feed" href="/feed/">
+    <link rel="alternate" type="application/rss+xml" title="24HourWire - {{ language|upper }} News Feed" href="/feed/{{ language }}/">
+    <link rel="alternate" type="application/json" title="24HourWire - JSON Feed" href="/feed.json">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     <link rel="preconnect" href="https://fonts.googleapis.com">
