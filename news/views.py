@@ -325,49 +325,39 @@ def different_angle(request, story_id):
 
 
 def feeds_view(request):
-    """Display available RSS and JSON feeds."""
+    """Display available RSS and JSON feeds for the selected language."""
     language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))
     t = UI_STRINGS.get(language, UI_STRINGS['en'])
     
-    # Get all supported languages
-    languages = []
-    for code, name in LANGUAGE_NAMES.items():
-        languages.append({
-            'code': code,
-            'name': name,
-            'rss_url': f'/feed/{code}/',
-            'json_url': f'/feed/{code}.json',
-        })
-    
-    # Get active categories from recent stories
+    # Get categories for the selected language only
     cutoff = timezone.now() - timedelta(hours=24)
     categories = Story.objects.filter(
-        published__gte=cutoff
-    ).values('language', 'category').distinct().order_by('language', 'category')
+        language=language,
+        published__gte=cutoff,
+        category__isnull=False
+    ).values('category').distinct().order_by('category')
     
-    # Organize categories by language
-    category_feeds = {}
+    # Build category feeds list
+    category_feeds = []
     for item in categories:
-        lang = item['language']
         cat = item['category']
-        if lang not in category_feeds:
-            category_feeds[lang] = []
         if cat:
-            category_feeds[lang].append({
+            category_feeds.append({
                 'category': cat,
                 'name': cat.replace('-', ' ').title(),
-                'rss_url': f'/feed/{lang}/{cat}/',
-                'json_url': f'/feed/{lang}/{cat}.json',
+                'rss_url': f'/feed/{language}/{cat}/',
+                'json_url': f'/feed/{language}/{cat}.json',
             })
     
     context = {
         't': t,
         'language': language,
         'language_name': LANGUAGE_NAMES.get(language, language.upper()),
-        'languages': languages,
         'category_feeds': category_feeds,
         'global_rss': '/feed/',
         'global_json': '/feed.json',
+        'language_rss': f'/feed/{language}/',
+        'language_json': f'/feed/{language}.json',
     }
     
     return render(request, 'feeds.html', context)
