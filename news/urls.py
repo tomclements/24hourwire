@@ -14,6 +14,7 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('different-angle/<int:story_id>/', views.different_angle, name='different_angle'),
+    path('go/<str:token>/', views.branded_redirect, name='branded_redirect'),
     path('story/<int:story_id>/', views.story_share, name='story_share'),
     # RSS Feeds
     path('feed/', GlobalFeed(), name='feed_global'),

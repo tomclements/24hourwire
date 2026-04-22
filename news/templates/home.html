@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="{{ language }}">
 {% load static %}
+{% load news_extras %}
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1401,7 +1402,7 @@
                                 <a href="https://www.bing.com/news/search?q={{ story.get_search_terms }}" target="_blank" title="{{ t.search_related }}">{{ t.find_coverage_btn }}</a>
                                 <button class="different-angle-btn" onclick="showDifferentAngle({{ story.id }}, '{{ story.title|escapejs }}', '{{ story.source }}', '{{ story.bias_label }}')" title="{{ t.different_perspectives }}">{{ t.different_angle_btn }}</button>
                             </div>
-                            <button class="share-btn" onclick="shareStory('{{ story.title|escapejs }}', '{{ story.url|escapejs }}', '{{ story.source|escapejs }}')" title="{{ t.share_btn }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-primary);"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button>
+                            <button class="share-btn" onclick="shareStory('{{ story.title|escapejs }}', '{{ story.source|escapejs }}', '{{ story|sign_share_data|escapejs }}')" title="{{ t.share_btn }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-primary);"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button>
                         </div>
                     </article>
                     {% endfor %}
@@ -1533,33 +1534,29 @@
             });
         });
 
-        // Share story
-        function shareStory(title, url, source) {
-            // Use original article URL (stories expire after 24h, so 24HourWire links would break)
-            // Include 24HourWire branding in the share text instead
-            const shareText = `${title}\n\nSource: ${source}\nCurated by @24HourWire`;
+        // Share story using branded redirect URLs (stateless signed tokens)
+        function shareStory(title, source, token) {
+            const wireUrl = 'https://24hourwire.com/go/' + encodeURIComponent(token) + '/';
+            const shareText = `via @24HourWire\n\n${title}\n\nSource: ${source}`;
             
-            console.log('Sharing:', {title, shareText, url});
+            console.log('Sharing:', {title, shareText, wireUrl});
             
             if (navigator.share) {
-                // Use native share API
                 navigator.share({
-                    title: title,
+                    title: 'via @24HourWire',
                     text: shareText,
-                    url: url
+                    url: wireUrl
                 }).catch(err => {
                     console.log('Native share failed:', err);
-                    // If native share fails, open share overlay
-                    openShareOverlay(title, url, source);
+                    openShareOverlay(title, source, wireUrl);
                 });
             } else {
-                // Open share overlay with sharing options
-                openShareOverlay(title, url, source);
+                openShareOverlay(title, source, wireUrl);
             }
         }
         
         // Share overlay for platforms without native share
-        function openShareOverlay(title, url, source) {
+        function openShareOverlay(title, source, wireUrl) {
             const overlay = document.createElement('div');
             overlay.id = 'share-overlay';
             overlay.innerHTML = `
@@ -1570,23 +1567,24 @@
                         <button class="close-overlay" onclick="closeShareOverlay()">&times;</button>
                     </div>
                     <div class="share-overlay-preview">
+                        <p class="share-preview-source" style="color: var(--accent); font-weight: 600; margin-bottom: 8px;">via @24HourWire</p>
                         <p class="share-preview-text">${title}</p>
-                        <p class="share-preview-source">${source} | Curated by @24HourWire</p>
+                        <p class="share-preview-source">Source: ${source}</p>
                     </div>
                     <div class="share-overlay-buttons">
-                        <button class="share-option twitter" onclick="shareToTwitter('${encodeURIComponent(title)}', '${encodeURIComponent(url)}')">
+                        <button class="share-option twitter" onclick="shareToTwitter('${encodeURIComponent(title)}', '${encodeURIComponent(wireUrl)}')">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
                             <span>{{ t.share_on_x }}</span>
                         </button>
-                        <button class="share-option facebook" onclick="shareToFacebook('${encodeURIComponent(url)}')">
+                        <button class="share-option facebook" onclick="shareToFacebook('${encodeURIComponent(wireUrl)}')">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                             <span>{{ t.share_facebook }}</span>
                         </button>
-                        <button class="share-option linkedin" onclick="shareToLinkedIn('${encodeURIComponent(url)}')">
+                        <button class="share-option linkedin" onclick="shareToLinkedIn('${encodeURIComponent(wireUrl)}')">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
                             <span>{{ t.share_linkedin }}</span>
                         </button>
-                        <button class="share-option copy" onclick="copyShareLink('${encodeURIComponent(title)}', '${encodeURIComponent(url)}', '${encodeURIComponent(source)}')">
+                        <button class="share-option copy" onclick="copyShareLink('${encodeURIComponent(title)}', '${encodeURIComponent(wireUrl)}', '${encodeURIComponent(source)}')">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                             <span>{{ t.copy_link }}</span>
                         </button>
@@ -1605,27 +1603,27 @@
             }
         }
         
-        function shareToTwitter(title, url) {
+        function shareToTwitter(title, wireUrl) {
             const decodedTitle = decodeURIComponent(title);
-            const text = decodedTitle + '\n\nSource article - Curated by @24HourWire';
-            const twitterUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(url);
+            const text = 'via @24HourWire\n\n' + decodedTitle;
+            const twitterUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(wireUrl);
             console.log('Twitter share URL:', twitterUrl);
             window.open(twitterUrl, '_blank', 'width=600,height=400');
             closeShareOverlay();
         }
         
-        function shareToFacebook(url) {
-            window.open('https://www.facebook.com/sharer/sharer.php?u=' + url, '_blank', 'width=600,height=400');
+        function shareToFacebook(wireUrl) {
+            window.open('https://www.facebook.com/sharer/sharer.php?u=' + wireUrl, '_blank', 'width=600,height=400');
             closeShareOverlay();
         }
         
-        function shareToLinkedIn(url) {
-            window.open('https://www.linkedin.com/sharing/share-offsite/?url=' + url, '_blank', 'width=600,height=400');
+        function shareToLinkedIn(wireUrl) {
+            window.open('https://www.linkedin.com/sharing/share-offsite/?url=' + wireUrl, '_blank', 'width=600,height=400');
             closeShareOverlay();
         }
         
-        function copyShareLink(title, url, source) {
-            const text = decodeURIComponent(title) + '\n' + decodeURIComponent(url) + '\n\nSource: ' + decodeURIComponent(source) + ' | Curated by @24HourWire';
+        function copyShareLink(title, wireUrl, source) {
+            const text = decodeURIComponent(title) + '\n' + decodeURIComponent(wireUrl) + '\n\nSource: ' + decodeURIComponent(source) + ' | Curated by @24HourWire';
             navigator.clipboard.writeText(text).then(() => {
                 const btn = document.querySelector('.share-option.copy');
                 btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg><span>{{ t.copied }}</span>';

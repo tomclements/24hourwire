@@ -1,4 +1,6 @@
 from django.shortcuts import render, redirect
+from django.core import signing
+from django.http import Http404
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth import login, logout, authenticate
@@ -228,6 +230,35 @@ def story_share(request, story_id):
         'story': story,
         'language': language,
         't': ui_strings,
+    })
+
+
+def branded_redirect(request, token):
+    """Stateless branded redirect using signed tokens.
+    
+    Verifies a signed token containing story metadata, renders a branded
+    landing page with OG/Twitter Card tags, then redirects to the
+    original article. No database storage required.
+    """
+    signer = signing.Signer()
+    try:
+        # Verify the signed token
+        payload = signer.unsign(token)
+        data = signing.loads(payload)
+    except (signing.BadSignature, signing.SignatureExpired):
+        raise Http404("Invalid or expired link")
+    
+    url = data.get('url', '')
+    title = data.get('title', '')
+    source = data.get('source', '')
+    
+    if not url:
+        raise Http404("Invalid link")
+    
+    return render(request, 'branded_redirect.html', {
+        'url': url,
+        'title': title,
+        'source': source,
     })
 
 

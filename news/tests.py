@@ -11,7 +11,9 @@ from django.urls import reverse
 from django.http import JsonResponse
 
 from news.models import Story, StoryCluster, title_fingerprint, normalize_url
-from news.views import story_share, different_angle
+from news.views import story_share, different_angle, branded_redirect
+from django.core import signing
+from news.templatetags.news_extras import sign_share_data
 
 
 class StoryModelTests(TestCase):
@@ -256,3 +258,87 @@ class StoryClusterModelTests(TestCase):
         self.assertEqual(len(stories), 2)
         self.assertIn(self.story1, stories)
         self.assertIn(self.story2, stories)
+
+
+class BrandedRedirectTests(TestCase):
+    """Tests for stateless branded share redirect."""
+    
+    def setUp(self):
+        self.factory = RequestFactory()
+    
+    def test_signing_roundtrip(self):
+        """Test that signed tokens can be created and verified."""
+        data = {
+            'url': 'https://example.com/article',
+            'title': 'Test Article',
+            'source': 'Test Source',
+        }
+        signer = signing.Signer()
+        payload = signing.dumps(data)
+        token = signer.sign(payload)
+        
+        # Verify token
+        payload = signer.unsign(token)
+        result = signing.loads(payload)
+        
+        self.assertEqual(result['url'], data['url'])
+        self.assertEqual(result['title'], data['title'])
+        self.assertEqual(result['source'], data['source'])
+    
+    def test_tampered_token_returns_404(self):
+        """Test that tampered tokens return 404."""
+        from django.http import Http404
+        request = self.factory.get('/go/invalid-token/')
+        with self.assertRaises(Http404):
+            branded_redirect(request, 'invalid-token')
+    
+    def test_branded_redirect_view_renders(self):
+        """Test the branded redirect view renders with OG tags."""
+        data = {
+            'url': 'https://bbc.com/news/test-article',
+            'title': 'Breaking News Test',
+            'source': 'BBC',
+        }
+        signer = signing.Signer()
+        payload = signing.dumps(data)
+        token = signer.sign(payload)
+        
+        request = self.factory.get(f'/go/{token}/')
+        response = branded_redirect(request, token)
+        
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        
+        # Check branding
+        self.assertIn('24HourWire', content)
+        self.assertIn('Breaking News Test', content)
+        self.assertIn('BBC', content)
+        self.assertIn('bbc.com/news/test-article', content)
+        
+        # Check redirect meta tag
+        self.assertIn('meta http-equiv="refresh"', content)
+    
+    def test_template_filter_generates_valid_token(self):
+        """Test the sign_share_data template filter."""
+        story = Story.objects.create(
+            source='Test Source',
+            title='Test Title',
+            excerpt='Test excerpt',
+            url='https://example.com/story',
+            language='en',
+            category='world',
+            published=timezone.now(),
+            url_hash='test123',
+            title_fingerprint='tf123',
+        )
+        
+        token = sign_share_data(story)
+        
+        # Verify it's a valid signed token
+        signer = signing.Signer()
+        payload = signer.unsign(token)
+        data = signing.loads(payload)
+        
+        self.assertEqual(data['url'], story.url)
+        self.assertEqual(data['title'], story.title)
+        self.assertEqual(data['source'], story.source)
