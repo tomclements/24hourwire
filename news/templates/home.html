@@ -12,9 +12,9 @@
     <meta property="og:title" content="24HourWire | The Latest News from All Angles">
     <meta property="og:description" content="Unbiased news aggregator showing current events from multiple perspectives. 24 hour news coverage from diverse sources.">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://24hourwire.com">
+    <meta property="og:url" content="https://24hourwire.news">
     <meta property="og:site_name" content="24HourWire">
-    <meta property="og:image" content="https://24hourwire.com{% static 'news/images/logo.jpg' %}">
+    <meta property="og:image" content="https://24hourwire.news{% static 'news/images/logo.jpg' %}">
     <meta property="og:image:alt" content="24HourWire - {{ t.logo_tagline }}">
     <meta property="og:locale" content="{{ language }}_{{ language|upper }}">
     
@@ -24,10 +24,10 @@
     <meta name="twitter:creator" content="@24HourWire">
     <meta name="twitter:title" content="24HourWire | The Latest News from All Angles">
     <meta name="twitter:description" content="Unbiased news aggregator showing current events from multiple perspectives. 24 hour news coverage from diverse sources.">
-    <meta name="twitter:image" content="https://24hourwire.com{% static 'news/images/logo.jpg' %}">
+    <meta name="twitter:image" content="https://24hourwire.news{% static 'news/images/logo.jpg' %}">
     <meta name="twitter:image:alt" content="24HourWire - {{ t.logo_tagline }}">
     
-    <link rel="canonical" href="https://24hourwire.com">
+    <link rel="canonical" href="https://24hourwire.news">
     <link rel="icon" type="image/jpeg" href="{% static 'news/images/logo.jpg' %}">
     <!-- RSS Feed Auto-Discovery -->
     <link rel="alternate" type="application/rss+xml" title="24HourWire - Global News Feed" href="/feed/">
@@ -1539,7 +1539,7 @@
         // does not decode %3A back to : in path segments, which breaks
         // signature verification. The token only contains safe chars (no /).
         function shareStory(title, source, token) {
-            const wireUrl = 'https://24hourwire.com/go/' + token + '/';
+            const wireUrl = 'https://24hourwire.news/go/' + token + '/';
             const shareText = `via @24HourWire\n\n${title}\n\nSource: ${source}`;
             
             console.log('Sharing:', {title, shareText, wireUrl});

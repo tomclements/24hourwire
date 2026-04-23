@@ -165,7 +165,7 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 CSRF_TRUSTED_ORIGINS = [
     origin.strip() 
-    for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', 'https://24hourwire.com,https://www.24hourwire.com').split(',')
+    for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', 'https://24hourwire.news,https://www.24hourwire.news').split(',')
     if origin.strip()
 ]
 if not DEBUG:

@@ -26,7 +26,7 @@ services:
       - key: DEBUG
         value: false
       - key: CSRF_TRUSTED_ORIGINS
-        value: https://24hourwire.com,https://www.24hourwire.com,https://two4hourwire.onrender.com
+        value: https://24hourwire.news,https://www.24hourwire.news,https://two4hourwire.onrender.com
       - key: WEB_CONCURRENCY
         value: 2
 

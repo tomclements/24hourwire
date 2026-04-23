@@ -239,7 +239,7 @@ class JSONFeedView(View):
         feed = {
             'version': 'https://jsonfeed.org/version/1.1',
             'title': '24HourWire News Feed',
-            'home_page_url': 'https://24hourwire.com',
+            'home_page_url': 'https://24hourwire.news',
             'feed_url': request.build_absolute_uri(),
             'description': 'News from all angles',
             'items': items,
