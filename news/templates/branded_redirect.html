@@ -8,7 +8,7 @@
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="article">
-    <meta property="og:url" content="https://24hourwire.com/go/{{ request.resolver_match.kwargs.token }}/">
+    <meta property="og:url" content="https://24hourwire.com/go/{{ token }}/">
     <meta property="og:title" content="{{ title }}">
     <meta property="og:description" content="Curated by 24HourWire - news from all angles">
     <meta property="og:site_name" content="24HourWire">
@@ -16,21 +16,21 @@
     <meta property="og:image:alt" content="24HourWire - News from all angles">
     
     <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:card" content="summary">
     <meta name="twitter:site" content="@24HourWire">
+    <meta name="twitter:domain" content="24hourwire.com">
     <meta name="twitter:title" content="{{ title }}">
     <meta name="twitter:description" content="Curated by 24HourWire - news from all angles">
     <meta name="twitter:image" content="https://24hourwire.com/static/news/images/logo.jpg">
     <meta name="twitter:image:alt" content="24HourWire - News from all angles">
     
     <!-- Canonical -->
-    <link rel="canonical" href="https://24hourwire.com/go/{{ request.resolver_match.kwargs.token }}/">
+    <link rel="canonical" href="https://24hourwire.com/go/{{ token }}/">
     
     <!-- Favicon -->
     <link rel="icon" type="image/jpeg" href="/static/news/images/logo.jpg">
     
-    <!-- Auto-redirect after short delay -->
-    <meta http-equiv="refresh" content="2;url={{ url }}">
+    <!-- No meta refresh - crawlers need to read OG tags before redirect -->
     
     <style>
         :root {
@@ -201,12 +201,18 @@
     </div>
     
     <script>
+        // Redirect after 2 seconds using JavaScript
+        // This ensures crawlers (Twitterbot, Facebook) read our OG tags
+        // before being redirected to the original article
         let seconds = 2;
         const el = document.getElementById('countdown');
         const timer = setInterval(() => {
             seconds--;
             if (el) el.textContent = seconds;
-            if (seconds <= 0) clearInterval(timer);
+            if (seconds <= 0) {
+                clearInterval(timer);
+                window.location.href = '{{ url|escapejs }}';
+            }
         }, 1000);
     </script>
 </body>

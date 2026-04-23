@@ -315,8 +315,8 @@ class BrandedRedirectTests(TestCase):
         self.assertIn('BBC', content)
         self.assertIn('bbc.com/news/test-article', content)
         
-        # Check redirect meta tag
-        self.assertIn('meta http-equiv="refresh"', content)
+        # Check JavaScript redirect (not meta refresh, so crawlers read OG tags)
+        self.assertIn('window.location.href', content)
     
     def test_template_filter_generates_valid_token(self):
         """Test the sign_share_data template filter."""

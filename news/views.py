@@ -259,6 +259,7 @@ def branded_redirect(request, token):
         'url': url,
         'title': title,
         'source': source,
+        'token': token,
     })
 
 
