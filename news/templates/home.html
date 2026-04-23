@@ -1535,8 +1535,11 @@
         });
 
         // Share story using branded redirect URLs (stateless signed tokens)
+        // NOTE: Do NOT encodeURIComponent the token - Django's URL resolver
+        // does not decode %3A back to : in path segments, which breaks
+        // signature verification. The token only contains safe chars (no /).
         function shareStory(title, source, token) {
-            const wireUrl = 'https://24hourwire.com/go/' + encodeURIComponent(token) + '/';
+            const wireUrl = 'https://24hourwire.com/go/' + token + '/';
             const shareText = `via @24HourWire\n\n${title}\n\nSource: ${source}`;
             
             console.log('Sharing:', {title, shareText, wireUrl});
