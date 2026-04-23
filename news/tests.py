@@ -298,6 +298,7 @@ class BrandedRedirectTests(TestCase):
             'url': 'https://bbc.com/news/test-article',
             'title': 'Breaking News Test',
             'source': 'BBC',
+            'image_url': 'https://example.com/image.jpg',
         }
         signer = signing.Signer()
         payload = signing.dumps(data)
@@ -314,6 +315,9 @@ class BrandedRedirectTests(TestCase):
         self.assertIn('Breaking News Test', content)
         self.assertIn('BBC', content)
         self.assertIn('bbc.com/news/test-article', content)
+        
+        # Check OG image uses story image
+        self.assertIn('https://example.com/image.jpg', content)
         
         # Check JavaScript redirect (not meta refresh, so crawlers read OG tags)
         self.assertIn('window.location.href', content)
@@ -342,3 +346,4 @@ class BrandedRedirectTests(TestCase):
         self.assertEqual(data['url'], story.url)
         self.assertEqual(data['title'], story.title)
         self.assertEqual(data['source'], story.source)
+        self.assertEqual(data['image_url'], story.image_url)

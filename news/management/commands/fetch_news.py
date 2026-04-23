@@ -31,6 +31,48 @@ handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)
 logger.addHandler(handler)
 
 
+def extract_image_url(entry):
+    """Extract the best image URL from a feedparser entry.
+    
+    Checks multiple RSS image formats in order of preference:
+    1. media_thumbnail (most common for news feeds)
+    2. media_content with medium='image'
+    3. enclosures with image type
+    4. First <img> tag in summary/content
+    
+    Returns empty string if no image found.
+    """
+    # media:thumbnail is most common for news feeds (BBC, Reuters, etc.)
+    thumbnails = entry.get('media_thumbnail', [])
+    if thumbnails:
+        # thumbnails is a list of dicts with 'url', 'width', 'height'
+        # Pick the largest one if multiple sizes available
+        best = max(thumbnails, key=lambda t: int(t.get('width', 0)) * int(t.get('height', 0)))
+        return best.get('url', '')
+    
+    # media:content with medium='image'
+    media_content = entry.get('media_content', [])
+    for media in media_content:
+        if media.get('medium') == 'image' and media.get('url'):
+            return media['url']
+    
+    # enclosures
+    enclosures = entry.get('enclosures', [])
+    for enc in enclosures:
+        if enc.get('type', '').startswith('image/'):
+            return enc.get('href', '')
+    
+    # Try to extract from HTML in summary or content
+    html_content = entry.get('summary', '') or entry.get('content', [{}])[0].get('value', '')
+    if html_content:
+        # Look for <img> tags
+        img_match = re.search(r'<img[^>]+src\s*=\s*["\'](https?://[^"\']+)["\']', html_content, re.IGNORECASE)
+        if img_match:
+            return img_match.group(1)
+    
+    return ''
+
+
 def retry_on_db_error(max_retries=3, delay=1):
     """Decorator to retry database operations on connection errors."""
     def decorator(func):
@@ -240,6 +282,9 @@ class Command(BaseCommand):
                 else:
                     excerpt = ''
 
+                # Extract image URL from RSS entry
+                image_url = extract_image_url(entry)
+
                 to_create.append(Story(
                     source=source_name,
                     title=title,
@@ -250,6 +295,7 @@ class Command(BaseCommand):
                     language=language,
                     category=categorize_story(title, language),
                     published=pub_time,
+                    image_url=image_url,
                 ))
                 
                 # Track for fuzzy deduplication

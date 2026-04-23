@@ -251,6 +251,7 @@ def branded_redirect(request, token):
     url = data.get('url', '')
     title = data.get('title', '')
     source = data.get('source', '')
+    image_url = data.get('image_url', '')
     
     if not url:
         raise Http404("Invalid link")
@@ -259,6 +260,7 @@ def branded_redirect(request, token):
         'url': url,
         'title': title,
         'source': source,
+        'image_url': image_url,
         'token': token,
     })
 

@@ -65,6 +65,7 @@ class Story(models.Model):
     url_hash = models.CharField(max_length=64, db_index=True, default='')
     title_fingerprint = models.CharField(max_length=32, db_index=True, default='')
     tweeted = models.BooleanField(default=False, db_index=True)
+    image_url = models.URLField(max_length=2000, blank=True)
 
     class Meta:
         ordering = ['-published']

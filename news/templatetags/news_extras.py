@@ -15,6 +15,7 @@ def sign_share_data(story):
         'url': story.url,
         'title': story.title,
         'source': story.source,
+        'image_url': story.image_url or '',
     }
     signer = signing.Signer()
     payload = signing.dumps(data)

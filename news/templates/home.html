@@ -567,6 +567,32 @@
             gap: 12px;
             margin-bottom: 12px;
         }
+
+        .story-image-link {
+            display: block;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            overflow: hidden;
+            text-decoration: none;
+        }
+
+        .story-image {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.3s;
+        }
+
+        .story-image-link:hover .story-image {
+            transform: scale(1.03);
+        }
+
+        @media (min-width: 640px) {
+            .story-image {
+                height: 180px;
+            }
+        }
         
         .story-title {
             font-size: 1.1rem;
@@ -1377,6 +1403,12 @@
                         <div class="story-header">
                             <a href="{{ story.url }}" target="_blank" class="story-title" itemprop="headline">{{ story.title }}</a>
                         </div>
+                        
+                        {% if story.image_url %}
+                        <a href="{{ story.url }}" target="_blank" class="story-image-link" itemprop="image" itemscope itemtype="https://schema.org/ImageObject">
+                            <img src="{{ story.image_url }}" alt="{{ story.title }}" class="story-image" loading="lazy" onerror="this.style.display='none'" itemprop="url">
+                        </a>
+                        {% endif %}
                         
                         <div class="story-meta">
                             <span class="source-tag">{{ story.source }}{% if story.is_paywalled %}<span class="paywall-badge" title="{{ t.paywall_title }}">$</span>{% endif %}</span>
