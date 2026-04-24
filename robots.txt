@@ -1,6 +1,10 @@
 User-agent: *
 Allow: /
+Disallow: /go/
+Disallow: /dashboard/
+Disallow: /login/
 
-Sitemap: https://two4hourwire.onrender.com/sitemap.xml
+Sitemap: https://24hourwire.news/sitemap.xml
+Sitemap: https://24hourwire.news/news-sitemap.xml
 
 Crawl-delay: 1

@@ -347,3 +347,69 @@ class BrandedRedirectTests(TestCase):
         self.assertEqual(data['title'], story.title)
         self.assertEqual(data['source'], story.source)
         self.assertEqual(data['image_url'], story.image_url)
+
+
+class SitemapTests(TestCase):
+    """Tests for XML sitemaps."""
+
+    def test_sitemap_returns_xml(self):
+        """Test that standard sitemap returns valid XML."""
+        response = self.client.get('/sitemap.xml')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/xml')
+
+        content = response.content.decode()
+        self.assertIn('<urlset', content)
+        self.assertIn('https://24hourwire.news/', content)
+        self.assertIn('https://24hourwire.news/feeds/', content)
+        self.assertIn('<priority>1.0</priority>', content)
+
+    def test_news_sitemap_returns_xml(self):
+        """Test that news sitemap returns valid Google News XML."""
+        # Create a recent story
+        story = Story.objects.create(
+            source='BBC',
+            title='Test News Story',
+            excerpt='Test excerpt',
+            url='https://example.com/test',
+            language='en',
+            category='world',
+            published=timezone.now(),
+            url_hash='hash123',
+            title_fingerprint='fp123',
+        )
+
+        response = self.client.get('/news-sitemap.xml')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/xml')
+
+        content = response.content.decode()
+        self.assertIn('<urlset', content)
+        self.assertIn('xmlns:news=', content)
+        self.assertIn('<news:news>', content)
+        self.assertIn('<news:name>24HourWire</news:name>', content)
+        self.assertIn('<news:language>en</news:language>', content)
+        self.assertIn(f'https://24hourwire.news/story/{story.id}/', content)
+        self.assertIn('Test News Story', content)
+
+    def test_news_sitemap_excludes_old_stories(self):
+        """Test that news sitemap only includes recent stories."""
+        # Create an old story
+        old_story = Story.objects.create(
+            source='BBC',
+            title='Old Story',
+            excerpt='Old excerpt',
+            url='https://example.com/old',
+            language='en',
+            category='world',
+            published=timezone.now() - timedelta(hours=72),
+            url_hash='old123',
+            title_fingerprint='oldfp',
+        )
+
+        response = self.client.get('/news-sitemap.xml')
+        content = response.content.decode()
+
+        # Old story should not appear
+        self.assertNotIn('Old Story', content)
+        self.assertNotIn(f'https://24hourwire.news/story/{old_story.id}/', content)

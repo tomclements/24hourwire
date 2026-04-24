@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.core import signing
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth import login, logout, authenticate
@@ -263,6 +263,80 @@ def branded_redirect(request, token):
         'image_url': image_url,
         'token': token,
     })
+
+
+def sitemap(request):
+    """Generate standard XML sitemap for static pages."""
+    from django.utils.xmlutils import SimplerXMLGenerator
+    from io import StringIO
+
+    urls = [
+        {'loc': 'https://24hourwire.news/', 'priority': '1.0', 'changefreq': 'hourly'},
+        {'loc': 'https://24hourwire.news/feeds/', 'priority': '0.8', 'changefreq': 'daily'},
+        {'loc': 'https://24hourwire.news/about/', 'priority': '0.5', 'changefreq': 'weekly'},
+        {'loc': 'https://24hourwire.news/terms/', 'priority': '0.3', 'changefreq': 'monthly'},
+        {'loc': 'https://24hourwire.news/privacy/', 'priority': '0.3', 'changefreq': 'monthly'},
+    ]
+
+    output = StringIO()
+    xml = SimplerXMLGenerator(output, 'utf-8')
+    xml.startDocument()
+    xml.startElement('urlset', {
+        'xmlns': 'http://www.sitemaps.org/schemas/sitemap/0.9'
+    })
+
+    now = timezone.now().strftime('%Y-%m-%d')
+    for url in urls:
+        xml.startElement('url', {})
+        xml.addQuickElement('loc', url['loc'])
+        xml.addQuickElement('lastmod', now)
+        xml.addQuickElement('changefreq', url['changefreq'])
+        xml.addQuickElement('priority', url['priority'])
+        xml.endElement('url')
+
+    xml.endElement('urlset')
+    xml.endDocument()
+
+    return HttpResponse(output.getvalue(), content_type='application/xml')
+
+
+def news_sitemap(request):
+    """Generate Google News sitemap with recent stories.
+    
+    Google News requires:
+    - Only articles from last 48 hours
+    - <news:publication> with name and language
+    - <news:publication_date> in W3C format
+    - <news:title> matching the article headline
+    """
+    cutoff = timezone.now() - timedelta(hours=48)
+    stories = Story.objects.filter(
+        published__gte=cutoff
+    ).order_by('-published')[:1000]
+
+    output = []
+    output.append('<?xml version="1.0" encoding="UTF-8"?>')
+    output.append('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"')
+    output.append('        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">')
+
+    for story in stories:
+        output.append('  <url>')
+        output.append(f'    <loc>https://24hourwire.news/story/{story.id}/</loc>')
+        output.append('    <news:news>')
+        output.append('      <news:publication>')
+        output.append('        <news:name>24HourWire</news:name>')
+        output.append(f'        <news:language>{story.language}</news:language>')
+        output.append('      </news:publication>')
+        output.append(f'      <news:publication_date>{story.published.strftime("%Y-%m-%dT%H:%M:%SZ")}</news:publication_date>')
+        # Escape XML special characters in title
+        title = story.title.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')
+        output.append(f'      <news:title>{title}</news:title>')
+        output.append('    </news:news>')
+        output.append('  </url>')
+
+    output.append('</urlset>')
+
+    return HttpResponse('\n'.join(output), content_type='application/xml')
 
 
 def different_angle(request, story_id):
