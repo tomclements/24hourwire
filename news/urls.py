@@ -29,4 +29,6 @@ urlpatterns = [
     # Sitemaps
     path('sitemap.xml', views.sitemap, name='sitemap'),
     path('news-sitemap.xml', views.news_sitemap, name='news_sitemap'),
+    # Embeddable widget
+    path('widget.js', views.widget_js, name='widget_js'),
 ]

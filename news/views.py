@@ -474,3 +474,66 @@ def feeds_view(request):
     }
     
     return render(request, 'feeds.html', context)
+
+
+def widget_js(request):
+    """Generate an embeddable JavaScript widget for external sites.
+    
+    Usage:
+        <script src="https://24hourwire.news/widget.js?lang=en&limit=5&category=world"></script>
+    
+    Parameters:
+        lang: Language code (default: en)
+        limit: Number of stories to show (default: 5, max: 20)
+        category: Filter by category (optional)
+        theme: 'light' or 'dark' (default: light)
+        target: CSS selector for container (default: #hourwire-widget)
+    """
+    from django.http import JsonResponse
+    
+    language = request.GET.get('lang', 'en')
+    if language not in SOURCES:
+        language = 'en'
+    
+    try:
+        limit = min(int(request.GET.get('limit', 5)), 20)
+    except ValueError:
+        limit = 5
+    
+    category = request.GET.get('category', '')
+    theme = request.GET.get('theme', 'light')
+    target = request.GET.get('target', '#hourwire-widget')
+    
+    # Fetch stories
+    cutoff = timezone.now() - timedelta(hours=24)
+    stories = Story.objects.filter(language=language, published__gte=cutoff)
+    
+    if category:
+        stories = stories.filter(category=category)
+    
+    stories = stories.order_by('-published')[:limit]
+    
+    # Get source bias info for each story
+    lang_source_info = LANGUAGE_SOURCE_INFO.get(language, LANGUAGE_SOURCE_INFO['en'])
+    story_data = []
+    for story in stories:
+        bias_info = lang_source_info.get(story.source, ('Unknown', '#999', ''))
+        story_data.append({
+            'title': story.title,
+            'url': story.url,
+            'source': story.source,
+            'bias_label': bias_info[0],
+            'published': story.published.isoformat(),
+            'image_url': story.image_url or '',
+        })
+    
+    response = render(request, 'widget.js', {
+        'stories': story_data,
+        'theme': theme,
+        'target': target,
+        'language': language,
+    })
+    
+    response['Content-Type'] = 'application/javascript; charset=utf-8'
+    response['Access-Control-Allow-Origin'] = '*'
+    return response
