@@ -405,6 +405,13 @@ class Command(BaseCommand):
             # Force garbage collection between languages
             gc.collect()
 
+        # Clear cache so fresh stories appear immediately
+        if total_new > 0:
+            from django.core.cache import cache
+            cache.clear()
+            logger.info('Cache cleared after fetch')
+            self.safe_write(self.style.SUCCESS("Cache cleared"))
+
         logger.info(f'Fetch complete: {total_new} new, {total_dupes} dupes ({url_dupes} url, {title_dupes} title, {fuzzy_dupes} fuzzy)')
         self.safe_write(self.style.SUCCESS(
             f"\nFetch complete: {total_new} new stories "

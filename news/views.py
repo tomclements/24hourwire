@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.core import signing
 from django.http import Http404, HttpResponse
 from django.utils import timezone
+from django.views.decorators.cache import cache_page
 from datetime import timedelta
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -19,6 +20,7 @@ def is_staff_or_superuser(user):
     return user.is_staff or user.is_superuser
 
 
+@cache_page(60)  # Cache home page for 1 minute
 def home(request):
     cutoff = timezone.now() - timedelta(hours=24)
     
@@ -129,6 +131,7 @@ def home(request):
     })
 
 
+@cache_page(3600)  # Cache static pages for 1 hour
 def about_view(request):
     language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))
     if language not in SOURCES:
@@ -201,6 +204,7 @@ def logout_view(request):
     return redirect('home')
 
 
+@cache_page(3600)  # Cache story share pages for 1 hour
 def story_share(request, story_id):
     """Display a story sharing page with proper OG/Twitter Card meta tags.
     
@@ -265,6 +269,7 @@ def branded_redirect(request, token):
     })
 
 
+@cache_page(600)  # Cache sitemaps for 10 minutes
 def sitemap(request):
     """Generate standard XML sitemap for static pages."""
     from django.utils.xmlutils import SimplerXMLGenerator
@@ -300,6 +305,7 @@ def sitemap(request):
     return HttpResponse(output.getvalue(), content_type='application/xml')
 
 
+@cache_page(600)  # Cache news sitemap for 10 minutes
 def news_sitemap(request):
     """Generate Google News sitemap with recent stories.
     
@@ -432,6 +438,7 @@ def different_angle(request, story_id):
     })
 
 
+@cache_page(300)  # Cache feeds page for 5 minutes
 def feeds_view(request):
     """Display available RSS and JSON feeds for the selected language."""
     language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))
