@@ -7,7 +7,7 @@ from datetime import timedelta
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from .models import Story, StoryCluster
+from .models import Story, StoryCluster, AnalyticsEvent
 from .sources_config import (
     LANGUAGE_SOURCE_INFO, DEFAULT_SOURCES, SOURCES, LANGUAGE_NAMES,
     PAYWALLED_SOURCES, CATEGORY_KEYWORDS, CATEGORY_NAMES, UI_STRINGS, LANGUAGE_NAMES,
@@ -537,3 +537,110 @@ def widget_js(request):
     response['Content-Type'] = 'application/javascript; charset=utf-8'
     response['Access-Control-Allow-Origin'] = '*'
     return response
+
+
+@user_passes_test(is_staff_or_superuser, login_url='/login/')
+def analytics_dashboard(request):
+    """Analytics dashboard showing aggregated visitor data.
+    
+    No personal data displayed. Only aggregated counts and trends.
+    """
+    from django.db.models import Count
+    
+    # Time ranges
+    now = timezone.now()
+    today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    yesterday = today - timedelta(days=1)
+    last_7_days = today - timedelta(days=7)
+    last_30_days = today - timedelta(days=30)
+    
+    # Summary stats
+    summary = {
+        'today': AnalyticsEvent.objects.filter(timestamp__gte=today).count(),
+        'yesterday': AnalyticsEvent.objects.filter(timestamp__gte=yesterday, timestamp__lt=today).count(),
+        'last_7_days': AnalyticsEvent.objects.filter(timestamp__gte=last_7_days).count(),
+        'last_30_days': AnalyticsEvent.objects.filter(timestamp__gte=last_30_days).count(),
+        'total': AnalyticsEvent.objects.count(),
+    }
+    
+    # Top pages (last 7 days)
+    top_pages = AnalyticsEvent.objects.filter(
+        timestamp__gte=last_7_days,
+        event_type='page_view'
+    ).values('path').annotate(
+        count=Count('id')
+    ).order_by('-count')[:20]
+    
+    # Geographic distribution (last 7 days)
+    countries = AnalyticsEvent.objects.filter(
+        timestamp__gte=last_7_days,
+        country_code__isnull=False
+    ).exclude(country_code='').values('country_code').annotate(
+        count=Count('id')
+    ).order_by('-count')[:20]
+    
+    # Event type breakdown (last 7 days)
+    event_types = AnalyticsEvent.objects.filter(
+        timestamp__gte=last_7_days
+    ).values('event_type').annotate(
+        count=Count('id')
+    ).order_by('-count')
+    
+    # Language distribution (last 7 days)
+    languages = AnalyticsEvent.objects.filter(
+        timestamp__gte=last_7_days,
+        language__isnull=False
+    ).exclude(language='').values('language').annotate(
+        count=Count('id')
+    ).order_by('-count')[:10]
+    
+    # Hourly activity (last 24 hours)
+    hourly = []
+    for i in range(24):
+        hour_start = now - timedelta(hours=i+1)
+        hour_end = now - timedelta(hours=i)
+        count = AnalyticsEvent.objects.filter(
+            timestamp__gte=hour_start,
+            timestamp__lt=hour_end
+        ).count()
+        hourly.append({
+            'hour': hour_end.strftime('%H:00'),
+            'count': count
+        })
+    hourly.reverse()
+    
+    # Recent events (last 50)
+    recent_events = AnalyticsEvent.objects.all()[:50]
+    
+    # Feed access stats (last 7 days)
+    feed_access = AnalyticsEvent.objects.filter(
+        timestamp__gte=last_7_days,
+        event_type='feed_access'
+    ).count()
+    
+    # Widget loads (last 7 days)
+    widget_loads = AnalyticsEvent.objects.filter(
+        timestamp__gte=last_7_days,
+        event_type='widget_load'
+    ).count()
+    
+    # Shares (last 7 days)
+    shares = AnalyticsEvent.objects.filter(
+        timestamp__gte=last_7_days,
+        event_type='share'
+    ).count()
+    
+    context = {
+        'summary': summary,
+        'top_pages': top_pages,
+        'countries': countries,
+        'event_types': event_types,
+        'languages': languages,
+        'hourly': hourly,
+        'recent_events': recent_events,
+        'feed_access': feed_access,
+        'widget_loads': widget_loads,
+        'shares': shares,
+    }
+    
+    return render(request, 'analytics_dashboard.html', context)

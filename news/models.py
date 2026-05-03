@@ -151,6 +151,35 @@ class StoryCluster(models.Model):
         return f"{self.source_count} sources: {self.representative_story.title[:50]}"
 
 
+class AnalyticsEvent(models.Model):
+    """Lightweight analytics event tracking. No personal data stored."""
+    
+    EVENT_TYPES = [
+        ('page_view', 'Page View'),
+        ('share', 'Share'),
+        ('feed_access', 'Feed Access'),
+        ('widget_load', 'Widget Load'),
+    ]
+    
+    event_type = models.CharField(max_length=20, choices=EVENT_TYPES, db_index=True)
+    path = models.CharField(max_length=500, db_index=True)
+    language = models.CharField(max_length=5, blank=True, db_index=True)
+    category = models.CharField(max_length=20, blank=True)
+    country_code = models.CharField(max_length=5, blank=True, db_index=True)
+    user_agent = models.CharField(max_length=200, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
+    
+    class Meta:
+        ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['event_type', 'timestamp']),
+            models.Index(fields=['country_code', 'timestamp']),
+        ]
+    
+    def __str__(self):
+        return f"{self.event_type}: {self.path} ({self.country_code})"
+
+
 def build_clusters(language, max_stories=500):
     """Build StoryClusters for a language by grouping stories with similar titles.
     

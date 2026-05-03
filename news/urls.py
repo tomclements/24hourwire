@@ -31,4 +31,6 @@ urlpatterns = [
     path('news-sitemap.xml', views.news_sitemap, name='news_sitemap'),
     # Embeddable widget
     path('widget.js', views.widget_js, name='widget_js'),
+    # Analytics dashboard
+    path('analytics/', views.analytics_dashboard, name='analytics_dashboard'),
 ]
