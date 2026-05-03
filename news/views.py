@@ -131,6 +131,22 @@ def home(request):
     })
 
 
+def robots_txt(request):
+    """Serve robots.txt dynamically."""
+    content = """User-agent: *
+Allow: /
+Disallow: /go/
+Disallow: /dashboard/
+Disallow: /login/
+
+Sitemap: https://24hourwire.news/sitemap.xml
+Sitemap: https://24hourwire.news/news-sitemap.xml
+
+Crawl-delay: 1
+"""
+    return HttpResponse(content, content_type='text/plain')
+
+
 @cache_page(3600)  # Cache static pages for 1 hour
 def about_view(request):
     language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))

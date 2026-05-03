@@ -5,6 +5,7 @@ from .views_dashboard import dashboard_view
 from .feeds import GlobalFeed, LanguageFeed, CategoryFeed, JSONFeedView
 
 urlpatterns = [
+    path('robots.txt', views.robots_txt, name='robots_txt'),
     path('', views.home, name='home'),
     path('about/', views.about_view, name='about'),
     path('terms/', views.terms_view, name='terms'),
