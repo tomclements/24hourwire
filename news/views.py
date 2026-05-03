@@ -74,28 +74,31 @@ def home(request):
     else:
         selected_sources = lang_default_sources
     
-    all_stories = list(Story.objects.filter(published__gte=cutoff, language=language).order_by('-published'))
+    # PERFORMANCE: Limit to 50 most recent stories and filter by source in DB
+    stories = list(Story.objects.filter(
+        published__gte=cutoff,
+        language=language,
+        source__in=selected_sources
+    ).order_by('-published')[:50])
     
-    for story in all_stories:
+    # Apply metadata to displayed stories only
+    for story in stories:
         story.story_categories = get_story_categories(story.title, language)
         bias_info = lang_source_info.get(story.source, ('Unknown', '#999', 'https://mediabiasfactcheck.com/'))
         story.bias_label = bias_info[0]
         story.bias_color = bias_info[1]
         story.bias_link = bias_info[2]
         story.is_paywalled = story.source in PAYWALLED_SOURCES
-    
-    stories = [s for s in all_stories if s.source in selected_sources]
 
     # Load pre-computed clusters for "Most Covered" tab
     most_covered_stories = []
     clusters = StoryCluster.objects.filter(
         language=language,
         source_count__gte=2,
-    ).prefetch_related('stories')[:20]
+    ).select_related('representative_story')[:20]
 
     for cluster in clusters:
         rep = cluster.representative_story
-        # Apply bias info to the representative story
         bias_info = lang_source_info.get(rep.source, ('Unknown', '#999', 'https://mediabiasfactcheck.com/'))
         rep.bias_label = bias_info[0]
         rep.bias_color = bias_info[1]

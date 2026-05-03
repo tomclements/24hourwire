@@ -72,6 +72,8 @@ class Story(models.Model):
         indexes = [
             models.Index(fields=['language', 'published']),
             models.Index(fields=['source', 'language']),
+            models.Index(fields=['language', 'published', 'source']),
+            models.Index(fields=['language', 'published', 'category']),
         ]
 
     def __str__(self):
