@@ -1398,7 +1398,7 @@
             </div>
             
             {% if cat_data.stories %}
-                <div class="stories-grid">
+                <div class="stories-grid" data-category="{{ cat_id }}" data-loaded="{{ cat_data.stories|length }}" data-total="{{ cat_data.total_stories }}">
                     {% for story in cat_data.stories %}
                     <article class="story-card" data-title="{{ story.title|lower }}" data-source="{{ story.source|lower }}" itemscope itemtype="https://schema.org/NewsArticle">
                         <div class="story-header">
@@ -1441,9 +1441,9 @@
                     {% endfor %}
                 </div>
                 
-                {% if cat_data.stories|length > 20 %}
-                <button class="load-more" onclick="loadMore(this)" style="width: 100%; margin-top: 24px; padding: 14px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; font-size: 0.9rem; font-weight: 500; color: var(--text-secondary); transition: all 0.2s;">
-                    Load more stories ({{ cat_data.stories|length }} total)
+                {% if cat_data.has_more %}
+                <button class="load-more" onclick="loadMore(this, '{{ cat_id }}')" style="width: 100%; margin-top: 24px; padding: 14px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; font-size: 0.9rem; font-weight: 500; color: var(--text-secondary); transition: all 0.2s;">
+                    Load more stories ({{ cat_data.loaded }} of {{ cat_data.total_stories }} shown)
                 </button>
                 {% endif %}
             {% else %}
@@ -1543,11 +1543,67 @@
             }
         }
 
-        // Load more stories
-        function loadMore(btn) {
+        // Load more stories via AJAX
+        async function loadMore(btn, category) {
             const section = btn.closest('.category-section');
-            section.querySelectorAll('.story-card').forEach(el => el.style.display = 'flex');
-            btn.style.display = 'none';
+            const grid = section.querySelector('.stories-grid');
+            const loaded = parseInt(grid.dataset.loaded || '0');
+            const language = new URLSearchParams(window.location.search).get('lang') || 'en';
+            const sources = new URLSearchParams(window.location.search).get('sources') || '';
+            
+            btn.disabled = true;
+            btn.textContent = 'Loading...';
+            
+            try {
+                const response = await fetch(`/api/stories/?lang=${language}&category=${category}&offset=${loaded}&sources=${sources}`);
+                const data = await response.json();
+                
+                if (data.stories && data.stories.length > 0) {
+                    data.stories.forEach(story => {
+                        const article = document.createElement('article');
+                        article.className = 'story-card';
+                        article.setAttribute('data-title', story.title.toLowerCase());
+                        article.setAttribute('data-source', story.source.toLowerCase());
+                        article.innerHTML = `
+                            <div class="story-header">
+                                <a href="${story.url}" target="_blank" class="story-title">${story.title}</a>
+                            </div>
+                            ${story.image_url ? `<a href="${story.url}" target="_blank" class="story-image-link"><img src="${story.image_url}" alt="${story.title}" class="story-image" loading="lazy" onerror="this.style.display='none'"></a>` : ''}
+                            <div class="story-meta">
+                                <span class="source-tag">${story.source}${story.is_paywalled ? '<span class="paywall-badge" title="Paywalled">$</span>' : ''}</span>
+                                ${story.covered_by_count ? `<span class="covered-badge">${story.covered_by_count} sources</span>` : ''}
+                                <span class="bias-badge ${story.bias_label.toLowerCase().replace(/ /g, '-').replace('/', '-')}">${story.bias_label}</span>
+                                <span class="time-badge">${story.time_ago}</span>
+                            </div>
+                            ${story.excerpt ? `<p class="story-excerpt">${story.excerpt}</p>` : ''}
+                            <div class="story-actions">
+                                <div class="story-links">
+                                    <a href="${story.url}" target="_blank">Read full story ↗</a>
+                                    <a href="https://www.bing.com/news/search?q=${story.search_terms}" target="_blank">Find more coverage</a>
+                                    <button class="different-angle-btn" onclick="showDifferentAngle(${story.id}, '${story.title.replace(/'/g, "\\'")}', '${story.source}', '${story.bias_label}')" title="Different perspectives">Different Angle</button>
+                                </div>
+                                <button class="share-btn" onclick="shareStory('${story.title.replace(/'/g, "\\'")}', '${story.source}', '${story.share_token}')" title="Share"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button>
+                            </div>
+                        `;
+                        grid.appendChild(article);
+                    });
+                    
+                    grid.dataset.loaded = loaded + data.stories.length;
+                    
+                    if (data.has_more) {
+                        btn.textContent = `Load more stories (${loaded + data.stories.length} of ${data.total} shown)`;
+                        btn.disabled = false;
+                    } else {
+                        btn.style.display = 'none';
+                    }
+                } else {
+                    btn.style.display = 'none';
+                }
+            } catch (err) {
+                console.error('Failed to load more stories:', err);
+                btn.textContent = 'Error loading stories. Try again.';
+                btn.disabled = false;
+            }
         }
 
         // Search functionality

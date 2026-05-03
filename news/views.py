@@ -74,12 +74,12 @@ def home(request):
     else:
         selected_sources = lang_default_sources
     
-    # PERFORMANCE: Limit to 50 most recent stories and filter by source in DB
+    # PERFORMANCE: Filter by source in DB, then process in Python
     stories = list(Story.objects.filter(
         published__gte=cutoff,
         language=language,
         source__in=selected_sources
-    ).order_by('-published')[:50])
+    ).order_by('-published'))
     
     # Apply metadata to displayed stories only
     for story in stories:
@@ -117,9 +117,14 @@ def home(request):
             cat_stories = most_covered_stories
         else:
             cat_stories = [s for s in stories if cat_id in s.story_categories]
+        
+        # Send first 20 for initial render, include metadata for "load more"
         grouped[cat_id] = {
             'name': cat_name,
-            'stories': cat_stories
+            'stories': cat_stories[:20],
+            'total_stories': len(cat_stories),
+            'loaded': min(20, len(cat_stories)),
+            'has_more': len(cat_stories) > 20,
         }
     
     return render(request, 'home.html', {
@@ -493,6 +498,81 @@ def feeds_view(request):
     }
     
     return render(request, 'feeds.html', context)
+
+
+def load_more_stories(request):
+    """API endpoint for loading more stories via AJAX.
+    
+    Parameters:
+        lang: Language code
+        category: Category ID or 'all'
+        offset: Number of stories already loaded
+        sources: Source filter (optional)
+    """
+    from django.http import JsonResponse
+    
+    language = request.GET.get('lang', 'en')
+    if language not in SOURCES:
+        language = 'en'
+    
+    category_id = request.GET.get('category', 'all')
+    try:
+        offset = int(request.GET.get('offset', 20))
+    except ValueError:
+        offset = 20
+    
+    selected_sources_param = request.GET.get('sources', '')
+    lang_sources = SOURCES.get(language, SOURCES['en'])
+    lang_default_sources = DEFAULT_SOURCES.get(language, DEFAULT_SOURCES['en'])
+    lang_source_info = LANGUAGE_SOURCE_INFO.get(language, LANGUAGE_SOURCE_INFO['en'])
+    
+    if selected_sources_param == 'all':
+        selected_sources = [s[0] for s in lang_sources]
+    elif selected_sources_param in ['left', 'left-center', 'center', 'right-center', 'right']:
+        selected_sources = [s[0] for s in lang_sources if s[1].lower() == selected_sources_param.lower()]
+    elif selected_sources_param:
+        selected_sources = selected_sources_param.split(',')
+    else:
+        selected_sources = lang_default_sources
+    
+    cutoff = timezone.now() - timedelta(hours=24)
+    stories = list(Story.objects.filter(
+        published__gte=cutoff,
+        language=language,
+        source__in=selected_sources
+    ).order_by('-published'))
+    
+    # Filter by category
+    if category_id != 'all' and category_id != 'most_covered':
+        stories = [s for s in stories if category_id in get_story_categories(s.title, language)]
+    
+    total = len(stories)
+    batch = stories[offset:offset + 50]
+    
+    story_data = []
+    for story in batch:
+        bias_info = lang_source_info.get(story.source, ('Unknown', '#999', ''))
+        excerpt = story.get_clean_excerpt()
+        story_data.append({
+            'id': story.id,
+            'title': story.title,
+            'url': story.url,
+            'source': story.source,
+            'bias_label': bias_info[0],
+            'is_paywalled': story.source in PAYWALLED_SOURCES,
+            'covered_by_count': getattr(story, 'covered_by_count', None),
+            'time_ago': f"{story.published.strftime('%H:%M')}",
+            'excerpt': excerpt[:200] if excerpt else '',
+            'image_url': story.image_url or '',
+            'search_terms': story.get_search_terms(),
+            'share_token': '',  # Will be generated in template if needed
+        })
+    
+    return JsonResponse({
+        'stories': story_data,
+        'total': total,
+        'has_more': offset + len(batch) < total,
+    })
 
 
 def widget_js(request):
