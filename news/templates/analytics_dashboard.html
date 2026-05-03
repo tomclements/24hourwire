@@ -173,6 +173,14 @@
             <a href="/">← Back to site</a> | <a href="/dashboard/">Dashboard</a> | <a href="https://dashboard.render.com/" target="_blank">Render Logs ↗</a>
         </div>
         
+        {% if error %}
+        <div class="section" style="background: #fee2e2; border-color: #ef4444;">
+            <h2 style="color: #dc2626;">⚠️ Setup Required</h2>
+            <p style="font-size: 1.1rem; margin-bottom: 16px;">{{ error }}</p>
+            <p><strong>To fix:</strong> SSH into your Render server and run: <code style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px;">python manage.py migrate</code></p>
+        </div>
+        {% endif %}
+        
         <!-- Summary Stats -->
         <div class="grid">
             <div class="stat-card">

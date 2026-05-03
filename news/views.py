@@ -645,6 +645,25 @@ def analytics_dashboard(request):
     No personal data displayed. Only aggregated counts and trends.
     """
     from django.db.models import Count
+    from django.db import OperationalError, ProgrammingError
+    
+    # Check if AnalyticsEvent table exists
+    try:
+        AnalyticsEvent.objects.count()
+    except (OperationalError, ProgrammingError) as e:
+        return render(request, 'analytics_dashboard.html', {
+            'error': f"Database table missing: {e}. Run: python manage.py migrate",
+            'summary': {},
+            'top_pages': [],
+            'countries': [],
+            'event_types': [],
+            'languages': [],
+            'hourly': [],
+            'recent_events': [],
+            'feed_access': 0,
+            'widget_loads': 0,
+            'shares': 0,
+        })
     
     # Time ranges
     now = timezone.now()
