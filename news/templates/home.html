@@ -1391,10 +1391,10 @@
     <main>
         {% for cat_id, cat_data in grouped.items %}
         {% if cat_data.stories|length > 0 %}
-        <section id="{{ cat_id }}" class="category-section" data-count="{{ cat_data.stories|length }}">
+        <section id="{{ cat_id }}" class="category-section" data-count="{{ cat_data.total_stories }}">
             <div class="category-header">
                 <h2 class="category-title">{{ cat_data.name }}</h2>
-                <span class="category-count">{{ cat_data.stories|length }} stories</span>
+                <span class="category-count" id="count-{{ cat_id }}">{{ cat_data.total_stories }} stories</span>
             </div>
             
             {% if cat_data.stories %}
@@ -1589,6 +1589,12 @@
                     });
                     
                     grid.dataset.loaded = loaded + data.stories.length;
+                    
+                    // Update category count
+                    const countEl = document.getElementById('count-' + category);
+                    if (countEl) {
+                        countEl.textContent = data.total + ' stories';
+                    }
                     
                     if (data.has_more) {
                         btn.textContent = `Load more stories (${loaded + data.stories.length} of ${data.total} shown)`;
