@@ -288,9 +288,7 @@
             <h2>Hourly Activity (Last 24 Hours)</h2>
             <div class="hourly-grid">
                 {% for hour in hourly %}
-                {% with max_count=hourly|dictsort:"count"|last %}
-                <div class="hour-bar" style="height: {% if max_count.count > 0 %}{{ hour.count|div:max_count.count|mul:100 }}{% else %}0{% endif %}%" data-count="{{ hour.count }}"></div>
-                {% endwith %}
+                <div class="hour-bar" style="height: {{ hour.percent }}%" data-count="{{ hour.count }}"></div>
                 {% endfor %}
             </div>
             <div class="hour-labels">

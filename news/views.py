@@ -727,6 +727,11 @@ def analytics_dashboard(request):
         })
     hourly.reverse()
     
+    # Calculate bar heights as percentages
+    max_hourly = max(h['count'] for h in hourly) if hourly else 0
+    for h in hourly:
+        h['percent'] = round((h['count'] / max_hourly * 100), 1) if max_hourly > 0 else 0
+    
     # Recent events (last 50)
     recent_events = AnalyticsEvent.objects.all()[:50]
     
