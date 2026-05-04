@@ -1373,7 +1373,7 @@
                             {% if cat_data.stories|length > 0 %}
                             <a href="#{{ cat_id }}" class="tab {% if forloop.first %}active{% endif %}" onclick="showCategory('{{ cat_id }}'); return false;">
                                 {{ cat_data.name }}
-                                <span class="tab-count">{{ cat_data.stories|length }}</span>
+                                <span class="tab-count" id="tab-count-{{ cat_id }}" data-total="{{ cat_data.total_stories }}">{{ cat_data.total_stories }}</span>
                             </a>
                             {% endif %}
                         {% endfor %}
@@ -1590,10 +1590,17 @@
                     
                     grid.dataset.loaded = loaded + data.stories.length;
                     
-                    // Update category count
+                    // Update category count in section header
                     const countEl = document.getElementById('count-' + category);
                     if (countEl) {
                         countEl.textContent = data.total + ' stories';
+                    }
+                    
+                    // Update tab count in header navigation
+                    const tabCountEl = document.getElementById('tab-count-' + category);
+                    if (tabCountEl) {
+                        tabCountEl.textContent = data.total;
+                        tabCountEl.dataset.total = data.total;
                     }
                     
                     if (data.has_more) {
