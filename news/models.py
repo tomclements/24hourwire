@@ -112,8 +112,16 @@ class Story(models.Model):
         text = re.sub(r'&lt;', '<', text)
         text = re.sub(r'&gt;', '>', text)
         text = re.sub(r'&#39;', "'", text)
+        text = re.sub(r'&#8217;', "'", text)  # Right single quotation mark
+        text = re.sub(r'&#8216;', "'", text)  # Left single quotation mark
+        text = re.sub(r'&#8220;', '"', text)  # Left double quotation mark
+        text = re.sub(r'&#8221;', '"', text)  # Right double quotation mark
+        text = re.sub(r'&#8230;', '...', text)  # Ellipsis
+        text = re.sub(r'&#8211;', '-', text)  # En dash
+        text = re.sub(r'&#8212;', '--', text)  # Em dash
         text = re.sub(r'&quot;', '"', text)
-        text = re.sub(r'&[a-zA-Z0-9]+;', '', text)  # Remove any remaining entities
+        text = re.sub(r'&#[0-9]+;', '', text)  # Remove any remaining numeric entities
+        text = re.sub(r'&[a-zA-Z0-9]+;', '', text)  # Remove any remaining named entities
         
         # Clean up whitespace
         text = WHITESPACE_PATTERN.sub(' ', text).strip()
