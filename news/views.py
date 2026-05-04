@@ -111,6 +111,7 @@ def home(request):
 
     # Fetch active book recommendations for English categories
     recommended_books = {}
+    all_books = []
     if language == 'en':
         from .models import RecommendedBook
         books = RecommendedBook.objects.filter(language='en', is_active=True)
@@ -118,6 +119,7 @@ def home(request):
             if book.category not in recommended_books:
                 recommended_books[book.category] = []
             recommended_books[book.category].append(book)
+            all_books.append(book)
     
     grouped = {}
     for cat_id, cat_name in category_names.items():
@@ -130,10 +132,15 @@ def home(request):
         
         # Get books for this category (randomize order)
         import random
-        cat_books = recommended_books.get(cat_id, [])
-        if cat_books:
+        if cat_id == 'all' and all_books:
+            cat_books = list(all_books)
             random.shuffle(cat_books)
-            cat_books = cat_books[:2]  # Max 2 books per category
+            cat_books = cat_books[:2]  # Max 2 books for "All" tab
+        else:
+            cat_books = recommended_books.get(cat_id, [])
+            if cat_books:
+                random.shuffle(cat_books)
+                cat_books = cat_books[:2]  # Max 2 books per category
         
         # Send first 20 for initial render, include metadata for "load more"
         grouped[cat_id] = {
@@ -588,12 +595,17 @@ def load_more_stories(request):
     
     # Fetch book recommendations for English categories
     book_data = []
-    if language == 'en' and category_id not in ('all', 'most_covered'):
+    if language == 'en' and category_id != 'most_covered':
         from .models import RecommendedBook
         import random
-        cat_books = list(RecommendedBook.objects.filter(
-            language='en', is_active=True, category=category_id
-        ))
+        if category_id == 'all':
+            cat_books = list(RecommendedBook.objects.filter(
+                language='en', is_active=True
+            ))
+        else:
+            cat_books = list(RecommendedBook.objects.filter(
+                language='en', is_active=True, category=category_id
+            ))
         if cat_books:
             random.shuffle(cat_books)
             for book in cat_books[:2]:
