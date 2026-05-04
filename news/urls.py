@@ -34,6 +34,7 @@ urlpatterns = [
     path('widget.js', views.widget_js, name='widget_js'),
     # Analytics dashboard
     path('analytics/', views.analytics_dashboard, name='analytics_dashboard'),
+    path('analytics/book-click/', views.track_book_click, name='track_book_click'),
     # API
     path('api/stories/', views.load_more_stories, name='load_more_stories'),
 ]

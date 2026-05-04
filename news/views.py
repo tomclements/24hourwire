@@ -109,6 +109,16 @@ def home(request):
         rep.covered_by_sources = cluster.sources
         most_covered_stories.append(rep)
 
+    # Fetch active book recommendations for English categories
+    recommended_books = {}
+    if language == 'en':
+        from .models import RecommendedBook
+        books = RecommendedBook.objects.filter(language='en', is_active=True)
+        for book in books:
+            if book.category not in recommended_books:
+                recommended_books[book.category] = []
+            recommended_books[book.category].append(book)
+    
     grouped = {}
     for cat_id, cat_name in category_names.items():
         if cat_id == 'all':
@@ -118,6 +128,13 @@ def home(request):
         else:
             cat_stories = [s for s in stories if cat_id in s.story_categories]
         
+        # Get books for this category (randomize order)
+        import random
+        cat_books = recommended_books.get(cat_id, [])
+        if cat_books:
+            random.shuffle(cat_books)
+            cat_books = cat_books[:2]  # Max 2 books per category
+        
         # Send first 20 for initial render, include metadata for "load more"
         grouped[cat_id] = {
             'name': cat_name,
@@ -125,6 +142,7 @@ def home(request):
             'total_stories': len(cat_stories),
             'loaded': min(20, len(cat_stories)),
             'has_more': len(cat_stories) > 20,
+            'books': cat_books,
         }
     
     return render(request, 'home.html', {
@@ -568,8 +586,29 @@ def load_more_stories(request):
             'share_token': '',  # Will be generated in template if needed
         })
     
+    # Fetch book recommendations for English categories
+    book_data = []
+    if language == 'en' and category_id not in ('all', 'most_covered'):
+        from .models import RecommendedBook
+        import random
+        cat_books = list(RecommendedBook.objects.filter(
+            language='en', is_active=True, category=category_id
+        ))
+        if cat_books:
+            random.shuffle(cat_books)
+            for book in cat_books[:2]:
+                book_data.append({
+                    'title': book.title,
+                    'author': book.author,
+                    'description': book.description or '',
+                    'image_url': book.image_url or '',
+                    'amazon_url': book.amazon_url(),
+                    'asin': book.asin,
+                })
+    
     return JsonResponse({
         'stories': story_data,
+        'books': book_data,
         'total': total,
         'has_more': offset + len(batch) < total,
     })
@@ -636,6 +675,33 @@ def widget_js(request):
     response['Content-Type'] = 'application/javascript; charset=utf-8'
     response['Access-Control-Allow-Origin'] = '*'
     return response
+
+
+def track_book_click(request):
+    """Track book recommendation clicks via beacon API.
+    
+    Accepts POST requests with JSON body containing book ASIN.
+    Records as an analytics event for aggregated reporting.
+    """
+    from django.http import JsonResponse
+    if request.method == 'POST':
+        try:
+            import json
+            body = json.loads(request.body.decode('utf-8'))
+            asin = body.get('asin', '')
+            if asin:
+                country_code = request.META.get('HTTP_CF_IPCOUNTRY') or ''
+                user_agent = request.META.get('HTTP_USER_AGENT', '')[:200]
+                AnalyticsEvent.objects.create(
+                    event_type='book_click',
+                    path=f'/book/{asin}',
+                    language=request.GET.get('lang', 'en')[:5],
+                    country_code=country_code[:5],
+                    user_agent=user_agent,
+                )
+        except Exception:
+            pass
+    return JsonResponse({'status': 'ok'})
 
 
 @user_passes_test(is_staff_or_superuser, login_url='/login/')

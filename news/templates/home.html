@@ -560,6 +560,94 @@
             transform: translateY(-2px);
             border-color: var(--accent);
         }
+
+        /* Book Recommendation Cards */
+        .book-card {
+            background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
+            border: 2px solid #eab308;
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+            text-align: center;
+            position: relative;
+        }
+
+        .book-card:hover {
+            box-shadow: 0 8px 16px -4px rgba(234, 179, 8, 0.3);
+            transform: translateY(-2px);
+            border-color: #ca8a04;
+        }
+
+        .book-badge {
+            display: inline-block;
+            background: #eab308;
+            color: #713f12;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 4px 10px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            align-self: center;
+        }
+
+        .book-cover {
+            width: 100px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin: 0 auto 16px auto;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            display: block;
+            background: #f3f4f6;
+        }
+
+        .book-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #713f12;
+            line-height: 1.4;
+            margin: 0 0 8px 0;
+        }
+
+        .book-author {
+            font-size: 0.85rem;
+            color: #92400e;
+            margin-bottom: 12px;
+            font-style: italic;
+        }
+
+        .book-description {
+            font-size: 0.85rem;
+            color: #78350f;
+            line-height: 1.5;
+            margin-bottom: 16px;
+            flex-grow: 1;
+        }
+
+        .book-link {
+            display: inline-block;
+            background: #ca8a04;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            align-self: center;
+        }
+
+        .book-link:hover {
+            background: #a16207;
+            transform: translateY(-1px);
+        }
         
         .story-header {
             display: flex;
@@ -1400,6 +1488,27 @@
             {% if cat_data.stories %}
                 <div class="stories-grid" data-category="{{ cat_id }}" data-loaded="{{ cat_data.stories|length }}" data-total="{{ cat_data.total_stories }}">
                     {% for story in cat_data.stories %}
+                    
+                    {# Insert book recommendation after 10th story #}
+                    {% if forloop.counter == 10 and cat_data.books %}
+                        {% with book=cat_data.books.0 %}
+                        <article class="book-card" data-book-asin="{{ book.asin }}">
+                            <span class="book-badge">Recommended Read</span>
+                            {% if book.image_url %}
+                            <img src="{{ book.image_url }}" alt="{{ book.title }}" class="book-cover" loading="lazy" onerror="this.style.display='none'">
+                            {% else %}
+                            <div class="book-cover" style="display: flex; align-items: center; justify-content: center; background: #f3f4f6; color: #9ca3af; font-size: 2rem;">📚</div>
+                            {% endif %}
+                            <h3 class="book-title">{{ book.title }}</h3>
+                            <p class="book-author">by {{ book.author }}</p>
+                            {% if book.description %}
+                            <p class="book-description">{{ book.description|truncatechars:140 }}</p>
+                            {% endif %}
+                            <a href="{{ book.amazon_url }}" target="_blank" class="book-link" onclick="trackBookClick('{{ book.asin }}')">View on Amazon →</a>
+                        </article>
+                        {% endwith %}
+                    {% endif %}
+
                     <article class="story-card" data-title="{{ story.title|lower }}" data-source="{{ story.source|lower }}" itemscope itemtype="https://schema.org/NewsArticle">
                         <div class="story-header">
                             <a href="{{ story.url }}" target="_blank" class="story-title" itemprop="headline">{{ story.title }}</a>
@@ -1559,7 +1668,36 @@
                 const data = await response.json();
                 
                 if (data.stories && data.stories.length > 0) {
-                    data.stories.forEach(story => {
+                    // Build all new cards into a fragment, inserting books at correct positions
+                    const fragment = document.createDocumentFragment();
+                    
+                    // Track which book ASINs are already shown to avoid duplicates
+                    const shownAsins = new Set();
+                    grid.querySelectorAll('.book-card[data-book-asin]').forEach(card => {
+                        shownAsins.add(card.dataset.bookAsin);
+                    });
+                    
+                    // Pick an unused book for insertion at position 24
+                    let bookForInsertion = null;
+                    if (data.books && data.books.length > 0) {
+                        for (const book of data.books) {
+                            if (!shownAsins.has(book.asin)) {
+                                bookForInsertion = book;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    data.stories.forEach((story, index) => {
+                        const globalStoryNum = loaded + index + 1; // 1-based position in overall story list
+                        
+                        // Insert book at position 24 (after story 24, before story 25)
+                        if (globalStoryNum === 24 && bookForInsertion) {
+                            fragment.appendChild(createBookCard(bookForInsertion));
+                            shownAsins.add(bookForInsertion.asin);
+                            bookForInsertion = null; // Only insert once
+                        }
+                        
                         const article = document.createElement('article');
                         article.className = 'story-card';
                         article.setAttribute('data-title', story.title.toLowerCase());
@@ -1585,8 +1723,10 @@
                                 <button class="share-btn" onclick="shareStory('${story.title.replace(/'/g, "\\'")}', '${story.source}', '${story.share_token}')" title="Share"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button>
                             </div>
                         `;
-                        grid.appendChild(article);
+                        fragment.appendChild(article);
                     });
+                    
+                    grid.appendChild(fragment);
                     
                     grid.dataset.loaded = loaded + data.stories.length;
                     
@@ -1698,6 +1838,34 @@
             `;
             document.body.appendChild(overlay);
             document.body.style.overflow = 'hidden';
+        }
+        
+        // Track book recommendation clicks for analytics
+        function trackBookClick(asin) {
+            console.log('Book click:', asin);
+            // Simple analytics tracking - can be expanded later
+            if (navigator.sendBeacon) {
+                navigator.sendBeacon('/analytics/book-click/', JSON.stringify({asin: asin, timestamp: Date.now()}));
+            }
+        }
+        
+        // Helper to create a book recommendation card element
+        function createBookCard(book) {
+            const article = document.createElement('article');
+            article.className = 'book-card';
+            article.setAttribute('data-book-asin', book.asin);
+            const coverHtml = book.image_url
+                ? `<img src="${book.image_url}" alt="${book.title}" class="book-cover" loading="lazy" onerror="this.style.display='none'">`
+                : `<div class="book-cover" style="display: flex; align-items: center; justify-content: center; background: #f3f4f6; color: #9ca3af; font-size: 2rem;">📚</div>`;
+            article.innerHTML = `
+                <span class="book-badge">Recommended Read</span>
+                ${coverHtml}
+                <h3 class="book-title">${book.title}</h3>
+                <p class="book-author">by ${book.author}</p>
+                ${book.description ? `<p class="book-description">${book.description.substring(0, 140)}${book.description.length > 140 ? '...' : ''}</p>` : ''}
+                <a href="${book.amazon_url}" target="_blank" class="book-link" onclick="trackBookClick('${book.asin}')">View on Amazon →</a>
+            `;
+            return article;
         }
         
         function closeShareOverlay() {

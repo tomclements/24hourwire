@@ -258,3 +258,43 @@ def build_clusters(language, max_stories=500):
         cluster.stories.set(stories_list)
 
     return len(created)
+
+
+class RecommendedBook(models.Model):
+    """Curated book recommendations shown alongside news stories."""
+    
+    CATEGORY_CHOICES = [
+        ('world', 'World'),
+        ('us', 'US'),
+        ('politics', 'Politics'),
+        ('business', 'Business'),
+        ('technology', 'Technology'),
+        ('science', 'Science'),
+        ('health', 'Health'),
+        ('sports', 'Sports'),
+        ('entertainment', 'Entertainment'),
+    ]
+    
+    title = models.CharField(max_length=200)
+    author = models.CharField(max_length=100)
+    asin = models.CharField(max_length=20, unique=True)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    language = models.CharField(max_length=5, default='en')
+    description = models.TextField(blank=True)
+    image_url = models.URLField(blank=True)
+    is_active = models.BooleanField(default=True)
+    click_count = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['category', '-created_at']
+        indexes = [
+            models.Index(fields=['category', 'language', 'is_active']),
+        ]
+    
+    def __str__(self):
+        return f"{self.title} by {self.author}"
+    
+    def amazon_url(self):
+        """Generate Amazon affiliate link."""
+        return f"https://www.amazon.com/dp/{self.asin}?tag=24hourwire-20"
