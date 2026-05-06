@@ -1544,7 +1544,7 @@
                                 <a href="https://www.bing.com/news/search?q={{ story.get_search_terms }}" target="_blank" title="{{ t.search_related }}">{{ t.find_coverage_btn }}</a>
                                 <button class="different-angle-btn" onclick="showDifferentAngle({{ story.id }}, '{{ story.title|escapejs }}', '{{ story.source }}', '{{ story.bias_label }}')" title="{{ t.different_perspectives }}">{{ t.different_angle_btn }}</button>
                             </div>
-                            <button class="share-btn" onclick="shareStory('{{ story.title|escapejs }}', '{{ story.source|escapejs }}', '{{ story|sign_share_data|escapejs }}')" title="{{ t.share_btn }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-primary);"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button>
+                                <button class="share-btn" onclick="shareStory('{{ story.title|escapejs }}', '{{ story.source|escapejs }}', '{{ story|sign_share_data|escapejs }}', {{ story.id }})" title="{{ t.share_btn }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-primary);"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button>
                         </div>
                     </article>
                     {% endfor %}
@@ -1720,7 +1720,7 @@
                                     <a href="https://www.bing.com/news/search?q=${story.search_terms}" target="_blank">Find more coverage</a>
                                     <button class="different-angle-btn" onclick="showDifferentAngle(${story.id}, '${story.title.replace(/'/g, "\\'")}', '${story.source}', '${story.bias_label}')" title="Different perspectives">Different Angle</button>
                                 </div>
-                                <button class="share-btn" onclick="shareStory('${story.title.replace(/'/g, "\\'")}', '${story.source}', '${story.share_token}')" title="Share"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button>
+                                <button class="share-btn" onclick="shareStory('${story.title.replace(/'/g, "\\'")}', '${story.source}', '${story.share_token}', ${story.id})" title="Share"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button>
                             </div>
                         `;
                         fragment.appendChild(article);
@@ -1776,12 +1776,14 @@
             });
         });
 
-        // Share story using branded redirect URLs (stateless signed tokens)
-        // NOTE: Do NOT encodeURIComponent the token - Django's URL resolver
-        // does not decode %3A back to : in path segments, which breaks
-        // signature verification. The token only contains safe chars (no /).
-        function shareStory(title, source, token) {
-            const wireUrl = 'https://24hourwire.news/go/' + token + '/';
+        // Share story using story share page (short URL for social media)
+        // Fallback to /go/ token URL if storyId not available
+        function shareStory(title, source, token, storyId) {
+            // Use short /story/{id}/ URL for cleaner social sharing
+            // Twitter will crawl this page for preview cards
+            const wireUrl = storyId
+                ? 'https://24hourwire.news/story/' + storyId + '/'
+                : 'https://24hourwire.news/go/' + token + '/';
             const shareText = `via @24HourWire\n\n${title}\n\nSource: ${source}`;
             
             console.log('Sharing:', {title, shareText, wireUrl});
@@ -1878,9 +1880,8 @@
         
         function shareToTwitter(title, wireUrl) {
             const decodedTitle = decodeURIComponent(title);
-            const decodedUrl = decodeURIComponent(wireUrl);
             const text = 'via @24HourWire\n\n' + decodedTitle;
-            const twitterUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(decodedUrl);
+            const twitterUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(wireUrl);
             console.log('Twitter share URL:', twitterUrl);
             window.open(twitterUrl, '_blank', 'width=600,height=400');
             closeShareOverlay();
