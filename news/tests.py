@@ -350,7 +350,7 @@ class BrandedRedirectTests(TestCase):
 
 
 class ShareFunctionalityTests(TestCase):
-    """Tests for social sharing functionality - URL length, OG tags, intent URLs."""
+    """Tests for social sharing functionality - stateless URLs, OG tags, intent URLs."""
     
     def setUp(self):
         self.story = Story.objects.create(
@@ -366,15 +366,19 @@ class ShareFunctionalityTests(TestCase):
             image_url='https://example.com/image.jpg',
         )
     
-    def test_story_share_url_is_short(self):
-        """Story share URL should be short for social media."""
-        url = f'https://24hourwire.news/story/{self.story.id}/'
-        # Should be under 50 chars for clean social sharing
-        self.assertLess(len(url), 50, f"Share URL too long: {url}")
-    
-    def test_story_share_view_has_og_tags(self):
-        """Story share page must have Open Graph tags for Twitter cards."""
-        response = self.client.get(f'/story/{self.story.id}/')
+    def test_branded_redirect_has_og_tags(self):
+        """Branded redirect page must have Open Graph tags for Twitter cards."""
+        data = {
+            'url': self.story.url,
+            'title': self.story.title,
+            'source': self.story.source,
+            'image_url': self.story.image_url,
+        }
+        signer = signing.Signer()
+        payload = signing.dumps(data)
+        token = signer.sign(payload)
+        
+        response = self.client.get(f'/go/{token}/')
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
         
@@ -391,20 +395,8 @@ class ShareFunctionalityTests(TestCase):
         self.assertIn('twitter:description', content, "Missing twitter:description")
         self.assertIn('twitter:image', content, "Missing twitter:image")
     
-    def test_story_share_og_title_contains_story_title(self):
+    def test_branded_redirect_og_title_contains_story_title(self):
         """OG title should contain the actual story title."""
-        response = self.client.get(f'/story/{self.story.id}/')
-        content = response.content.decode()
-        self.assertIn(self.story.title, content)
-    
-    def test_story_share_og_image_uses_story_image(self):
-        """OG image should use the story's image."""
-        response = self.client.get(f'/story/{self.story.id}/')
-        content = response.content.decode()
-        self.assertIn(self.story.image_url, content)
-    
-    def test_branded_redirect_url_is_longer_than_story_share(self):
-        """Branded redirect URLs are longer - verify we use story share for social."""
         data = {
             'url': self.story.url,
             'title': self.story.title,
@@ -415,40 +407,64 @@ class ShareFunctionalityTests(TestCase):
         payload = signing.dumps(data)
         token = signer.sign(payload)
         
-        branded_url = f'https://24hourwire.news/go/{token}/'
-        story_url = f'https://24hourwire.news/story/{self.story.id}/'
-        
-        # Branded URL should be much longer (contains encoded data)
-        self.assertGreater(len(branded_url), len(story_url) + 50,
-                          "Branded URL should be significantly longer than story URL")
+        response = self.client.get(f'/go/{token}/')
+        content = response.content.decode()
+        self.assertIn(self.story.title, content)
     
-    def test_twitter_intent_url_construction(self):
-        """Twitter intent URL should have properly encoded parameters."""
+    def test_branded_redirect_og_image_uses_story_image(self):
+        """OG image should use the story's image."""
+        data = {
+            'url': self.story.url,
+            'title': self.story.title,
+            'source': self.story.source,
+            'image_url': self.story.image_url,
+        }
+        signer = signing.Signer()
+        payload = signing.dumps(data)
+        token = signer.sign(payload)
+        
+        response = self.client.get(f'/go/{token}/')
+        content = response.content.decode()
+        self.assertIn(self.story.image_url, content)
+    
+    def test_branded_redirect_works_after_story_deleted(self):
+        """Branded redirect is stateless - works even after story is deleted."""
+        data = {
+            'url': self.story.url,
+            'title': self.story.title,
+            'source': self.story.source,
+            'image_url': self.story.image_url,
+        }
+        signer = signing.Signer()
+        payload = signing.dumps(data)
+        token = signer.sign(payload)
+        
+        # Delete the story
+        story_id = self.story.id
+        self.story.delete()
+        
+        # Branded redirect should still work
+        response = self.client.get(f'/go/{token}/')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn(self.story.title, content)
+    
+    def test_twitter_intent_url_single_encoding(self):
+        """Twitter intent URL must encode wireUrl exactly once."""
         from urllib.parse import quote
         title = 'Test Story'
-        wire_url = 'https://24hourwire.news/story/123/'
+        wire_url = 'https://24hourwire.news/go/abc123/'
         
-        # Simulate the intent URL construction (same as JS encodeURIComponent)
+        # Simulate the intent URL construction (same as JS shareToTwitter)
         text = 'via @24HourWire\n\n' + title
-        twitter_url = ('https://twitter.com/intent/tweet?text=' 
-                      + quote(text, safe='') + '&url=' 
+        twitter_url = ('https://twitter.com/intent/tweet?text='
+                      + quote(text, safe='') + '&url='
                       + quote(wire_url, safe=''))
         
-        # Should contain the encoded URL (single-encoded)
-        self.assertIn('24hourwire.news%2Fstory%2F123%2F', twitter_url)
-    
-    def test_story_share_redirects_to_original(self):
-        """Story share page should redirect to original article."""
-        response = self.client.get(f'/story/{self.story.id}/')
-        content = response.content.decode()
-        
-        # Should contain the original story URL for redirect
-        self.assertIn(self.story.url, content)
-        # Should have a redirect mechanism (meta refresh or JS)
-        has_meta_refresh = 'http-equiv="refresh"' in content
-        has_js_redirect = 'window.location.href' in content
-        self.assertTrue(has_meta_refresh or has_js_redirect,
-                       "Page should have a redirect mechanism")
+        # URL should be encoded exactly once
+        self.assertIn('24hourwire.news%2Fgo%2Fabc123%2F', twitter_url)
+        # Should NOT be double-encoded
+        self.assertNotIn('%252F', twitter_url)
     
     def test_share_token_generation(self):
         """Template filter should generate valid signed token."""
