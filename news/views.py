@@ -168,9 +168,18 @@ def robots_txt(request):
     """Serve robots.txt dynamically."""
     content = """User-agent: *
 Allow: /
-Disallow: /go/
 Disallow: /dashboard/
 Disallow: /login/
+
+# Allow social media crawlers to access share pages for card generation
+User-agent: Twitterbot
+Allow: /go/
+
+User-agent: facebookexternalhit
+Allow: /go/
+
+User-agent: LinkedInBot
+Allow: /go/
 
 Sitemap: https://24hourwire.news/sitemap.xml
 Sitemap: https://24hourwire.news/news-sitemap.xml
