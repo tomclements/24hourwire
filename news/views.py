@@ -759,52 +759,81 @@ def analytics_dashboard(request):
     last_7_days = today - timedelta(days=7)
     last_30_days = today - timedelta(days=30)
     
-    # Summary stats
+    # Base queryset: exclude admin/dashboard/analytics pages
+    base_qs = AnalyticsEvent.objects.exclude(
+        path__startswith='/dashboard/'
+    ).exclude(
+        path__startswith='/analytics/'
+    )
+    
+    # Summary stats (human only, excluding bots)
+    human_qs = base_qs.filter(is_bot=False)
     summary = {
-        'today': AnalyticsEvent.objects.filter(timestamp__gte=today).count(),
-        'yesterday': AnalyticsEvent.objects.filter(timestamp__gte=yesterday, timestamp__lt=today).count(),
-        'last_7_days': AnalyticsEvent.objects.filter(timestamp__gte=last_7_days).count(),
-        'last_30_days': AnalyticsEvent.objects.filter(timestamp__gte=last_30_days).count(),
-        'total': AnalyticsEvent.objects.count(),
+        'today': human_qs.filter(timestamp__gte=today).count(),
+        'yesterday': human_qs.filter(timestamp__gte=yesterday, timestamp__lt=today).count(),
+        'last_7_days': human_qs.filter(timestamp__gte=last_7_days).count(),
+        'last_30_days': human_qs.filter(timestamp__gte=last_30_days).count(),
+        'total': human_qs.count(),
     }
     
-    # Top pages (last 7 days)
-    top_pages = AnalyticsEvent.objects.filter(
+    # Bot detection stats
+    bot_stats = {
+        'today_bots': base_qs.filter(timestamp__gte=today, is_bot=True).count(),
+        'today_human': summary['today'],
+        'last_7_bots': base_qs.filter(timestamp__gte=last_7_days, is_bot=True).count(),
+        'last_7_human': summary['last_7_days'],
+    }
+    
+    # Top pages (last 7 days, human only)
+    top_pages = human_qs.filter(
         timestamp__gte=last_7_days,
         event_type='page_view'
     ).values('path').annotate(
         count=Count('id')
     ).order_by('-count')[:20]
     
-    # Geographic distribution (last 7 days)
-    countries = AnalyticsEvent.objects.filter(
+    # Geographic distribution (last 7 days, human only) with daily counts
+    countries_7d = human_qs.filter(
         timestamp__gte=last_7_days,
         country_code__isnull=False
     ).exclude(country_code='').values('country_code').annotate(
-        count=Count('id')
-    ).order_by('-count')[:20]
+        count_7d=Count('id')
+    ).order_by('-count_7d')[:20]
     
-    # Event type breakdown (last 7 days)
-    event_types = AnalyticsEvent.objects.filter(
+    # Add today's count for each country
+    countries = []
+    for country in countries_7d:
+        today_count = human_qs.filter(
+            timestamp__gte=today,
+            country_code=country['country_code']
+        ).count()
+        countries.append({
+            'country_code': country['country_code'],
+            'count_7d': country['count_7d'],
+            'count_today': today_count,
+        })
+    
+    # Event type breakdown (last 7 days, human only)
+    event_types = human_qs.filter(
         timestamp__gte=last_7_days
     ).values('event_type').annotate(
         count=Count('id')
     ).order_by('-count')
     
-    # Language distribution (last 7 days)
-    languages = AnalyticsEvent.objects.filter(
+    # Language distribution (last 7 days, human only)
+    languages = human_qs.filter(
         timestamp__gte=last_7_days,
         language__isnull=False
     ).exclude(language='').values('language').annotate(
         count=Count('id')
     ).order_by('-count')[:10]
     
-    # Hourly activity (last 24 hours)
+    # Hourly activity (last 24 hours, human only)
     hourly = []
     for i in range(24):
         hour_start = now - timedelta(hours=i+1)
         hour_end = now - timedelta(hours=i)
-        count = AnalyticsEvent.objects.filter(
+        count = human_qs.filter(
             timestamp__gte=hour_start,
             timestamp__lt=hour_end
         ).count()
@@ -819,29 +848,30 @@ def analytics_dashboard(request):
     for h in hourly:
         h['percent'] = round((h['count'] / max_hourly * 100), 1) if max_hourly > 0 else 0
     
-    # Recent events (last 50)
-    recent_events = AnalyticsEvent.objects.all()[:50]
+    # Recent events (last 50, human only, excluding admin)
+    recent_events = human_qs[:50]
     
-    # Feed access stats (last 7 days)
-    feed_access = AnalyticsEvent.objects.filter(
+    # Feed access stats (last 7 days, all - bots can access feeds too)
+    feed_access = base_qs.filter(
         timestamp__gte=last_7_days,
         event_type='feed_access'
     ).count()
     
     # Widget loads (last 7 days)
-    widget_loads = AnalyticsEvent.objects.filter(
+    widget_loads = base_qs.filter(
         timestamp__gte=last_7_days,
         event_type='widget_load'
     ).count()
     
     # Shares (last 7 days)
-    shares = AnalyticsEvent.objects.filter(
+    shares = base_qs.filter(
         timestamp__gte=last_7_days,
         event_type='share'
     ).count()
     
     context = {
         'summary': summary,
+        'bot_stats': bot_stats,
         'top_pages': top_pages,
         'countries': countries,
         'event_types': event_types,

@@ -181,6 +181,10 @@
         </div>
         {% endif %}
         
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 16px;">
+            <span style="color: #16a34a; font-weight: 600;">&#9679;</span> Showing human visits only. Dashboard/analytics paths excluded.
+        </p>
+
         <!-- Summary Stats -->
         <div class="grid">
             <div class="stat-card">
@@ -203,6 +207,41 @@
                 <h3>Total Events</h3>
                 <div class="number">{{ summary.total }}</div>
             </div>
+        </div>
+
+        <!-- Bot vs Human Stats -->
+        <div class="section">
+            <h2>Bot Detection</h2>
+            <table>
+                <thead>
+                    <tr><th>Period</th><th>Human Visits</th><th>Bot/Crawler Visits</th><th>Bot %</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Today</td>
+                        <td><strong>{{ bot_stats.today_human }}</strong></td>
+                        <td style="color: #dc2626;">{{ bot_stats.today_bots }}</td>
+                        <td>
+                            {% if bot_stats.today_human or bot_stats.today_bots %}
+                                {% widthratio bot_stats.today_bots bot_stats.today_human|add:bot_stats.today_bots 100 %}%
+                            {% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Last 7 Days</td>
+                        <td><strong>{{ bot_stats.last_7_human }}</strong></td>
+                        <td style="color: #dc2626;">{{ bot_stats.last_7_bots }}</td>
+                        <td>
+                            {% if bot_stats.last_7_human or bot_stats.last_7_bots %}
+                                {% widthratio bot_stats.last_7_bots bot_stats.last_7_human|add:bot_stats.last_7_bots 100 %}%
+                            {% else %}—{% endif %}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <p style="margin-top: 12px; font-size: 0.8rem; color: var(--text-secondary);">
+                Bots detected from user agent strings (Googlebot, Bingbot, Feedly, Facebook, Twitter, etc.)
+            </p>
         </div>
         
         <!-- Event Type Breakdown -->
@@ -244,19 +283,20 @@
             
             <!-- Countries -->
             <div class="section">
-                <h2>Top Countries (7 days)</h2>
+                <h2>Top Countries (7 days + Today)</h2>
                 <table>
                     <thead>
-                        <tr><th>Country</th><th>Visitors</th></tr>
+                        <tr><th>Country</th><th>7 Days</th><th>Today</th></tr>
                     </thead>
                     <tbody>
                         {% for country in countries %}
                         <tr>
                             <td>{{ country.country_code }}</td>
-                            <td>{{ country.count }}</td>
+                            <td><strong>{{ country.count_7d }}</strong></td>
+                            <td>{% if country.count_today %}<span style="color: var(--accent); font-weight: 600;">{{ country.count_today }}</span>{% else %}<span style="color: var(--text-secondary);">—</span>{% endif %}</td>
                         </tr>
                         {% empty %}
-                        <tr><td colspan="2" style="color: var(--text-secondary);">No geo data yet (Cloudflare headers not present)</td></tr>
+                        <tr><td colspan="3" style="color: var(--text-secondary);">No geo data yet (Cloudflare headers not present)</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -304,7 +344,7 @@
         
         <!-- Recent Events -->
         <div class="section">
-            <h2>Recent Events</h2>
+            <h2>Recent Human Events</h2>
             <table>
                 <thead>
                     <tr>
@@ -313,6 +353,7 @@
                         <th>Path</th>
                         <th>Language</th>
                         <th>Country</th>
+                        <th>Bot?</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -327,9 +368,10 @@
                         <td>{{ event.path|truncatechars:50 }}</td>
                         <td>{{ event.language }}</td>
                         <td>{{ event.country_code|default:"—" }}</td>
+                        <td>{% if event.is_bot %}<span style="color: #dc2626; font-size: 0.75rem;">bot</span>{% else %}<span style="color: #16a34a; font-size: 0.75rem;">human</span>{% endif %}</td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="5" style="color: var(--text-secondary);">No events recorded yet</td></tr>
+                    <tr><td colspan="6" style="color: var(--text-secondary);">No events recorded yet</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

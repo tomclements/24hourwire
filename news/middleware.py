@@ -26,6 +26,18 @@ class AnalyticsMiddleware:
         '/sitemap',
     ]
     
+    # Bot user agent patterns (lowercase)
+    BOT_PATTERNS = [
+        'bot', 'crawler', 'spider', 'slurp', 'scraper',
+        'feed', 'rss', 'aggregator',
+        'facebookexternalhit', 'twitterbot', 'linkedinbot',
+        'whatsapp', 'telegrambot', 'slackbot',
+        'googlebot', 'bingbot', 'yandex', 'baidu',
+        'ahrefs', 'semrush', 'moz',
+        'python-requests', 'curl', 'wget', 'httpie',
+        'scan', 'audit', 'check',
+    ]
+    
     def __init__(self, get_response):
         self.get_response = get_response
     
@@ -53,6 +65,9 @@ class AnalyticsMiddleware:
         # Get user agent (truncated)
         user_agent = request.META.get('HTTP_USER_AGENT', '')[:200]
         
+        # Detect if request is from a bot/crawler
+        is_bot = self._is_bot(user_agent)
+        
         # Log the event asynchronously to avoid slowing down response
         try:
             AnalyticsEvent.objects.create(
@@ -61,12 +76,18 @@ class AnalyticsMiddleware:
                 language=language[:5],
                 country_code=country_code[:5],
                 user_agent=user_agent,
+                is_bot=is_bot,
             )
         except Exception:
             # Silently fail if analytics logging breaks
             pass
         
         return response
+    
+    def _is_bot(self, user_agent):
+        """Detect if user agent is a bot/crawler."""
+        ua_lower = user_agent.lower()
+        return any(pattern in ua_lower for pattern in self.BOT_PATTERNS)
     
     def _get_event_type(self, path):
         """Determine event type from URL path."""
