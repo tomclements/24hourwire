@@ -26,8 +26,10 @@ from django.conf import settings
 # - test_story_share_template_used: Template caching in test env
 
 CRITICAL_TEST_CLASSES = [
-    'news.tests.ShareFunctionalityTests',   # Social sharing (NEW)
+    'news.tests.ShareFunctionalityTests',   # Social sharing
     'news.tests.BrandedRedirectTests',      # Share tokens
+    'news.tests.BiasFilterRegressionTests', # Bias filter bugs
+    'news.tests.BotDetectionTests',         # Bot detection
     'news.tests.StoryModelTests',           # Core model logic
     'news.tests.ExcerptCleaningTests',      # Content processing
 ]

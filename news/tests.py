@@ -481,6 +481,130 @@ class ShareFunctionalityTests(TestCase):
         self.assertEqual(data['title'], self.story.title)
 
 
+class BiasFilterRegressionTests(TestCase):
+    """Regression tests for bias filter bugs."""
+    
+    def test_default_homepage_uses_all_sources(self):
+        """Default homepage (no sources param) should use all sources, not just defaults."""
+        from .sources_config import SOURCES, DEFAULT_SOURCES
+        
+        # Create stories from sources that are in SOURCES but NOT in DEFAULT_SOURCES
+        non_default_source = None
+        lang_sources = SOURCES.get('en', SOURCES['en'])
+        lang_defaults = DEFAULT_SOURCES.get('en', DEFAULT_SOURCES['en'])
+        
+        for source_name, _ in lang_sources:
+            if source_name not in lang_defaults:
+                non_default_source = source_name
+                break
+        
+        if non_default_source:
+            # Use a title that matches 'world' category keywords
+            Story.objects.create(
+                source=non_default_source,
+                title='Global Summit Reaches Trade Agreement',
+                excerpt='Test',
+                url='https://example.com/test',
+                language='en',
+                category='world',
+                published=timezone.now(),
+                url_hash='nd123',
+                title_fingerprint='ndfp123',
+            )
+            
+            # Default homepage should show this story
+            response = self.client.get('/')
+            content = response.content.decode()
+            self.assertIn('Global Summit Reaches Trade Agreement', content,
+                         "Default homepage should show stories from ALL sources, not just defaults")
+    
+    def test_bias_class_set_on_stories(self):
+        """Stories rendered on homepage should have bias_class attribute set."""
+        Story.objects.create(
+            source='BBC',
+            title='Global Summit Reaches Trade Agreement',
+            excerpt='Test',
+            url='https://example.com/bbc',
+            language='en',
+            category='world',
+            published=timezone.now(),
+            url_hash='bbc123',
+            title_fingerprint='bbcfp123',
+        )
+        
+        response = self.client.get('/')
+        content = response.content.decode()
+        
+        # Check that bias badge has a non-default class (not just 'center')
+        # BBC is Left-Center in en.py, so it should have class 'left-center'
+        self.assertIn('bias-badge left-center', content,
+                     "BBC stories should have 'left-center' bias class, not default 'center'")
+    
+    def test_load_more_includes_bias_class(self):
+        """AJAX load_more should include bias_class in JSON response."""
+        Story.objects.create(
+            source='BBC',
+            title='Tech Giants Announce New AI Chips',
+            excerpt='Test',
+            url='https://example.com/bbc2',
+            language='en',
+            category='technology',
+            published=timezone.now(),
+            url_hash='bbc456',
+            title_fingerprint='bbcfp456',
+        )
+        
+        response = self.client.get('/api/stories/?lang=en&category=technology&offset=0')
+        import json
+        data = json.loads(response.content)
+        
+        self.assertTrue(len(data['stories']) > 0, "Should return at least one story")
+        self.assertIn('bias_class', data['stories'][0],
+                     "AJAX response should include 'bias_class' field")
+        self.assertNotEqual(data['stories'][0]['bias_class'], 'center',
+                           "bias_class should reflect actual bias, not default 'center'")
+
+
+class BotDetectionTests(TestCase):
+    """Tests for bot/crawler detection in analytics middleware."""
+    
+    def test_mozilla_user_agent_not_flagged_as_bot(self):
+        """Normal browser user agents containing 'Mozilla' should NOT be bots."""
+        from .middleware import AnalyticsMiddleware
+        
+        middleware = AnalyticsMiddleware(lambda req: None)
+        
+        # Common browser UAs all contain "Mozilla"
+        browser_uas = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/121.0',
+            'Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1',
+        ]
+        
+        for ua in browser_uas:
+            is_bot = middleware._is_bot(ua)
+            self.assertFalse(is_bot, f"Browser UA should NOT be flagged as bot: {ua[:50]}...")
+    
+    def test_actual_bots_flagged_correctly(self):
+        """Known bot user agents SHOULD be flagged as bots."""
+        from .middleware import AnalyticsMiddleware
+        
+        middleware = AnalyticsMiddleware(lambda req: None)
+        
+        bot_uas = [
+            'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+            'Twitterbot/1.0',
+            'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)',
+            'Feedly/1.0 (+http://www.feedly.com/fetcher.html; 1 subscribers; )',
+            'LinkedInBot/1.0 (compatible; Mozilla/5.0; Apache-HttpClient +http://www.linkedin.com)',
+        ]
+        
+        for ua in bot_uas:
+            is_bot = middleware._is_bot(ua)
+            self.assertTrue(is_bot, f"Bot UA should be flagged as bot: {ua[:50]}...")
+
+
 class SitemapTests(TestCase):
     """Tests for XML sitemaps."""
 
