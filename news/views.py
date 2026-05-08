@@ -72,7 +72,8 @@ def home(request):
             # Treat as source names
             selected_sources = requested_values
     else:
-        selected_sources = lang_default_sources
+        # Default to ALL sources (same as sources=all) so "All" bias filter shows everything
+        selected_sources = [s[0] for s in lang_sources]
     
     # PERFORMANCE: Filter by source in DB, then process in Python
     stories = list(Story.objects.filter(
@@ -88,6 +89,7 @@ def home(request):
         story.bias_label = bias_info[0]
         story.bias_color = bias_info[1]
         story.bias_link = bias_info[2]
+        story.bias_class = bias_info[0].lower().replace(' ', '-').replace('/', '-') if bias_info[0] else 'unknown'
         story.is_paywalled = story.source in PAYWALLED_SOURCES
 
     # Load pre-computed clusters for "Most Covered" tab
@@ -567,7 +569,8 @@ def load_more_stories(request):
     elif selected_sources_param:
         selected_sources = selected_sources_param.split(',')
     else:
-        selected_sources = lang_default_sources
+        # Default to ALL sources (same as sources=all)
+        selected_sources = [s[0] for s in lang_sources]
     
     cutoff = timezone.now() - timedelta(hours=24)
     stories = list(Story.objects.filter(
@@ -593,6 +596,7 @@ def load_more_stories(request):
             'url': story.url,
             'source': story.source,
             'bias_label': bias_info[0],
+            'bias_class': bias_info[0].lower().replace(' ', '-').replace('/', '-') if bias_info[0] else 'unknown',
             'is_paywalled': story.source in PAYWALLED_SOURCES,
             'covered_by_count': getattr(story, 'covered_by_count', None),
             'time_ago': f"{story.published.strftime('%H:%M')}",
@@ -719,6 +723,7 @@ def track_book_click(request):
                     language=request.GET.get('lang', 'en')[:5],
                     country_code=country_code[:5],
                     user_agent=user_agent,
+                    is_bot=False,  # Beacon API calls are always from real users
                 )
         except Exception:
             pass

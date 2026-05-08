@@ -27,13 +27,14 @@ class AnalyticsMiddleware:
     ]
     
     # Bot user agent patterns (lowercase)
+    # NOTE: Be careful with short patterns - 'moz' would match 'Mozilla' in every browser
     BOT_PATTERNS = [
         'bot', 'crawler', 'spider', 'slurp', 'scraper',
         'feed', 'rss', 'aggregator',
         'facebookexternalhit', 'twitterbot', 'linkedinbot',
         'whatsapp', 'telegrambot', 'slackbot',
         'googlebot', 'bingbot', 'yandex', 'baidu',
-        'ahrefs', 'semrush', 'moz',
+        'ahrefs', 'semrush', 'rogerbot',
         'python-requests', 'curl', 'wget', 'httpie',
         'scan', 'audit', 'check',
     ]

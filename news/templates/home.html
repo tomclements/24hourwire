@@ -1710,7 +1710,7 @@
                             <div class="story-meta">
                                 <span class="source-tag">${story.source}${story.is_paywalled ? '<span class="paywall-badge" title="Paywalled">$</span>' : ''}</span>
                                 ${story.covered_by_count ? `<span class="covered-badge">${story.covered_by_count} sources</span>` : ''}
-                                <span class="bias-badge ${story.bias_label.toLowerCase().replace(/ /g, '-').replace('/', '-')}">${story.bias_label}</span>
+                                <span class="bias-badge ${story.bias_class || story.bias_label.toLowerCase().replace(/ /g, '-').replace('/', '-')}">${story.bias_label}</span>
                                 <span class="time-badge">${story.time_ago}</span>
                             </div>
                             ${story.excerpt ? `<p class="story-excerpt">${story.excerpt}</p>` : ''}
