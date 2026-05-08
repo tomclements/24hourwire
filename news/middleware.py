@@ -37,6 +37,7 @@ class AnalyticsMiddleware:
         'ahrefs', 'semrush', 'rogerbot',
         'python-requests', 'curl', 'wget', 'httpie',
         'scan', 'audit', 'check',
+        'headless',  # HeadlessChrome (Playwright, Puppeteer, etc.)
     ]
     
     def __init__(self, get_response):

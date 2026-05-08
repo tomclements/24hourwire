@@ -603,6 +603,18 @@ class BotDetectionTests(TestCase):
         for ua in bot_uas:
             is_bot = middleware._is_bot(ua)
             self.assertTrue(is_bot, f"Bot UA should be flagged as bot: {ua[:50]}...")
+    
+    def test_headless_chrome_flagged_as_bot(self):
+        """HeadlessChrome (Playwright, Puppeteer) should be flagged as bot."""
+        from .middleware import AnalyticsMiddleware
+        
+        middleware = AnalyticsMiddleware(lambda req: None)
+        
+        # GitHub Actions Playwright uses this exact UA
+        playwright_ua = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/147.0.7727.15 Safari/537.36'
+        
+        is_bot = middleware._is_bot(playwright_ua)
+        self.assertTrue(is_bot, "Playwright HeadlessChrome should be flagged as bot")
 
 
 class SitemapTests(TestCase):
