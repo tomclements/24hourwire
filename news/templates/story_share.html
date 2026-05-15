@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ story.title }} | 24HourWire</title>
     
+    <!-- Prevent indexing of share wrapper pages - stories expire after 24h -->
+    <meta name="robots" content="noindex, nofollow">
+    
     <!-- Primary Meta Tags -->
     <meta name="title" content="{{ story.title }}">
     <meta name="description" content="{% if story.get_clean_excerpt %}{{ story.get_clean_excerpt|truncatechars:200 }}{% else %}Read this story and more diverse perspectives on 24HourWire - the news aggregator that shows you every angle.{% endif %}">

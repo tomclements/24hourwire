@@ -6,6 +6,9 @@
     <title>{{ title }} | 24HourWire</title>
     <meta name="description" content="Curated by 24HourWire - news from all angles. Read the full story at {{ source }}.">
     
+    <!-- Prevent indexing of redirect wrapper pages - OG tags still read by social crawlers -->
+    <meta name="robots" content="noindex, nofollow">
+    
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://24hourwire.news/go/{{ token }}/">

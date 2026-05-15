@@ -167,26 +167,39 @@ def home(request):
 
 
 def robots_txt(request):
-    """Serve robots.txt dynamically."""
+    """Serve robots.txt dynamically.
+    
+    Strategy:
+    - Block ephemeral pages (/go/, /story/) from Google indexing to avoid
+      'Crawled - currently not indexed' and 404 issues
+    - Allow social media crawlers (Twitter, Facebook, LinkedIn) to access
+      /go/ pages for generating preview cards
+    - Sitemap only includes stable pages and recent 24h stories
+    """
     content = """User-agent: *
 Allow: /
 Disallow: /dashboard/
 Disallow: /login/
+Disallow: /go/
+Disallow: /story/
+Disallow: /different-angle/
+Crawl-delay: 1
 
 # Allow social media crawlers to access share pages for card generation
 User-agent: Twitterbot
 Allow: /go/
+Allow: /story/
 
 User-agent: facebookexternalhit
 Allow: /go/
+Allow: /story/
 
 User-agent: LinkedInBot
 Allow: /go/
+Allow: /story/
 
 Sitemap: https://24hourwire.news/sitemap.xml
 Sitemap: https://24hourwire.news/news-sitemap.xml
-
-Crawl-delay: 1
 """
     return HttpResponse(content, content_type='text/plain')
 
@@ -370,15 +383,19 @@ def news_sitemap(request):
     """Generate Google News sitemap with recent stories.
     
     Google News requires:
-    - Only articles from last 48 hours
+    - Only articles from last 48 hours (but we use 24h to avoid 404s)
     - <news:publication> with name and language
     - <news:publication_date> in W3C format
     - <news:title> matching the article headline
+    
+    NOTE: We only include stories from last 24 hours (not 48) because
+    stories expire and are deleted after 24h. Including 48h-old stories
+    would cause Google to crawl URLs that return 404.
     """
-    cutoff = timezone.now() - timedelta(hours=48)
+    cutoff = timezone.now() - timedelta(hours=24)
     stories = Story.objects.filter(
         published__gte=cutoff
-    ).order_by('-published')[:1000]
+    ).order_by('-published')[:500]
 
     output = []
     output.append('<?xml version="1.0" encoding="UTF-8"?>')
