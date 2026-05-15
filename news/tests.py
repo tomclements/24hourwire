@@ -681,3 +681,33 @@ class SitemapTests(TestCase):
         # Old story should not appear
         self.assertNotIn('Old Story', content)
         self.assertNotIn(f'https://24hourwire.news/story/{old_story.id}/', content)
+
+
+class SportsCategorizationTests(TestCase):
+    """Tests for sports-only category restriction."""
+    
+    def test_sports_story_only_in_sports_category(self):
+        """Sports stories should only be categorized as sports, not world/politics/etc."""
+        from news.categorization import get_story_categories
+        
+        # A title that could match multiple categories but is clearly sports
+        categories = get_story_categories('Olympics Opening Ceremony Draws Global Crowd')
+        self.assertEqual(categories, ['sports'],
+                         "Sports stories should be restricted to only 'sports' category")
+    
+    def test_sports_with_political_terms_still_only_sports(self):
+        """Even sports titles with political/world keywords should be sports-only."""
+        from news.categorization import get_story_categories
+        
+        categories = get_story_categories('World Cup Politics: FIFA Election Controversy')
+        self.assertEqual(categories, ['sports'],
+                         "Sports story with political terms should still be sports-only")
+    
+    def test_non_sports_story_not_affected(self):
+        """Non-sports stories should get their normal categories."""
+        from news.categorization import get_story_categories
+        
+        categories = get_story_categories('Congress Passes New Budget Bill')
+        self.assertNotIn('sports', categories,
+                        "Non-sports stories should not be categorized as sports")
+        self.assertIn('politics', categories)

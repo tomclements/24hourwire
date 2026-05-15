@@ -123,8 +123,16 @@ def get_story_categories(title, language='en'):
     # Get categories with at least medium confidence (score >= 2)
     qualifying = [cat for cat, score in category_scores.items() if score >= 2]
     if qualifying:
+        # Sports stories should only appear in All and Sports tabs
+        # to avoid polluting World, Politics, Business, etc.
+        if 'sports' in qualifying:
+            return ['sports']
         return qualifying
     
     # If nothing qualifies with score >= 2, take top category only
     sorted_cats = sorted(category_scores.items(), key=lambda x: x[1], reverse=True)
-    return [sorted_cats[0][0]] if sorted_cats else ['world']
+    top_category = sorted_cats[0][0] if sorted_cats else 'world'
+    # Sports-only restriction applies even for low-confidence matches
+    if top_category == 'sports':
+        return ['sports']
+    return [top_category]
