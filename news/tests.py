@@ -711,3 +711,27 @@ class SportsCategorizationTests(TestCase):
         self.assertNotIn('sports', categories,
                         "Non-sports stories should not be categorized as sports")
         self.assertIn('politics', categories)
+    
+    def test_mlb_trade_headline_is_sports_only(self):
+        """MLB trade headlines should be categorized as sports only."""
+        from news.categorization import get_story_categories
+        
+        categories = get_story_categories("Ranking the Mets' trade bait value ahead of a potential fire sale")
+        self.assertEqual(categories, ['sports'],
+                        "MLB trade story should be sports-only")
+    
+    def test_golf_pga_headline_is_sports_only(self):
+        """PGA golf headlines should be categorized as sports only."""
+        from news.categorization import get_story_categories
+        
+        categories = get_story_categories("Looking ahead to the rest of the 2026 PGA Championship")
+        self.assertEqual(categories, ['sports'],
+                        "PGA golf story should be sports-only")
+    
+    def test_nfl_player_headline_is_sports_only(self):
+        """NFL player headlines should be categorized as sports only."""
+        from news.categorization import get_story_categories
+        
+        categories = get_story_categories("Jameis Winston uses his artistic talents in hilarious Giants 2026 schedule release video")
+        self.assertEqual(categories, ['sports'],
+                        "NFL player story should be sports-only")
