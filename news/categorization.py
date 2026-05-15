@@ -9,6 +9,17 @@ import re
 from news.languages import LANGUAGE_CATEGORY_KEYWORDS_WEIGHTED, LANGUAGE_EXCLUSION_RULES
 
 
+# Known sports-only sources - stories from these outlets are always sports
+SPORTS_SOURCES = {
+    'en': [
+        'ESPN', 'CBS Sports', 'Sky Sports', 'BBC Sport',
+        'Reuters Sports', 'AP Sports', 'Fox Sports', 'NBC Sports',
+        'Yahoo Sports', 'Bleacher Report', 'The Athletic',
+        'Sports Illustrated', 'Deadspin', 'SB Nation',
+    ],
+}
+
+
 def check_exclusion(title_lower, category, keyword, language='en'):
     """Check if a keyword match should be excluded based on context."""
     exclusion_rules = LANGUAGE_EXCLUSION_RULES.get(language, LANGUAGE_EXCLUSION_RULES.get('en', {}))
@@ -82,13 +93,23 @@ def categorize_story(title, language='en'):
     return 'world'
 
 
-def get_story_categories(title, language='en'):
+def get_story_categories(title, language='en', source=''):
     """Get all applicable categories for a story using weighted scoring.
     
-    Returns categories with score >= 3 (high confidence) OR score >= 2 (medium confidence).
+    If source is a known sports-only outlet (ESPN, BBC Sport, etc.),
+    returns ['sports'] immediately without keyword matching.
+    
+    Otherwise uses weighted keyword scoring. Returns categories with
+    score >= 2 (medium confidence or higher).
     Regional categories (united-states, europe, etc.) can be combined with topic categories.
     Uses language-specific keywords if available, falls back to English.
     """
+    # Check if source is a known sports-only outlet
+    if source:
+        lang_sports_sources = SPORTS_SOURCES.get(language, SPORTS_SOURCES.get('en', []))
+        if source in lang_sports_sources:
+            return ['sports']
+    
     title_lower = title.lower()
     # Get language-specific weighted keywords, fall back to English
     weighted_keywords = LANGUAGE_CATEGORY_KEYWORDS_WEIGHTED.get(

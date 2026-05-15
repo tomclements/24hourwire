@@ -84,7 +84,7 @@ def home(request):
     
     # Apply metadata to displayed stories only
     for story in stories:
-        story.story_categories = get_story_categories(story.title, language)
+        story.story_categories = get_story_categories(story.title, language, story.source)
         bias_info = lang_source_info.get(story.source, ('Unknown', '#999', 'https://mediabiasfactcheck.com/'))
         story.bias_label = bias_info[0]
         story.bias_color = bias_info[1]
@@ -106,7 +106,7 @@ def home(request):
         rep.bias_color = bias_info[1]
         rep.bias_link = bias_info[2]
         rep.is_paywalled = rep.source in PAYWALLED_SOURCES
-        rep.story_categories = get_story_categories(rep.title, language)
+        rep.story_categories = get_story_categories(rep.title, language, rep.source)
         rep.covered_by_count = cluster.source_count
         rep.covered_by_sources = cluster.sources
         most_covered_stories.append(rep)
@@ -598,7 +598,7 @@ def load_more_stories(request):
     
     # Filter by category
     if category_id != 'all' and category_id != 'most_covered':
-        stories = [s for s in stories if category_id in get_story_categories(s.title, language)]
+        stories = [s for s in stories if category_id in get_story_categories(s.title, language, s.source)]
     
     total = len(stories)
     batch = stories[offset:offset + 50]

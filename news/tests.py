@@ -703,7 +703,24 @@ class SportsCategorizationTests(TestCase):
         self.assertEqual(categories, ['sports'],
                          "Sports story with political terms should still be sports-only")
     
-    def test_non_sports_story_not_affected(self):
+    def test_espn_source_always_sports(self):
+        """ESPN stories should always be sports, regardless of title."""
+        from news.categorization import get_story_categories
+        
+        # A title that could be anything, but from ESPN it's sports
+        categories = get_story_categories('Breaking News Update', source='ESPN')
+        self.assertEqual(categories, ['sports'],
+                        "ESPN source should always be categorized as sports")
+    
+    def test_bbc_sport_source_always_sports(self):
+        """BBC Sport stories should always be sports, regardless of title."""
+        from news.categorization import get_story_categories
+        
+        categories = get_story_categories('Morning Update', source='BBC Sport')
+        self.assertEqual(categories, ['sports'],
+                        "BBC Sport source should always be categorized as sports")
+    
+    def test_non_sports_source_not_affected(self):
         """Non-sports stories should get their normal categories."""
         from news.categorization import get_story_categories
         
