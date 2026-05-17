@@ -15,46 +15,32 @@ from .sources_config import (
 from .categorization import categorize_story, get_story_categories, check_exclusion
 
 
-def get_related_topics(story):
+def get_related_topics(story, active_topics=None):
     """Find active topics that match a story's title or categories.
     
     Returns a list of Topic objects (max 2) for display on story cards.
-    """
-    from django.db.models import Q
-    from django.utils import timezone
-    from datetime import timedelta
     
+    NOTE: Does NOT verify topic has matching stories in DB (avoids N+1 queries).
+    Topics are assumed to be relevant if keywords/categories match.
+    """
     title_lower = story.title.lower()
     categories = getattr(story, 'story_categories', [story.category])
     
     related = []
-    cutoff = timezone.now() - timedelta(hours=24)
+    topics = active_topics or Topic.objects.filter(is_active=True)
     
-    for topic in Topic.objects.filter(is_active=True):
+    for topic in topics:
         # Check keyword match
-        matched = False
         for kw in topic.keywords:
             if kw.lower() in title_lower:
-                matched = True
+                related.append(topic)
                 break
-        
-        # Check category match
-        if not matched:
+        else:
+            # Check category match if no keyword matched
             for cat in topic.categories:
                 if cat in categories:
-                    matched = True
+                    related.append(topic)
                     break
-        
-        if matched:
-            # Only include if topic actually has matching stories in last 24h
-            keyword_q = Q()
-            for kw in topic.keywords:
-                keyword_q |= Q(title__icontains=kw)
-            has_stories = Story.objects.filter(
-                Q(published__gte=cutoff) & keyword_q
-            ).exists()
-            if has_stories:
-                related.append(topic)
         
         if len(related) >= 2:
             break
@@ -129,13 +115,16 @@ def home(request):
         source__in=selected_sources
     ).order_by('-published'))
     
+    # Pre-fetch active topics once to avoid N+1 queries in get_related_topics
+    active_topics = list(Topic.objects.filter(is_active=True))
+    
     # Apply metadata to displayed stories only
     for story in stories:
         story.story_categories = get_story_categories(story.title, language, story.source)
         bias_info = lang_source_info.get(story.source, ('Unknown', '#999', 'https://mediabiasfactcheck.com/'))
         story.bias_label = bias_info[0]
         story.bias_color = bias_info[1]
-        story.related_topics = get_related_topics(story)
+        story.related_topics = get_related_topics(story, active_topics=active_topics)
         story.bias_link = bias_info[2]
         story.bias_class = bias_info[0].lower().replace(' ', '-').replace('/', '-') if bias_info[0] else 'unknown'
         story.is_paywalled = story.source in PAYWALLED_SOURCES
