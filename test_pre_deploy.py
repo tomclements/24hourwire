@@ -33,6 +33,9 @@ CRITICAL_TEST_CLASSES = [
     'news.tests.SportsCategorizationTests',  # Sports-only category restriction
     'news.tests.StoryModelTests',            # Core model logic
     'news.tests.ExcerptCleaningTests',       # Content processing
+    'news.tests.TopicHubTests',              # Topic hub pages
+    'news.tests.TopicModelTests',            # Topic model logic
+    'news.tests.RobotsTxtTopicTests',        # robots.txt topic allow
 ]
 
 def run_tests():

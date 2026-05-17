@@ -35,6 +35,8 @@ urlpatterns = [
     # Analytics dashboard
     path('analytics/', views.analytics_dashboard, name='analytics_dashboard'),
     path('analytics/book-click/', views.track_book_click, name='track_book_click'),
+    # Topic hubs (evergreen landing pages)
+    path('topic/<str:slug>/', views.topic_detail, name='topic_detail'),
     # API
     path('api/stories/', views.load_more_stories, name='load_more_stories'),
 ]

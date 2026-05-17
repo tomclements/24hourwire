@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+{% load news_extras %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ topic.meta_title|default:topic.title }} | 24HourWire</title>
+    <meta name="description" content="{{ topic.meta_description|default:topic.description|truncatechars:200 }}">
+    
+    <!-- Indexable topic hub pages -->
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:title" content="{{ topic.meta_title|default:topic.title }} | 24HourWire">
+    <meta property="og:description" content="{{ topic.meta_description|default:topic.description|truncatechars:200 }}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://24hourwire.news{{ topic.get_absolute_url }}">
+    <meta property="og:site_name" content="24HourWire">
+    {% if topic.image_url %}
+    <meta property="og:image" content="{{ topic.image_url }}">
+    <meta property="og:image:alt" content="{{ topic.title }}">
+    {% else %}
+    <meta property="og:image" content="https://24hourwire.news{% static 'news/images/logo.jpg' %}">
+    <meta property="og:image:alt" content="24HourWire - {{ topic.title }}">
+    {% endif %}
+    <meta property="og:locale" content="en_US">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@24HourWire">
+    <meta name="twitter:creator" content="@24HourWire">
+    <meta name="twitter:title" content="{{ topic.meta_title|default:topic.title }} | 24HourWire">
+    <meta name="twitter:description" content="{{ topic.meta_description|default:topic.description|truncatechars:200 }}">
+    {% if topic.image_url %}
+    <meta name="twitter:image" content="{{ topic.image_url }}">
+    <meta name="twitter:image:alt" content="{{ topic.title }}">
+    {% else %}
+    <meta name="twitter:image" content="https://24hourwire.news{% static 'news/images/logo.jpg' %}">
+    <meta name="twitter:image:alt" content="24HourWire - {{ topic.title }}">
+    {% endif %}
+    
+    <link rel="canonical" href="https://24hourwire.news{{ topic.get_absolute_url }}">
+    <link rel="icon" type="image/jpeg" href="{% static 'news/images/logo.jpg' %}">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-FLFN6ZYCPX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-FLFN6ZYCPX');
+    </script>
+    <style>
+        :root {
+            --primary: #0A2540;
+            --primary-light: #1E3A5F;
+            --accent: #0066cc;
+            --text-primary: #1a1a1a;
+            --text-secondary: #4a5568;
+            --text-muted: #718096;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f7fafc;
+            --bg-tertiary: #edf2f7;
+            --border: #e2e8f0;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            --radius: 8px;
+            --radius-lg: 12px;
+            
+            --bias-left: #3b82f6;
+            --bias-left-center: #60a5fa;
+            --bias-center: #6b7280;
+            --bias-right-center: #f87171;
+            --bias-right: #ef4444;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            line-height: 1.6; 
+            color: var(--text-primary); 
+            background: var(--bg-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Sticky Header */
+        .header-container {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+        
+        header {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 12px 16px;
+        }
+        
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            flex-wrap: nowrap;
+            gap: 16px;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-right: auto;
+            text-decoration: none;
+        }
+        
+        .header-logo img {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+        
+        .header-logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header-logo-text .logo-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.2;
+            letter-spacing: -0.5px;
+        }
+        
+        .header-logo-text .logo-tagline {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            line-height: 1.2;
+        }
+        
+        /* Breadcrumb */
+        .breadcrumb {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        
+        .breadcrumb a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Hero Section */
+        .topic-hero {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 16px;
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .topic-hero-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .topic-hero h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+        
+        .topic-hero .headline {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+        
+        .topic-hero .description {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            max-width: 700px;
+        }
+        
+        /* Language Pills */
+        .lang-filters {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        .lang-pill {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-decoration: none;
+            border: 2px solid var(--border);
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+        
+        .lang-pill:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        
+        .lang-pill.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+        
+        /* Stats Bar */
+        .topic-stats {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+        
+        .topic-stats .stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        .topic-stats .stat strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        
+        /* Bias Spectrum */
+        .bias-spectrum {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .bias-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        
+        .bias-dot.left { background: var(--bias-left); }
+        .bias-dot.left-center { background: var(--bias-left-center); }
+        .bias-dot.center { background: var(--bias-center); }
+        .bias-dot.right-center { background: var(--bias-right-center); }
+        .bias-dot.right { background: var(--bias-right); }
+        
+        /* Main Content */
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px 16px;
+        }
+        
+        /* Stories Grid */
+        .stories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .story-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .story-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+            border-color: var(--accent);
+        }
+        
+        .story-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .story-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            line-height: 1.4;
+            color: var(--text-primary);
+            text-decoration: none;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .story-title:hover {
+            color: var(--accent);
+        }
+        
+        .story-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+            font-size: 0.8rem;
+        }
+        
+        .source-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        
+        .bias-badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .bias-badge.left { background: rgba(59,130,246,0.15); color: var(--bias-left); }
+        .bias-badge.left-center { background: rgba(96,165,250,0.15); color: var(--bias-left-center); }
+        .bias-badge.center { background: rgba(107,114,128,0.15); color: var(--bias-center); }
+        .bias-badge.right-center { background: rgba(248,113,113,0.15); color: var(--bias-right-center); }
+        .bias-badge.right { background: rgba(239,68,68,0.15); color: var(--bias-right); }
+        
+        .time-badge {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+        
+        .story-excerpt {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 16px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            flex-grow: 1;
+        }
+        
+        .story-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+        
+        .story-links {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .story-links a {
+            font-size: 0.8rem;
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .story-links a:hover {
+            text-decoration: underline;
+        }
+        
+        .share-btn {
+            background: var(--bg-tertiary);
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        
+        .share-btn:hover {
+            background: var(--bg-secondary);
+            transform: scale(1.1);
+        }
+        
+        .different-angle-btn {
+            background: transparent;
+            border: 1px solid var(--accent);
+            border-radius: 4px;
+            padding: 4px 10px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--accent);
+            transition: all 0.2s;
+        }
+        
+        .different-angle-btn:hover {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+        
+        /* Footer */
+        footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            margin-top: 60px;
+            padding: 40px 24px;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 32px;
+        }
+        
+        .footer-section h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .footer-section p, .footer-section a {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            line-height: 1.8;
+        }
+        
+        .footer-section a:hover {
+            color: var(--accent);
+        }
+        
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 32px auto 0;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        
+        @media (max-width: 640px) {
+            .topic-hero h1 {
+                font-size: 1.5rem;
+            }
+            .stories-grid {
+                grid-template-columns: 1fr;
+            }
+            .topic-stats {
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header-container">
+        <header>
+            <div class="header-top">
+                <a href="/" class="header-logo">
+                    <img src="{% static 'news/images/logo.jpg' %}" alt="24HourWire">
+                    <div class="header-logo-text">
+                        <span class="logo-title">24HourWire</span>
+                        <span class="logo-tagline">News from all angles</span>
+                    </div>
+                </a>
+            </div>
+        </header>
+    </div>
+    
+    <nav class="breadcrumb">
+        <a href="/">Home</a> &rsaquo; <a href="/">Topics</a> &rsaquo; {{ topic.title }}
+    </nav>
+    
+    <div class="topic-hero">
+        <div class="topic-hero-inner">
+            <h1>{{ topic.title }}</h1>
+            {% if topic.headline %}
+            <p class="headline">{{ topic.headline }}</p>
+            {% endif %}
+            {% if topic.description %}
+            <p class="description">{{ topic.description }}</p>
+            {% endif %}
+            
+            {% if languages_with_stories %}
+            <div class="lang-filters">
+                <a href="?" class="lang-pill {% if language == 'all' %}active{% endif %}">All Languages</a>
+                {% for lang in languages_with_stories %}
+                <a href="?lang={{ lang }}" class="lang-pill {% if language == lang %}active{% endif %}">{{ lang|upper }}</a>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="topic-stats">
+        <div class="stat">
+            <strong>{{ total_stories }}</strong> stories in the last 24 hours
+        </div>
+        {% if bias_counts %}
+        <div class="stat">
+            Coverage from:
+            <span class="bias-spectrum">
+                {% if bias_counts.left %}<span class="bias-dot left" title="Left: {{ bias_counts.left }}"></span>{% endif %}
+                {% if bias_counts.left_center %}<span class="bias-dot left-center" title="Left-Center: {{ bias_counts.left_center }}"></span>{% endif %}
+                {% if bias_counts.center %}<span class="bias-dot center" title="Center: {{ bias_counts.center }}"></span>{% endif %}
+                {% if bias_counts.right_center %}<span class="bias-dot right-center" title="Right-Center: {{ bias_counts.right_center }}"></span>{% endif %}
+                {% if bias_counts.right %}<span class="bias-dot right" title="Right: {{ bias_counts.right }}"></span>{% endif %}
+            </span>
+        </div>
+        {% endif %}
+    </div>
+    
+    <main>
+        {% if stories %}
+        <div class="stories-grid">
+            {% for story in stories %}
+            <article class="story-card">
+                <div class="story-header">
+                    <a href="{{ story.url }}" target="_blank" class="story-title">{{ story.title }}</a>
+                </div>
+                
+                <div class="story-meta">
+                    <span class="source-tag">{{ story.source }}</span>
+                    <span class="bias-badge {{ story.bias_class }}">{{ story.bias_label }}</span>
+                    <span class="time-badge">{{ story.published|timesince }} ago</span>
+                </div>
+                
+                {% with story.get_clean_excerpt as clean_excerpt %}
+                {% if clean_excerpt %}
+                <p class="story-excerpt">{{ clean_excerpt|truncatechars:180 }}</p>
+                {% endif %}
+                {% endwith %}
+                
+                <div class="story-actions">
+                    <div class="story-links">
+                        <a href="{{ story.url }}" target="_blank">Read full story &rarr;</a>
+                        <a href="https://www.bing.com/news/search?q={{ story.get_search_terms }}" target="_blank">Find coverage</a>
+                        <button class="different-angle-btn" onclick="alert('Different Angle coming soon')">Different Angle</button>
+                    </div>
+                    <button class="share-btn" onclick="alert('Share coming soon')" title="Share">&#9974;</button>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No stories found for this topic in the selected language.</p>
+            <p>Check back soon — coverage updates every few minutes.</p>
+        </div>
+        {% endif %}
+    </main>
+    
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>About</h4>
+                <p>24HourWire aggregates news from diverse sources so you can see every angle of the story.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Links</h4>
+                <p><a href="/about/">About</a></p>
+                <p><a href="/terms/">Terms</a></p>
+                <p><a href="/privacy/">Privacy</a></p>
+            </div>
+            <div class="footer-section">
+                <h4>Connect</h4>
+                <p><a href="https://twitter.com/24HourWire" target="_blank">Twitter @24HourWire</a></p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 24HourWire. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>

@@ -7,12 +7,59 @@ from datetime import timedelta
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from .models import Story, StoryCluster, AnalyticsEvent
+from .models import Story, StoryCluster, AnalyticsEvent, Topic
 from .sources_config import (
     LANGUAGE_SOURCE_INFO, DEFAULT_SOURCES, SOURCES, LANGUAGE_NAMES,
     PAYWALLED_SOURCES, CATEGORY_KEYWORDS, CATEGORY_NAMES, UI_STRINGS, LANGUAGE_NAMES,
 )
 from .categorization import categorize_story, get_story_categories, check_exclusion
+
+
+def get_related_topics(story):
+    """Find active topics that match a story's title or categories.
+    
+    Returns a list of Topic objects (max 2) for display on story cards.
+    """
+    from django.db.models import Q
+    from django.utils import timezone
+    from datetime import timedelta
+    
+    title_lower = story.title.lower()
+    categories = getattr(story, 'story_categories', [story.category])
+    
+    related = []
+    cutoff = timezone.now() - timedelta(hours=24)
+    
+    for topic in Topic.objects.filter(is_active=True):
+        # Check keyword match
+        matched = False
+        for kw in topic.keywords:
+            if kw.lower() in title_lower:
+                matched = True
+                break
+        
+        # Check category match
+        if not matched:
+            for cat in topic.categories:
+                if cat in categories:
+                    matched = True
+                    break
+        
+        if matched:
+            # Only include if topic actually has matching stories in last 24h
+            keyword_q = Q()
+            for kw in topic.keywords:
+                keyword_q |= Q(title__icontains=kw)
+            has_stories = Story.objects.filter(
+                Q(published__gte=cutoff) & keyword_q
+            ).exists()
+            if has_stories:
+                related.append(topic)
+        
+        if len(related) >= 2:
+            break
+    
+    return related
 
 
 def is_staff_or_superuser(user):
@@ -88,6 +135,7 @@ def home(request):
         bias_info = lang_source_info.get(story.source, ('Unknown', '#999', 'https://mediabiasfactcheck.com/'))
         story.bias_label = bias_info[0]
         story.bias_color = bias_info[1]
+        story.related_topics = get_related_topics(story)
         story.bias_link = bias_info[2]
         story.bias_class = bias_info[0].lower().replace(' ', '-').replace('/', '-') if bias_info[0] else 'unknown'
         story.is_paywalled = story.source in PAYWALLED_SOURCES
@@ -178,6 +226,7 @@ def robots_txt(request):
     """
     content = """User-agent: *
 Allow: /
+Allow: /topic/
 Disallow: /dashboard/
 Disallow: /login/
 Disallow: /go/
@@ -355,6 +404,14 @@ def sitemap(request):
         {'loc': 'https://24hourwire.news/terms/', 'priority': '0.3', 'changefreq': 'monthly'},
         {'loc': 'https://24hourwire.news/privacy/', 'priority': '0.3', 'changefreq': 'monthly'},
     ]
+    
+    # Add active topic hub pages (indexable evergreen content)
+    for topic in Topic.objects.filter(is_active=True):
+        urls.append({
+            'loc': f'https://24hourwire.news{topic.get_absolute_url()}',
+            'priority': '0.7',
+            'changefreq': 'hourly',
+        })
 
     output = StringIO()
     xml = SimplerXMLGenerator(output, 'utf-8')
@@ -906,3 +963,64 @@ def analytics_dashboard(request):
     }
     
     return render(request, 'analytics_dashboard.html', context)
+
+
+def topic_detail(request, slug):
+    """Display an evergreen topic hub page with live matching stories.
+    
+    Topic pages are indexable by search engines and aggregate stories
+    from the last 24 hours that match the topic's keywords and categories.
+    """
+    from django.db.models import Count
+    
+    try:
+        topic = Topic.objects.get(slug=slug, is_active=True)
+    except Topic.DoesNotExist:
+        raise Http404("Topic not found")
+    
+    # Get language filter from query param
+    language = request.GET.get('lang')
+    if language and language not in [s[0] for s in Story._meta.get_field('language').choices]:
+        language = None
+    
+    # Fetch matching stories with metadata
+    stories = topic.get_stories(language=language, limit=50)
+    
+    # Apply metadata
+    lang_source_info = LANGUAGE_SOURCE_INFO.get('en', LANGUAGE_SOURCE_INFO.get('en', {}))
+    for story in stories:
+        story.story_categories = get_story_categories(story.title, story.language, story.source)
+        bias_info = lang_source_info.get(story.source, ('Unknown', '#999', ''))
+        story.bias_label = bias_info[0]
+        story.bias_color = bias_info[1]
+        story.bias_class = bias_info[0].lower().replace(' ', '-').replace('/', '-') if bias_info[0] else 'unknown'
+        story.is_paywalled = story.source in PAYWALLED_SOURCES
+    
+    # Get languages with stories for filter pills
+    languages_with_stories = topic.get_languages_with_stories()
+    
+    # Bias spectrum: count stories by bias
+    # Keys normalized to use underscores (Django templates can't handle hyphens in variable names)
+    bias_counts = {}
+    for story in stories:
+        bias = getattr(story, 'bias_label', 'Unknown')
+        normalized_bias = bias.replace('-', '_').replace(' ', '_').lower()
+        bias_counts[normalized_bias] = bias_counts.get(normalized_bias, 0) + 1
+    
+    # Total story count (uncapped for display)
+    total_stories = topic.get_story_count(language=language)
+    
+    # Get UI strings
+    ui_strings = UI_STRINGS.get('en', UI_STRINGS.get('en', {}))
+    
+    context = {
+        'topic': topic,
+        'stories': stories,
+        'language': language or 'all',
+        'languages_with_stories': languages_with_stories,
+        'bias_counts': bias_counts,
+        'total_stories': total_stories,
+        't': ui_strings,
+    }
+    
+    return render(request, 'topic_detail.html', context)

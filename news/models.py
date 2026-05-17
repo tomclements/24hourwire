@@ -299,3 +299,92 @@ class RecommendedBook(models.Model):
     def amazon_url(self):
         """Generate Amazon affiliate link."""
         return f"https://www.amazon.com/dp/{self.asin}?tag=24hourwire-20"
+
+
+class Topic(models.Model):
+    """Evergreen topic hub that aggregates live stories by keywords.
+    
+    Topics are permanent landing pages that auto-populate with matching
+    stories from the last 24 hours. They are indexable by Google and
+    serve as stable URLs for social sharing.
+    """
+    
+    slug = models.SlugField(unique=True, db_index=True)
+    title = models.CharField(max_length=200)
+    headline = models.CharField(max_length=300, blank=True)
+    description = models.TextField(blank=True)
+    keywords = models.JSONField(default=list, help_text="Keywords for matching stories by title")
+    categories = models.JSONField(default=list, help_text="Categories to match (e.g., ['sports', 'world'])")
+    languages = models.JSONField(default=list, help_text="Language codes to include")
+    image_url = models.URLField(blank=True)
+    is_active = models.BooleanField(default=True, db_index=True)
+    priority = models.IntegerField(default=0, help_text="Sort order on homepage")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    # SEO fields
+    meta_title = models.CharField(max_length=200, blank=True)
+    meta_description = models.TextField(blank=True)
+    
+    class Meta:
+        ordering = ['-priority', '-created_at']
+        indexes = [
+            models.Index(fields=['is_active', 'priority']),
+        ]
+    
+    def __str__(self):
+        return self.title
+    
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('topic_detail', kwargs={'slug': self.slug})
+    
+    def get_stories(self, language=None, limit=50):
+        """Fetch matching stories from last 24 hours."""
+        from django.utils import timezone
+        from datetime import timedelta
+        from django.db.models import Q
+        
+        cutoff = timezone.now() - timedelta(hours=24)
+        
+        # Build keyword Q objects
+        keyword_q = Q()
+        for kw in self.keywords:
+            keyword_q |= Q(title__icontains=kw)
+        
+        # Build category Q objects (use actual DB category field)
+        category_q = Q(category__in=self.categories) if self.categories else Q()
+        
+        # Combine: keyword match OR category match, within last 24h
+        base_q = Q(published__gte=cutoff) & (keyword_q | category_q)
+        stories = Story.objects.filter(base_q).distinct()
+        
+        # Language filter
+        if language:
+            stories = stories.filter(language=language)
+        elif self.languages:
+            stories = stories.filter(language__in=self.languages)
+        
+        return stories.order_by('-published')[:limit]
+    
+    def get_story_count(self, language=None):
+        """Get count of matching stories."""
+        return self.get_stories(language=language, limit=1000).count()
+    
+    def get_languages_with_stories(self):
+        """Return language codes that have matching stories."""
+        from django.utils import timezone
+        from datetime import timedelta
+        from django.db.models import Q
+        
+        cutoff = timezone.now() - timedelta(hours=24)
+        keyword_q = Q()
+        for kw in self.keywords:
+            keyword_q |= Q(title__icontains=kw)
+        
+        category_q = Q(category__in=self.categories) if self.categories else Q()
+        
+        base_q = Q(published__gte=cutoff) & (keyword_q | category_q)
+        qs = Story.objects.filter(base_q).distinct().values_list('language', flat=True)
+        
+        return sorted(set(qs))

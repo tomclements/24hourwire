@@ -1538,6 +1538,14 @@
                         {% endif %}
                         {% endwith %}
                         
+                        {% if story.related_topics %}
+                        <div style="margin-bottom: 12px;">
+                            {% for topic in story.related_topics %}
+                            <a href="{{ topic.get_absolute_url }}" style="display: inline-block; padding: 3px 10px; background: rgba(0,102,204,0.08); color: var(--accent); border-radius: 12px; font-size: 0.75rem; font-weight: 500; text-decoration: none; margin-right: 6px; border: 1px solid rgba(0,102,204,0.15);">{{ topic.title }}</a>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
                         <div class="story-actions">
                             <div class="story-links">
                                 <a href="{{ story.url }}" target="_blank" itemprop="url">Read full story ↗</a>

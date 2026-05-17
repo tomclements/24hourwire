@@ -10,7 +10,7 @@ from django.utils import timezone
 from django.urls import reverse
 from django.http import JsonResponse
 
-from news.models import Story, StoryCluster, title_fingerprint, normalize_url
+from news.models import Story, StoryCluster, Topic, title_fingerprint, normalize_url
 from news.views import story_share, different_angle, branded_redirect
 from django.core import signing
 from news.templatetags.news_extras import sign_share_data
@@ -752,3 +752,254 @@ class SportsCategorizationTests(TestCase):
         categories = get_story_categories("Jameis Winston uses his artistic talents in hilarious Giants 2026 schedule release video")
         self.assertEqual(categories, ['sports'],
                         "NFL player story should be sports-only")
+
+
+class TopicHubTests(TestCase):
+    """Tests for evergreen topic hub pages."""
+    
+    def setUp(self):
+        self.client = Client()
+        self.topic = Topic.objects.create(
+            slug='test-topic',
+            title='Test Topic',
+            headline='A test topic for unit tests',
+            description='This is a test topic used for unit testing.',
+            keywords=['test', 'unit', 'pytest'],
+            categories=['world'],
+            languages=['en'],
+            is_active=True,
+            priority=5,
+            meta_title='Test Topic | 24HourWire',
+            meta_description='Test topic for verifying hub page functionality.',
+        )
+        
+        # Create matching story
+        self.matching_story = Story.objects.create(
+            source='BBC',
+            title='Unit testing best practices for pytest',
+            excerpt='How to write better unit tests using pytest.',
+            url='https://example.com/pytest-testing',
+            language='en',
+            category='world',
+            published=timezone.now(),
+            url_hash='testhash1',
+            title_fingerprint='testfp1'
+        )
+        
+        # Create non-matching story
+        self.non_matching_story = Story.objects.create(
+            source='Reuters',
+            title='Stock market closes higher on tech gains',
+            excerpt='The stock market rallied today.',
+            url='https://example.com/market-rally',
+            language='en',
+            category='business',
+            published=timezone.now(),
+            url_hash='testhash2',
+            title_fingerprint='testfp2'
+        )
+    
+    def test_topic_model_str(self):
+        """Topic string representation should be its title."""
+        self.assertEqual(str(self.topic), 'Test Topic')
+    
+    def test_topic_absolute_url(self):
+        """Topic should generate correct absolute URL."""
+        self.assertEqual(self.topic.get_absolute_url(), '/topic/test-topic/')
+    
+    def test_topic_get_stories_matches_keywords(self):
+        """Topic should return stories matching its keywords."""
+        stories = list(self.topic.get_stories())
+        self.assertEqual(len(stories), 1)
+        self.assertEqual(stories[0].id, self.matching_story.id)
+    
+    def test_topic_get_stories_excludes_old_stories(self):
+        """Topic should only return stories from last 24 hours."""
+        # Update story to be 25 hours old
+        self.matching_story.published = timezone.now() - timedelta(hours=25)
+        self.matching_story.save()
+        
+        stories = list(self.topic.get_stories())
+        self.assertEqual(len(stories), 0)
+    
+    def test_topic_detail_page_renders(self):
+        """Topic detail page should render with 200 status."""
+        response = self.client.get('/topic/test-topic/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Test Topic')
+        self.assertContains(response, 'A test topic for unit tests')
+    
+    def test_topic_detail_page_shows_matching_stories(self):
+        """Topic detail should display matching stories."""
+        response = self.client.get('/topic/test-topic/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Unit testing best practices for pytest')
+        self.assertContains(response, 'BBC')
+    
+    def test_topic_detail_page_language_filter(self):
+        """Topic detail should filter stories by language param."""
+        # Create Spanish story that matches
+        Story.objects.create(
+            source='El Pais',
+            title='Testing practices en Python',
+            excerpt='Test practices.',
+            url='https://example.com/es-testing',
+            language='es',
+            category='world',
+            published=timezone.now(),
+            url_hash='testhash3',
+            title_fingerprint='testfp3'
+        )
+        
+        response = self.client.get('/topic/test-topic/?lang=es')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Testing practices en Python')
+    
+    def test_topic_detail_page_404_for_inactive(self):
+        """Inactive topics should return 404."""
+        self.topic.is_active = False
+        self.topic.save()
+        response = self.client.get('/topic/test-topic/')
+        self.assertEqual(response.status_code, 404)
+    
+    def test_topic_detail_page_404_for_missing(self):
+        """Non-existent topic slugs should return 404."""
+        response = self.client.get('/topic/does-not-exist/')
+        self.assertEqual(response.status_code, 404)
+    
+    def test_topic_meta_robots_indexable(self):
+        """Topic pages should have index, follow meta robots."""
+        response = self.client.get('/topic/test-topic/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'index, follow')
+        self.assertNotContains(response, 'noindex')
+    
+    def test_topic_og_tags_present(self):
+        """Topic pages should have Open Graph tags."""
+        response = self.client.get('/topic/test-topic/')
+        self.assertContains(response, 'og:title')
+        self.assertContains(response, 'Test Topic')
+        self.assertContains(response, 'og:url')
+        self.assertContains(response, '/topic/test-topic/')
+    
+    def test_sitemap_includes_active_topics(self):
+        """Sitemap should include active topic URLs."""
+        from django.core.cache import cache
+        cache.clear()  # Clear cached sitemap from previous tests
+        response = self.client.get('/sitemap.xml')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '/topic/test-topic/')
+    
+    def test_sitemap_excludes_inactive_topics(self):
+        """Sitemap should not include inactive topic URLs."""
+        self.topic.is_active = False
+        self.topic.save()
+        response = self.client.get('/sitemap.xml')
+        self.assertNotContains(response, '/topic/test-topic/')
+    
+    def test_get_related_topics_finds_matches(self):
+        """get_related_topics should return topics matching story keywords."""
+        from news.views import get_related_topics
+        
+        # Set story categories for the matching story
+        self.matching_story.story_categories = ['world']
+        related = get_related_topics(self.matching_story)
+        
+        self.assertEqual(len(related), 1)
+        self.assertEqual(related[0].slug, 'test-topic')
+    
+    def test_get_related_topics_limits_to_two(self):
+        """get_related_topics should return max 2 topics."""
+        from news.views import get_related_topics
+        
+        # Create additional matching topics
+        for i in range(3):
+            Topic.objects.create(
+                slug=f'extra-topic-{i}',
+                title=f'Extra Topic {i}',
+                keywords=['test', 'unit'],
+                categories=['world'],
+                is_active=True,
+                priority=1,
+            )
+        
+        self.matching_story.story_categories = ['world']
+        related = get_related_topics(self.matching_story)
+        self.assertLessEqual(len(related), 2)
+    
+    def test_topic_stats_bias_spectrum(self):
+        """Topic detail should show bias spectrum dots."""
+        response = self.client.get('/topic/test-topic/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'bias-dot')
+    
+    def test_topic_language_pills(self):
+        """Topic detail should show language filter pills."""
+        response = self.client.get('/topic/test-topic/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'lang-pill')
+        self.assertContains(response, 'All Languages')
+
+
+class TopicModelTests(TestCase):
+    """Unit tests for Topic model methods."""
+    
+    def setUp(self):
+        self.topic = Topic.objects.create(
+            slug='model-test',
+            title='Model Test Topic',
+            keywords=['election', 'vote'],
+            categories=['politics'],
+            languages=['en', 'es'],
+            is_active=True,
+        )
+        
+        self.en_story = Story.objects.create(
+            source='BBC',
+            title='Election results are in',
+            excerpt='Results.',
+            url='https://example.com/election',
+            language='en',
+            category='politics',
+            published=timezone.now(),
+            url_hash='hash1',
+            title_fingerprint='fp1'
+        )
+        
+        self.es_story = Story.objects.create(
+            source='El Pais',
+            title='Resultados de la votacion',
+            excerpt='Resultados.',
+            url='https://example.com/votacion',
+            language='es',
+            category='politics',
+            published=timezone.now(),
+            url_hash='hash2',
+            title_fingerprint='fp2'
+        )
+    
+    def test_get_story_count(self):
+        """Topic.get_story_count should return correct count."""
+        count = self.topic.get_story_count()
+        self.assertEqual(count, 2)
+    
+    def test_get_story_count_with_language_filter(self):
+        """Topic.get_story_count should filter by language."""
+        count = self.topic.get_story_count(language='en')
+        self.assertEqual(count, 1)
+    
+    def test_get_languages_with_stories(self):
+        """Topic.get_languages_with_stories should return language codes with stories."""
+        langs = self.topic.get_languages_with_stories()
+        self.assertIn('en', langs)
+        self.assertIn('es', langs)
+
+
+class RobotsTxtTopicTests(TestCase):
+    """Tests that robots.txt allows topic pages."""
+    
+    def test_robots_txt_allows_topic(self):
+        """robots.txt should Allow /topic/."""
+        response = self.client.get('/robots.txt')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Allow: /topic/')

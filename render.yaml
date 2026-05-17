@@ -14,6 +14,7 @@ services:
       pip install -r requirements.txt &&
       python manage.py migrate &&
       python manage.py seed_books --update &&
+      python manage.py seed_topics &&
       python manage.py collectstatic --no-input
     startCommand: gunicorn core.wsgi:application
     envVars:
