@@ -40,6 +40,7 @@ CRITICAL_TEST_CLASSES = [
     'news.tests.TopicKeywordOnlyTests',      # Strict keyword-only topic matching
     'news.tests.TopicLanguageNameTests',     # Full language names on topic pages
     'news.tests.TopicThemeToggleTests',      # Theme toggle on topic pages
+    'news.tests.TopicTranslationTests',      # Topic page language translations
 ]
 
 def run_tests():

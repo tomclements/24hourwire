@@ -6,14 +6,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ topic.meta_title|default:topic.title }} | 24HourWire</title>
-    <meta name="description" content="{{ topic.meta_description|default:topic.description|truncatechars:200 }}">
+    <meta name="description" content="{{ topic.meta_description|default:topic_translation.description|truncatechars:200 }}">
     
     <!-- Indexable topic hub pages -->
     <meta name="robots" content="index, follow">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:title" content="{{ topic.meta_title|default:topic.title }} | 24HourWire">
-    <meta property="og:description" content="{{ topic.meta_description|default:topic.description|truncatechars:200 }}">
+    <meta property="og:description" content="{{ topic.meta_description|default:topic_translation.description|truncatechars:200 }}">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://24hourwire.news{{ topic.get_absolute_url }}">
     <meta property="og:site_name" content="24HourWire">
@@ -31,7 +31,7 @@
     <meta name="twitter:site" content="@24HourWire">
     <meta name="twitter:creator" content="@24HourWire">
     <meta name="twitter:title" content="{{ topic.meta_title|default:topic.title }} | 24HourWire">
-    <meta name="twitter:description" content="{{ topic.meta_description|default:topic.description|truncatechars:200 }}">
+    <meta name="twitter:description" content="{{ topic.meta_description|default:topic_translation.description|truncatechars:200 }}">
     {% if topic.image_url %}
     <meta name="twitter:image" content="{{ topic.image_url }}">
     <meta name="twitter:image:alt" content="{{ topic.title }}">
@@ -600,11 +600,11 @@
     <div class="topic-hero">
         <div class="topic-hero-inner">
             <h1>{{ topic.title }}</h1>
-            {% if topic.headline %}
-            <p class="headline">{{ topic.headline }}</p>
+            {% if topic_translation.headline %}
+            <p class="headline">{{ topic_translation.headline }}</p>
             {% endif %}
-            {% if topic.description %}
-            <p class="description">{{ topic.description }}</p>
+            {% if topic_translation.description %}
+            <p class="description">{{ topic_translation.description }}</p>
             {% endif %}
             
             {% if languages_with_stories %}

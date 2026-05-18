@@ -326,6 +326,12 @@ class Topic(models.Model):
     meta_title = models.CharField(max_length=200, blank=True)
     meta_description = models.TextField(blank=True)
     
+    # Translations for headline and description by language code
+    translations = models.JSONField(
+        default=dict,
+        help_text="Translations by language: {'es': {'headline': '...', 'description': '...'}, ...}"
+    )
+    
     class Meta:
         ordering = ['-priority', '-created_at']
         indexes = [
@@ -334,6 +340,24 @@ class Topic(models.Model):
     
     def __str__(self):
         return self.title
+    
+    def get_translation(self, language='en'):
+        """Get translated headline/description for a language.
+        
+        Falls back to English if no translation exists.
+        Returns dict with headline and description.
+        """
+        if language == 'en' or not self.translations:
+            return {
+                'headline': self.headline,
+                'description': self.description,
+            }
+        
+        lang_data = self.translations.get(language, {})
+        return {
+            'headline': lang_data.get('headline', self.headline),
+            'description': lang_data.get('description', self.description),
+        }
     
     def get_absolute_url(self):
         from django.urls import reverse

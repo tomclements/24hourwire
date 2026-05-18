@@ -1089,6 +1089,67 @@ class RobotsTxtTopicTests(TestCase):
         self.assertContains(response, 'Allow: /topic/')
 
 
+class TopicTranslationTests(TestCase):
+    """Tests for topic headline/description translations."""
+    
+    def setUp(self):
+        self.client = Client()
+        self.topic = Topic.objects.create(
+            slug='translation-test',
+            title='Translation Test',
+            headline='English headline',
+            description='English description',
+            keywords=['test'],
+            categories=['world'],
+            languages=['en', 'es'],
+            is_active=True,
+            translations={
+                'es': {
+                    'headline': 'Titulo en espanol',
+                    'description': 'Descripcion en espanol',
+                }
+            }
+        )
+        Story.objects.create(
+            source='BBC', title='Test story', excerpt='Test',
+            url='https://example.com/t', language='en', category='world',
+            published=timezone.now(), url_hash='h1', title_fingerprint='f1'
+        )
+    
+    def test_get_translation_english(self):
+        """get_translation('en') should return original headline/description."""
+        trans = self.topic.get_translation('en')
+        self.assertEqual(trans['headline'], 'English headline')
+        self.assertEqual(trans['description'], 'English description')
+    
+    def test_get_translation_spanish(self):
+        """get_translation('es') should return Spanish headline/description."""
+        trans = self.topic.get_translation('es')
+        self.assertEqual(trans['headline'], 'Titulo en espanol')
+        self.assertEqual(trans['description'], 'Descripcion en espanol')
+    
+    def test_get_translation_fallback(self):
+        """get_translation for unknown language should fallback to English."""
+        trans = self.topic.get_translation('fr')
+        self.assertEqual(trans['headline'], 'English headline')
+        self.assertEqual(trans['description'], 'English description')
+    
+    def test_topic_page_shows_translated_content(self):
+        """Topic page should display translated headline/description when lang param is set."""
+        response = self.client.get('/topic/translation-test/?lang=es')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Titulo en espanol')
+        self.assertContains(response, 'Descripcion en espanol')
+        self.assertNotContains(response, 'English headline')
+    
+    def test_topic_page_shows_english_by_default(self):
+        """Topic page should display English content by default."""
+        response = self.client.get('/topic/translation-test/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'English headline')
+        self.assertContains(response, 'English description')
+
+
 class TopicLanguageNameTests(TestCase):
     """Tests for full language names on topic pages."""
     

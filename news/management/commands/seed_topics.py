@@ -18,6 +18,20 @@ class Command(BaseCommand):
                 'priority': 10,
                 'meta_title': 'World Cup 2026 News & Coverage | 24HourWire',
                 'meta_description': 'Live World Cup 2026 coverage from diverse global sources. Match previews, squad news, and analysis from every angle.',
+                'translations': {
+                    'es': {
+                        'headline': 'Cobertura en vivo de la Copa Mundial de la FIFA desde todos los angulos',
+                        'description': 'La Copa Mundial de la FIFA 2026 se organiza en Estados Unidos, Canada y Mexico. Obtenga las ultimas noticias, cobertura de partidos, convocatorias de equipos y analisis de fuentes de todo el mundo.',
+                    },
+                    'fr': {
+                        'headline': 'Couverture en direct de la Coupe du monde FIFA sous tous les angles',
+                        'description': 'La Coupe du monde de la FIFA 2026 est organisee aux Etats-Unis, au Canada et au Mexique. Obtenez les dernieres nouvelles, la couverture des matchs, les convocations et les analyses de sources du monde entier.',
+                    },
+                    'de': {
+                        'headline': 'Live-Berichterstattung uber die FIFA Weltmeisterschaft aus allen Blickwinkeln',
+                        'description': 'Die FIFA Weltmeisterschaft 2026 wird in den USA, Kanada und Mexiko ausgetragen. Erhalten Sie die neuesten Nachrichten, Spielberichte, Kaderbekanntgaben und Analysen aus Quellen auf der ganzen Welt.',
+                    },
+                },
             },
             {
                 'slug': 'us-china-relations',
@@ -30,6 +44,16 @@ class Command(BaseCommand):
                 'priority': 9,
                 'meta_title': 'US-China Relations: Trade & Diplomacy News | 24HourWire',
                 'meta_description': 'Latest news on US-China relations, trade talks, tariffs, and diplomatic developments from sources across the political spectrum.',
+                'translations': {
+                    'es': {
+                        'headline': 'Comercio, diplomacia y desarrollos geopoliticos',
+                        'description': 'Siga la evolucion de la relacion entre Estados Unidos y China, desde las negociaciones comerciales y aranceles hasta las cumbres diplomaticas y el posicionamiento militar en el Indo-Pacifico.',
+                    },
+                    'zh': {
+                        'headline': '贸易、外交与地缘政治动态',
+                        'description': '追踪中美关系的发展动态，从贸易谈判和关税到外交峰会及印太地区的军事姿态。',
+                    },
+                },
             },
             {
                 'slug': 'ai-regulation',
@@ -42,6 +66,16 @@ class Command(BaseCommand):
                 'priority': 8,
                 'meta_title': 'AI Regulation & Tech Policy News | 24HourWire',
                 'meta_description': 'Global AI regulation news: EU AI Act, US tech policy, antitrust actions, and data privacy developments from diverse sources.',
+                'translations': {
+                    'es': {
+                        'headline': 'Politica, etica y el futuro de la inteligencia artificial',
+                        'description': 'Mantengase informado sobre los esfuerzos globales de regulacion de IA, desde la Ley de IA de la UE hasta las ordenes ejecutivas de EE.UU. y los marcos emergentes en todo el mundo. Cobertura de big tech, antitrust, privacidad de datos y politica de innovacion.',
+                    },
+                    'de': {
+                        'headline': 'Politik, Ethik und die Zukunft der kunstlichen Intelligenz',
+                        'description': 'Bleiben Sie uber globale KI-Regulierungsbemuhungen informiert, von der EU-KI-Verordnung bis zu US-Executive Orders und neuen Rahmenwerken weltweit. Berichterstattung zu Big Tech, Kartellrecht, Datenschutz und Innovationspolitik.',
+                    },
+                },
             },
             {
                 'slug': 'ukraine-conflict',
@@ -54,6 +88,16 @@ class Command(BaseCommand):
                 'priority': 7,
                 'meta_title': 'Ukraine Conflict News & Analysis | 24HourWire',
                 'meta_description': 'Latest Ukraine war coverage: battlefield updates, diplomacy, sanctions, and humanitarian news from sources worldwide.',
+                'translations': {
+                    'es': {
+                        'headline': 'Cobertura continua de la guerra y su impacto global',
+                        'description': 'Cobertura integral de la guerra entre Rusia y Ucrania, incluyendo actualizaciones del campo de batalla, esfuerzos diplomaticos, impacto humanitario y repercusiones globales de sanciones y energia.',
+                    },
+                    'de': {
+                        'headline': 'Laufende Berichterstattung uber den Krieg und seine globalen Auswirkungen',
+                        'description': 'Umfassende Berichterstattung zum Russland-Ukraine-Krieg, einschliesslich Schlachtfeld-Updates, diplomatischer Bemuhungen, humanitarem Einfluss und globalen Sanktions- und Energieauswirkungen.',
+                    },
+                },
             },
             {
                 'slug': 'middle-east-crisis',
@@ -66,18 +110,16 @@ class Command(BaseCommand):
                 'priority': 6,
                 'meta_title': 'Middle East Crisis: Israel-Gaza & Regional News | 24HourWire',
                 'meta_description': 'Latest Middle East crisis coverage: Israel-Gaza conflict, regional diplomacy, and humanitarian developments from diverse global sources.',
-            },
-            {
-                'slug': 'climate-energy',
-                'title': 'Climate & Energy',
-                'headline': 'Climate policy, extreme weather, and the green transition',
-                'description': 'Coverage of climate change policy, renewable energy transitions, extreme weather events, COP conferences, and environmental regulation from around the world.',
-                'keywords': ['climate', 'carbon', 'renewable', 'cop', 'green', 'energy transition', 'extreme weather', 'flood', 'drought', 'temperature', 'paris agreement', 'emissions'],
-                'categories': ['world', 'science', 'business'],
-                'languages': ['en', 'de', 'fr', 'es', 'it', 'pt', 'ja', 'zh', 'ar'],
-                'priority': 5,
-                'meta_title': 'Climate Change & Energy Transition News | 24HourWire',
-                'meta_description': 'Global climate policy news, renewable energy updates, extreme weather coverage, and COP developments from diverse sources.',
+                'translations': {
+                    'es': {
+                        'headline': 'Israel, Gaza, Libano y desarrollos regionales',
+                        'description': 'Siga los rapidos desarrollos en Medio Oriente, desde el conflicto Israel-Gaza hasta la diplomacia regional, las preocupaciones humanitarias y los cambios geopoliticos mas amplios.',
+                    },
+                    'ar': {
+                        'headline': 'تطورات اسرائيل وغزة ولبنان والمنطقة',
+                        'description': 'تابع التطورات السريعة في الشرق الأوسط، من النزاع الاسرائيلي الفلسطيني الى الدبلوماسية الاقليمية والمخاوف الانسانية والتحولات الجيوسياسية الاقليمية.',
+                    },
+                },
             },
             {
                 'slug': 'us-elections-2026',
@@ -102,6 +144,16 @@ class Command(BaseCommand):
                 'priority': 3,
                 'meta_title': 'Global Economy: Inflation, Trade & Markets | 24HourWire',
                 'meta_description': 'Global economic news: inflation, interest rates, trade disputes, and market movements from diverse international sources.',
+                'translations': {
+                    'es': {
+                        'headline': 'Inflacion, tasas de interes, comercio y temores de recesion',
+                        'description': 'Siga el pulso de la economia global: decisiones de bancos centrales, datos de inflacion, disputas comerciales, movimientos del mercado e indicadores de recesion de diversas fuentes financieras.',
+                    },
+                    'de': {
+                        'headline': 'Inflation, Zinsen, Handel und Rezessionsangste',
+                        'description': 'Verfolgen Sie den Puls der globalen Wirtschaft: Zentralbankentscheidungen, Inflationsdaten, Handelsstreitigkeiten, Marktbewegungen und Rezessionsindikatoren aus verschiedenen Finanzquellen.',
+                    },
+                },
             },
             {
                 'slug': 'european-politics',
@@ -114,18 +166,16 @@ class Command(BaseCommand):
                 'priority': 2,
                 'meta_title': 'European Politics & EU News | 24HourWire',
                 'meta_description': 'European political news: EU policy, elections, migration debates, and the far-right surge from diverse continental sources.',
-            },
-            {
-                'slug': 'health-pandemic',
-                'title': 'Health & Pandemic Preparedness',
-                'headline': 'WHO updates, vaccine news, and global health policy',
-                'description': 'Stay informed on global health developments: WHO updates, vaccine research, pandemic preparedness, healthcare policy, and disease outbreaks worldwide.',
-                'keywords': ['who', 'vaccine', 'pandemic', 'health', 'disease', 'outbreak', 'virus', 'covid', 'healthcare', 'medicine', 'fda', 'cdc', 'public health'],
-                'categories': ['health', 'world', 'science'],
-                'languages': ['en', 'de', 'fr', 'es', 'it', 'pt', 'ja', 'zh', 'ar'],
-                'priority': 1,
-                'meta_title': 'Global Health & Pandemic News | 24HourWire',
-                'meta_description': 'Global health coverage: WHO updates, vaccine news, pandemic preparedness, and healthcare policy from diverse sources.',
+                'translations': {
+                    'es': {
+                        'headline': 'Elecciones de la UE, ascenso de la extrema derecha y debates sobre migracion',
+                        'description': 'Sigua los desarrollos politicos europeos: politica de la UE, elecciones nacionales, el ascenso de partidos de extrema derecha, debates sobre migracion y el futuro del proyecto europeo.',
+                    },
+                    'de': {
+                        'headline': 'EU-Wahlen, Rechtsruck und Migrationsdebatten',
+                        'description': 'Verfolgen Sie europaische politische Entwicklungen: EU-Politik, nationale Wahlen, der Aufstieg rechtspopulistischer Parteien, Migrationsdebatten und die Zukunft des europaischen Projekts.',
+                    },
+                },
             },
         ]
 

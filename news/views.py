@@ -1000,11 +1000,15 @@ def topic_detail(request, slug):
     # Total story count (uncapped for display)
     total_stories = topic.get_story_count(language=language)
     
+    # Get translated headline/description for the selected language
+    topic_translation = topic.get_translation(language or 'en')
+    
     # Get UI strings
     ui_strings = UI_STRINGS.get('en', UI_STRINGS.get('en', {}))
     
     context = {
         'topic': topic,
+        'topic_translation': topic_translation,
         'stories': stories,
         'language': language or 'all',
         'languages_with_stories': languages_with_stories,
