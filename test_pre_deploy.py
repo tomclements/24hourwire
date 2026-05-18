@@ -37,6 +37,9 @@ CRITICAL_TEST_CLASSES = [
     'news.tests.TopicModelTests',            # Topic model logic
     'news.tests.RobotsTxtTopicTests',        # robots.txt topic allow
     'news.tests.HomepageTopicCardsTests',    # Homepage topic cards
+    'news.tests.TopicKeywordOnlyTests',      # Strict keyword-only topic matching
+    'news.tests.TopicLanguageNameTests',     # Full language names on topic pages
+    'news.tests.TopicThemeToggleTests',      # Theme toggle on topic pages
 ]
 
 def run_tests():

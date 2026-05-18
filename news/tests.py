@@ -822,6 +822,32 @@ class TopicHubTests(TestCase):
         stories = list(self.topic.get_stories())
         self.assertEqual(len(stories), 0)
     
+    def test_topic_get_stories_excludes_category_only_matches(self):
+        """Stories matching category but NOT keywords should be excluded.
+        
+        This prevents broad topics (e.g. World Cup) from showing unrelated
+        stories that happen to share the same category (e.g. NBA stories).
+        """
+        # Create a story in the same category but with no matching keywords
+        non_matching = Story.objects.create(
+            source='ESPN',
+            title='NBA Finals: Lakers vs Celtics Game 7 Preview',
+            excerpt='Basketball preview.',
+            url='https://example.com/nba',
+            language='en',
+            category='world',  # Same category as topic
+            published=timezone.now(),
+            url_hash='nbahash',
+            title_fingerprint='nbafp'
+        )
+        
+        stories = list(self.topic.get_stories())
+        # The original matching story should still be there
+        self.assertEqual(len(stories), 1)
+        self.assertEqual(stories[0].id, self.matching_story.id)
+        # The non-matching category-only story should NOT appear
+        self.assertNotIn(non_matching, stories)
+    
     def test_topic_detail_page_renders(self):
         """Topic detail page should render with 200 status."""
         response = self.client.get('/topic/test-topic/')
@@ -941,6 +967,64 @@ class TopicHubTests(TestCase):
         self.assertContains(response, 'All Languages')
 
 
+class TopicKeywordOnlyTests(TestCase):
+    """Tests that topic pages use strict keyword matching (not broad categories)."""
+    
+    def setUp(self):
+        self.topic = Topic.objects.create(
+            slug='world-cup-test',
+            title='World Cup Test',
+            keywords=['world cup', 'fifa', 'mundial'],
+            categories=['sports', 'world'],
+            languages=['en'],
+            is_active=True,
+        )
+        
+        # A story that matches keywords
+        self.matching_story = Story.objects.create(
+            source='BBC',
+            title='FIFA announces World Cup 2026 venues',
+            excerpt='Football news.',
+            url='https://example.com/wc',
+            language='en',
+            category='sports',
+            published=timezone.now(),
+            url_hash='wc1',
+            title_fingerprint='wcf1'
+        )
+        
+        # A story that only matches category (should be excluded)
+        self.category_only_story = Story.objects.create(
+            source='ESPN',
+            title='NBA trade deadline roundup',
+            excerpt='Basketball news.',
+            url='https://example.com/nba',
+            language='en',
+            category='sports',
+            published=timezone.now(),
+            url_hash='nba1',
+            title_fingerprint='nbaf1'
+        )
+    
+    def test_keyword_match_included(self):
+        """Stories matching keywords should appear on topic page."""
+        stories = list(self.topic.get_stories())
+        self.assertEqual(len(stories), 1)
+        self.assertEqual(stories[0].id, self.matching_story.id)
+    
+    def test_category_only_excluded(self):
+        """Stories matching only category (not keywords) should be excluded."""
+        stories = list(self.topic.get_stories())
+        self.assertNotIn(self.category_only_story, stories)
+    
+    def test_topic_detail_shows_only_keyword_matches(self):
+        """Topic detail page should only display keyword-matched stories."""
+        response = self.client.get('/topic/world-cup-test/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'FIFA announces World Cup 2026 venues')
+        self.assertNotContains(response, 'NBA trade deadline roundup')
+
+
 class TopicModelTests(TestCase):
     """Unit tests for Topic model methods."""
     
@@ -968,7 +1052,7 @@ class TopicModelTests(TestCase):
         
         self.es_story = Story.objects.create(
             source='El Pais',
-            title='Resultados de la votacion',
+            title='Resultados de la election en Espana',
             excerpt='Resultados.',
             url='https://example.com/votacion',
             language='es',
@@ -1003,6 +1087,74 @@ class RobotsTxtTopicTests(TestCase):
         response = self.client.get('/robots.txt')
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Allow: /topic/')
+
+
+class TopicLanguageNameTests(TestCase):
+    """Tests for full language names on topic pages."""
+    
+    def setUp(self):
+        self.client = Client()
+        self.topic = Topic.objects.create(
+            slug='lang-test',
+            title='Language Test',
+            keywords=['test'],
+            categories=['world'],
+            languages=['en', 'es', 'fr'],
+            is_active=True,
+        )
+        # Create stories in multiple languages
+        Story.objects.create(
+            source='BBC', title='Test story en', excerpt='Test',
+            url='https://example.com/en', language='en', category='world',
+            published=timezone.now(), url_hash='h1', title_fingerprint='f1'
+        )
+        Story.objects.create(
+            source='El Pais', title='Test story es', excerpt='Test',
+            url='https://example.com/es', language='es', category='world',
+            published=timezone.now(), url_hash='h2', title_fingerprint='f2'
+        )
+    
+    def test_language_pills_show_full_names(self):
+        """Language filter pills should display full language names, not codes."""
+        response = self.client.get('/topic/lang-test/')
+        self.assertEqual(response.status_code, 200)
+        # Should show "English" and "Español", not "EN" and "ES"
+        self.assertContains(response, 'English')
+        self.assertContains(response, 'Español')
+        self.assertNotContains(response, '>EN<')
+        self.assertNotContains(response, '>ES<')
+
+
+class TopicThemeToggleTests(TestCase):
+    """Tests for dark/light theme toggle on topic pages."""
+    
+    def setUp(self):
+        self.client = Client()
+        self.topic = Topic.objects.create(
+            slug='theme-test',
+            title='Theme Test',
+            keywords=['test'],
+            categories=['world'],
+            is_active=True,
+        )
+        Story.objects.create(
+            source='BBC', title='Test story', excerpt='Test',
+            url='https://example.com/t', language='en', category='world',
+            published=timezone.now(), url_hash='h1', title_fingerprint='f1'
+        )
+    
+    def test_topic_page_has_theme_toggle(self):
+        """Topic detail page should include theme toggle button."""
+        response = self.client.get('/topic/theme-test/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'theme-toggle')
+        self.assertContains(response, 'toggleTheme')
+    
+    def test_topic_page_has_dark_mode_css(self):
+        """Topic detail page should include dark mode CSS variables."""
+        response = self.client.get('/topic/theme-test/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '[data-theme="dark"]')
 
 
 class HomepageTopicCardsTests(TestCase):

@@ -90,6 +90,27 @@
             overflow-x: hidden;
         }
         
+        /* Theme Toggle */
+        .theme-toggle {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            cursor: pointer;
+            padding: 8px;
+            font-size: 1rem;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-secondary);
+            transform: scale(1.05);
+        }
+
         /* Sticky Header */
         .header-container {
             position: sticky;
@@ -99,13 +120,13 @@
             border-bottom: 1px solid var(--border);
             box-shadow: var(--shadow);
         }
-        
+
         header {
             max-width: 1200px;
             margin: 0 auto;
             padding: 12px 16px;
         }
-        
+
         .header-top {
             display: flex;
             align-items: center;
@@ -509,6 +530,51 @@
                 gap: 12px;
             }
         }
+
+        /* Dark Mode */
+        [data-theme="dark"] {
+            --primary: #60a5fa;
+            --primary-light: #3b82f6;
+            --accent: #60a5fa;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --border: #475569;
+            --shadow: 0 1px 3px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.4);
+        }
+
+        [data-theme="dark"] .story-card {
+            background: var(--bg-secondary);
+        }
+
+        [data-theme="dark"] .source-tag {
+            background: var(--bg-tertiary);
+        }
+
+        [data-theme="dark"] .lang-pill {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            border-color: var(--border);
+        }
+
+        [data-theme="dark"] .lang-pill:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        [data-theme="dark"] .lang-pill.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        [data-theme="dark"] .topic-hero {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, #1e293b 100%);
+        }
     </style>
 </head>
 <body>
@@ -522,6 +588,7 @@
                         <span class="logo-tagline">News from all angles</span>
                     </div>
                 </a>
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
             </div>
         </header>
     </div>
@@ -544,7 +611,7 @@
             <div class="lang-filters">
                 <a href="?" class="lang-pill {% if language == 'all' %}active{% endif %}">All Languages</a>
                 {% for lang in languages_with_stories %}
-                <a href="?lang={{ lang }}" class="lang-pill {% if language == lang %}active{% endif %}">{{ lang|upper }}</a>
+                <a href="?lang={{ lang }}" class="lang-pill {% if language == lang %}active{% endif %}">{{ lang|language_name }}</a>
                 {% endfor %}
             </div>
             {% endif %}
@@ -630,5 +697,30 @@
             <p>&copy; 2026 24HourWire. All rights reserved.</p>
         </div>
     </footer>
+
+    <script>
+        // Theme toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const btn = document.querySelector('.theme-toggle');
+            btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        }
+
+        loadTheme();
+    </script>
 </body>
 </html>

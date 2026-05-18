@@ -1,5 +1,6 @@
 from django import template
 from django.core import signing
+from news.sources_config import LANGUAGE_NAMES
 
 register = template.Library()
 
@@ -20,3 +21,12 @@ def sign_share_data(story):
     signer = signing.Signer()
     payload = signing.dumps(data)
     return signer.sign(payload)
+
+
+@register.filter
+def language_name(code):
+    """Return the full language name for a language code.
+    
+    Usage: {{ lang|language_name }}
+    """
+    return LANGUAGE_NAMES.get(code, code)

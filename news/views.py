@@ -1011,6 +1011,7 @@ def topic_detail(request, slug):
         'bias_counts': bias_counts,
         'total_stories': total_stories,
         't': ui_strings,
+        'language_names': LANGUAGE_NAMES,
     }
     
     return render(request, 'topic_detail.html', context)

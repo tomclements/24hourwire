@@ -340,23 +340,26 @@ class Topic(models.Model):
         return reverse('topic_detail', kwargs={'slug': self.slug})
     
     def get_stories(self, language=None, limit=50):
-        """Fetch matching stories from last 24 hours."""
+        """Fetch matching stories from last 24 hours.
+        
+        Matches are based strictly on keywords in the story title.
+        Category matching is NOT used here to avoid broad, off-topic
+        results (e.g. a generic NBA story matching the World Cup topic
+        just because both have category='sports').
+        """
         from django.utils import timezone
         from datetime import timedelta
         from django.db.models import Q
         
         cutoff = timezone.now() - timedelta(hours=24)
         
-        # Build keyword Q objects
+        # Build keyword Q objects — strict title matching only
         keyword_q = Q()
         for kw in self.keywords:
             keyword_q |= Q(title__icontains=kw)
         
-        # Build category Q objects (use actual DB category field)
-        category_q = Q(category__in=self.categories) if self.categories else Q()
-        
-        # Combine: keyword match OR category match, within last 24h
-        base_q = Q(published__gte=cutoff) & (keyword_q | category_q)
+        # Require keyword match within last 24h
+        base_q = Q(published__gte=cutoff) & keyword_q
         stories = Story.objects.filter(base_q).distinct()
         
         # Language filter
@@ -382,9 +385,8 @@ class Topic(models.Model):
         for kw in self.keywords:
             keyword_q |= Q(title__icontains=kw)
         
-        category_q = Q(category__in=self.categories) if self.categories else Q()
-        
-        base_q = Q(published__gte=cutoff) & (keyword_q | category_q)
+        # Keyword-only matching (same logic as get_stories)
+        base_q = Q(published__gte=cutoff) & keyword_q
         qs = Story.objects.filter(base_q).distinct().values_list('language', flat=True)
         
         return sorted(set(qs))
