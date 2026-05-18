@@ -200,6 +200,7 @@ def home(request):
         'language_names': LANGUAGE_NAMES,
         't': UI_STRINGS.get(language, UI_STRINGS['en']),
         'source_filter': selected_sources_param or 'default',
+        'active_topics': active_topics,
     })
 
 

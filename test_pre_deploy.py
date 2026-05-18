@@ -36,6 +36,7 @@ CRITICAL_TEST_CLASSES = [
     'news.tests.TopicHubTests',              # Topic hub pages
     'news.tests.TopicModelTests',            # Topic model logic
     'news.tests.RobotsTxtTopicTests',        # robots.txt topic allow
+    'news.tests.HomepageTopicCardsTests',    # Homepage topic cards
 ]
 
 def run_tests():

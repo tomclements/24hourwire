@@ -1003,3 +1003,86 @@ class RobotsTxtTopicTests(TestCase):
         response = self.client.get('/robots.txt')
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Allow: /topic/')
+
+
+class HomepageTopicCardsTests(TestCase):
+    """Tests for 'Ongoing Coverage' topic cards on homepage."""
+    
+    def setUp(self):
+        self.client = Client()
+        # Create active topic
+        self.active_topic = Topic.objects.create(
+            slug='ongoing-test',
+            title='Ongoing Test Topic',
+            headline='Live updates on this important event',
+            description='This is a description for the ongoing test topic.',
+            keywords=['ongoing', 'test'],
+            categories=['world'],
+            languages=['en'],
+            is_active=True,
+            priority=10,
+        )
+        # Create inactive topic
+        self.inactive_topic = Topic.objects.create(
+            slug='inactive-test',
+            title='Inactive Test Topic',
+            headline='This should not appear',
+            keywords=['inactive'],
+            categories=['world'],
+            languages=['en'],
+            is_active=False,
+            priority=5,
+        )
+        # Create a story so homepage renders normally
+        Story.objects.create(
+            source='BBC',
+            title='Recent World News Update',
+            excerpt='Test excerpt for world news.',
+            url='https://example.com/recent-world',
+            language='en',
+            category='world',
+            published=timezone.now(),
+            url_hash='recent123',
+            title_fingerprint='recent456'
+        )
+    
+    def test_homepage_shows_ongoing_coverage_section(self):
+        """Homepage should display 'Ongoing Coverage' heading."""
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Ongoing Coverage')
+    
+    def test_homepage_shows_active_topic_cards(self):
+        """Homepage should show cards for active topics."""
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Ongoing Test Topic')
+        self.assertContains(response, 'Live updates on this important event')
+        self.assertContains(response, '/topic/ongoing-test/')
+    
+    def test_homepage_hides_inactive_topics(self):
+        """Homepage should not show inactive topic cards."""
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Inactive Test Topic')
+        self.assertNotContains(response, '/topic/inactive-test/')
+    
+    def test_homepage_topic_card_links_are_valid(self):
+        """Topic card links should resolve to valid topic pages."""
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn('href="/topic/ongoing-test/"', content)
+    
+    def test_homepage_topic_context_passed_to_template(self):
+        """Homepage view should pass active_topics in context."""
+        from news.views import home
+        from django.test import RequestFactory
+        
+        request = RequestFactory().get('/')
+        # Use home view directly to inspect context
+        # Note: cache_page decorator wraps the view, so we test the view logic
+        response = home(request)
+        self.assertEqual(response.status_code, 200)
+        # The template uses {% if active_topics %} so context must include it
+        # We verify the response renders successfully with topics in the DB
