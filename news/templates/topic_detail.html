@@ -619,6 +619,20 @@
             background: #f3f4f6;
         }
 
+        .book-cover-fallback {
+            width: 100px;
+            height: 150px;
+            border-radius: 6px;
+            margin: 0 auto 16px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #b45309;
+            font-size: 3rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
         .book-title {
             font-size: 1.05rem;
             font-weight: 700;
@@ -735,9 +749,10 @@
                 <article class="book-card">
                     <span class="book-badge">{{ topic.merchandise.title }}</span>
                     {% if item.image %}
-                    <img src="{{ item.image }}" alt="{{ item.name }}" class="book-cover" loading="lazy" onerror="this.style.display='none'">
+                    <img src="{{ item.image }}" alt="{{ item.name }}" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.book-cover-fallback').style.display='flex';this.style.display='none'">
+                    <div class="book-cover-fallback" style="display:none;">⚽</div>
                     {% else %}
-                    <div class="book-cover" style="display:flex;align-items:center;justify-content:center;background:#f3f4f6;color:#9ca3af;font-size:2rem;">⚽</div>
+                    <div class="book-cover-fallback">⚽</div>
                     {% endif %}
                     <h3 class="book-title">{{ item.name }}</h3>
                     <a href="{{ item.url }}" target="_blank" rel="nofollow sponsored" class="book-link" onclick="if(navigator.sendBeacon){navigator.sendBeacon('/analytics/book-click/',JSON.stringify({asin:'{{ item.name|escapejs }}',timestamp:Date.now()}))}">View on Amazon &rarr;</a>
@@ -751,9 +766,10 @@
                 <article class="book-card">
                     <span class="book-badge">{{ topic.merchandise.title }}</span>
                     {% if item.image %}
-                    <img src="{{ item.image }}" alt="{{ item.name }}" class="book-cover" loading="lazy" onerror="this.style.display='none'">
+                    <img src="{{ item.image }}" alt="{{ item.name }}" class="book-cover" loading="lazy" onerror="this.parentElement.querySelector('.book-cover-fallback').style.display='flex';this.style.display='none'">
+                    <div class="book-cover-fallback" style="display:none;">⚽</div>
                     {% else %}
-                    <div class="book-cover" style="display:flex;align-items:center;justify-content:center;background:#f3f4f6;color:#9ca3af;font-size:2rem;">⚽</div>
+                    <div class="book-cover-fallback">⚽</div>
                     {% endif %}
                     <h3 class="book-title">{{ item.name }}</h3>
                     <a href="{{ item.url }}" target="_blank" rel="nofollow sponsored" class="book-link" onclick="if(navigator.sendBeacon){navigator.sendBeacon('/analytics/book-click/',JSON.stringify({asin:'{{ item.name|escapejs }}',timestamp:Date.now()}))}">View on Amazon &rarr;</a>
