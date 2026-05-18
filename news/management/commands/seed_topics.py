@@ -18,6 +18,51 @@ class Command(BaseCommand):
                 'priority': 10,
                 'meta_title': 'World Cup 2026 News & Coverage | 24HourWire',
                 'meta_description': 'Live World Cup 2026 coverage from diverse global sources. Match previews, squad news, and analysis from every angle.',
+                'merchandise': {
+                    'title': 'World Cup 2026 Gear',
+                    'items': [
+                        {
+                            'name': 'adidas FIFA World Cup 2026 Official Match Ball',
+                            'url': 'https://www.amazon.com/s?k=adidas+world+cup+2026+official+match+ball&tag=24hourwire-20',
+                            'image': 'https://m.media-amazon.com/images/I/61yY3Y1Zz7L._AC_SL1000_.jpg',
+                        },
+                        {
+                            'name': 'Nike Pitch Training Soccer Ball',
+                            'url': 'https://www.amazon.com/s?k=nike+pitch+training+soccer+ball&tag=24hourwire-20',
+                            'image': 'https://m.media-amazon.com/images/I/71QJ7m9yZzL._AC_SL1500_.jpg',
+                        },
+                        {
+                            'name': 'Brazil National Team Jersey 2026',
+                            'url': 'https://www.amazon.com/s?k=brazil+soccer+jersey+2026&tag=24hourwire-20',
+                            'image': 'https://m.media-amazon.com/images/I/71Z3L3ZzZzL._AC_SL1500_.jpg',
+                        },
+                        {
+                            'name': 'Argentina National Team Jersey 2026',
+                            'url': 'https://www.amazon.com/s?k=argentina+soccer+jersey+2026&tag=24hourwire-20',
+                            'image': 'https://m.media-amazon.com/images/I/71A3L3ZzZzL._AC_SL1500_.jpg',
+                        },
+                        {
+                            'name': 'France National Team Jersey 2026',
+                            'url': 'https://www.amazon.com/s?k=france+soccer+jersey+2026&tag=24hourwire-20',
+                            'image': 'https://m.media-amazon.com/images/I/71B3L3ZzZzL._AC_SL1500_.jpg',
+                        },
+                        {
+                            'name': 'Germany National Team Jersey 2026',
+                            'url': 'https://www.amazon.com/s?k=germany+soccer+jersey+2026&tag=24hourwire-20',
+                            'image': 'https://m.media-amazon.com/images/I/71C3L3ZzZzL._AC_SL1500_.jpg',
+                        },
+                        {
+                            'name': 'USA National Team Jersey 2026',
+                            'url': 'https://www.amazon.com/s?k=usa+soccer+jersey+2026&tag=24hourwire-20',
+                            'image': 'https://m.media-amazon.com/images/I/71D3L3ZzZzL._AC_SL1500_.jpg',
+                        },
+                        {
+                            'name': 'Mexico National Team Jersey 2026',
+                            'url': 'https://www.amazon.com/s?k=mexico+soccer+jersey+2026&tag=24hourwire-20',
+                            'image': 'https://m.media-amazon.com/images/I/71E3L3ZzZzL._AC_SL1500_.jpg',
+                        },
+                    ]
+                },
                 'translations': {
                     'es': {
                         'headline': 'Cobertura en vivo de la Copa Mundial de la FIFA desde todos los angulos',

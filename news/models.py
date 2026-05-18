@@ -332,6 +332,12 @@ class Topic(models.Model):
         help_text="Translations by language: {'es': {'headline': '...', 'description': '...'}, ...}"
     )
     
+    # Affiliate merchandise links
+    merchandise = models.JSONField(
+        default=dict,
+        help_text="Merchandise links: {'title': '...', 'items': [{'name': '...', 'url': '...', 'image': '...'}]}"
+    )
+    
     class Meta:
         ordering = ['-priority', '-created_at']
         indexes = [

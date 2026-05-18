@@ -1186,6 +1186,77 @@ class TopicLanguageNameTests(TestCase):
         self.assertNotContains(response, '>ES<')
 
 
+class TopicMerchandiseTests(TestCase):
+    """Tests for topic merchandise/affiliate links section."""
+    
+    def setUp(self):
+        self.client = Client()
+        self.topic = Topic.objects.create(
+            slug='world-cup-merch',
+            title='World Cup Merch Test',
+            keywords=['test'],
+            categories=['sports'],
+            languages=['en'],
+            is_active=True,
+            merchandise={
+                'title': 'World Cup 2026 Gear',
+                'items': [
+                    {
+                        'name': 'Official Match Ball',
+                        'url': 'https://www.amazon.com/s?k=match+ball&tag=24hourwire-20',
+                        'image': 'https://example.com/ball.jpg',
+                    },
+                    {
+                        'name': 'Brazil Jersey',
+                        'url': 'https://www.amazon.com/s?k=brazil+jersey&tag=24hourwire-20',
+                    }
+                ]
+            }
+        )
+        Story.objects.create(
+            source='BBC', title='Test story', excerpt='Test',
+            url='https://example.com/t', language='en', category='sports',
+            published=timezone.now(), url_hash='h1', title_fingerprint='f1'
+        )
+    
+    def test_topic_page_shows_merchandise_section(self):
+        """Topic page with merchandise should display the gear section."""
+        response = self.client.get('/topic/world-cup-merch/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'World Cup 2026 Gear')
+        self.assertContains(response, 'Official Match Ball')
+        self.assertContains(response, 'Brazil Jersey')
+    
+    def test_merchandise_links_use_amazon_affiliate(self):
+        """Merchandise links should include the affiliate tracking ID."""
+        response = self.client.get('/topic/world-cup-merch/')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn('tag=24hourwire-20', content)
+    
+    def test_topic_without_merchandise_hides_section(self):
+        """Topics without merchandise should not show the section."""
+        no_merch_topic = Topic.objects.create(
+            slug='no-merch',
+            title='No Merch',
+            keywords=['test'],
+            categories=['world'],
+            languages=['en'],
+            is_active=True,
+        )
+        Story.objects.create(
+            source='BBC', title='Another test', excerpt='Test',
+            url='https://example.com/nm', language='en', category='world',
+            published=timezone.now(), url_hash='h2', title_fingerprint='f2'
+        )
+        response = self.client.get('/topic/no-merch/')
+        self.assertEqual(response.status_code, 200)
+        # Check for the actual section header text (not CSS class)
+        self.assertNotContains(response, 'World Cup 2026 Gear')
+        self.assertNotContains(response, 'Official Match Ball')
+        self.assertNotContains(response, 'Brazil Jersey')
+
+
 class TopicThemeToggleTests(TestCase):
     """Tests for dark/light theme toggle on topic pages."""
     

@@ -41,6 +41,7 @@ CRITICAL_TEST_CLASSES = [
     'news.tests.TopicLanguageNameTests',     # Full language names on topic pages
     'news.tests.TopicThemeToggleTests',      # Theme toggle on topic pages
     'news.tests.TopicTranslationTests',      # Topic page language translations
+    'news.tests.TopicMerchandiseTests',      # Topic merchandise affiliate links
 ]
 
 def run_tests():
