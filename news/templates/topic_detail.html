@@ -572,89 +572,92 @@
             border-color: var(--accent);
         }
 
-        /* Merchandise Section */
-        .merchandise-section {
-            max-width: 1200px;
-            margin: 32px auto;
-            padding: 0 16px;
-        }
-
-        .merchandise-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 16px;
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--primary);
-        }
-
-        .merchandise-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 16px;
-        }
-
-        .merch-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 12px;
-            text-align: center;
-            text-decoration: none;
-            color: inherit;
+        /* Book / Merchandise Cards (same styling as homepage) */
+        .book-card {
+            background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
+            border: 2px solid #eab308;
+            border-radius: var(--radius-lg);
+            padding: 20px;
             transition: all 0.2s;
             display: flex;
             flex-direction: column;
+            height: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+            text-align: center;
+            position: relative;
         }
 
-        .merch-card:hover {
-            border-color: var(--accent);
-            box-shadow: var(--shadow-md);
+        .book-card:hover {
+            box-shadow: 0 8px 16px -4px rgba(234, 179, 8, 0.3);
             transform: translateY(-2px);
+            border-color: #ca8a04;
         }
 
-        .merch-image {
-            width: 100%;
-            height: 120px;
-            object-fit: contain;
-            border-radius: 4px;
-            margin-bottom: 8px;
-            background: var(--bg-primary);
-        }
-
-        .merch-name {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            line-height: 1.3;
-            flex-grow: 1;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .merch-badge {
+        .book-badge {
             display: inline-block;
             background: #eab308;
             color: #713f12;
-            font-size: 0.65rem;
+            font-size: 0.7rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            padding: 3px 8px;
+            padding: 4px 10px;
             border-radius: 4px;
-            margin-top: 8px;
+            margin-bottom: 12px;
             align-self: center;
         }
 
-        [data-theme="dark"] .merch-card {
-            background: var(--bg-secondary);
+        .book-cover {
+            width: 100px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin: 0 auto 16px auto;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            display: block;
+            background: #f3f4f6;
         }
 
-        [data-theme="dark"] .merch-image {
-            background: var(--bg-tertiary);
+        .book-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #713f12;
+            line-height: 1.4;
+            margin: 0 0 8px 0;
+        }
+
+        .book-author {
+            font-size: 0.85rem;
+            color: #92400e;
+            margin-bottom: 12px;
+            font-style: italic;
+        }
+
+        .book-description {
+            font-size: 0.85rem;
+            color: #78350f;
+            line-height: 1.5;
+            margin-bottom: 16px;
+            flex-grow: 1;
+        }
+
+        .book-link {
+            display: inline-block;
+            background: #ca8a04;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            align-self: center;
+        }
+
+        .book-link:hover {
+            background: #a16207;
+            transform: translateY(-1px);
         }
 
         [data-theme="dark"] .topic-hero {
@@ -721,32 +724,43 @@
         {% endif %}
     </div>
     
-    {% if topic.merchandise and topic.merchandise.items %}
-    <section class="merchandise-section">
-        <h2 class="merchandise-header">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent);"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-            {{ topic.merchandise.title }}
-        </h2>
-        <div class="merchandise-grid">
-            {% for item in topic.merchandise.items %}
-            <a href="{{ item.url }}" target="_blank" rel="nofollow sponsored" class="merch-card" onclick="if(navigator.sendBeacon){navigator.sendBeacon('/analytics/book-click/',JSON.stringify({asin:'{{ item.name|escapejs }}',timestamp:Date.now()}))}">
-                {% if item.image %}
-                <img src="{{ item.image }}" alt="{{ item.name }}" class="merch-image" loading="lazy" onerror="this.style.display='none'">
-                {% else %}
-                <div class="merch-image" style="display:flex;align-items:center;justify-content:center;background:#f3f4f6;color:#9ca3af;font-size:2rem;">⚽</div>
-                {% endif %}
-                <span class="merch-name">{{ item.name }}</span>
-                <span class="merch-badge">Amazon</span>
-            </a>
-            {% endfor %}
-        </div>
-    </section>
-    {% endif %}
-    
     <main>
         {% if stories %}
         <div class="stories-grid">
             {% for story in stories %}
+            
+            {# Insert merchandise card after 4th story #}
+            {% if forloop.counter == 4 and topic.merchandise and topic.merchandise.items %}
+                {% with item=topic.merchandise.items.0 %}
+                <article class="book-card">
+                    <span class="book-badge">{{ topic.merchandise.title }}</span>
+                    {% if item.image %}
+                    <img src="{{ item.image }}" alt="{{ item.name }}" class="book-cover" loading="lazy" onerror="this.style.display='none'">
+                    {% else %}
+                    <div class="book-cover" style="display:flex;align-items:center;justify-content:center;background:#f3f4f6;color:#9ca3af;font-size:2rem;">⚽</div>
+                    {% endif %}
+                    <h3 class="book-title">{{ item.name }}</h3>
+                    <a href="{{ item.url }}" target="_blank" rel="nofollow sponsored" class="book-link" onclick="if(navigator.sendBeacon){navigator.sendBeacon('/analytics/book-click/',JSON.stringify({asin:'{{ item.name|escapejs }}',timestamp:Date.now()}))}">View on Amazon &rarr;</a>
+                </article>
+                {% endwith %}
+            {% endif %}
+            
+            {# Insert second merchandise card after 10th story (if available) #}
+            {% if forloop.counter == 10 and topic.merchandise and topic.merchandise.items|length > 1 %}
+                {% with item=topic.merchandise.items.1 %}
+                <article class="book-card">
+                    <span class="book-badge">{{ topic.merchandise.title }}</span>
+                    {% if item.image %}
+                    <img src="{{ item.image }}" alt="{{ item.name }}" class="book-cover" loading="lazy" onerror="this.style.display='none'">
+                    {% else %}
+                    <div class="book-cover" style="display:flex;align-items:center;justify-content:center;background:#f3f4f6;color:#9ca3af;font-size:2rem;">⚽</div>
+                    {% endif %}
+                    <h3 class="book-title">{{ item.name }}</h3>
+                    <a href="{{ item.url }}" target="_blank" rel="nofollow sponsored" class="book-link" onclick="if(navigator.sendBeacon){navigator.sendBeacon('/analytics/book-click/',JSON.stringify({asin:'{{ item.name|escapejs }}',timestamp:Date.now()}))}">View on Amazon &rarr;</a>
+                </article>
+                {% endwith %}
+            {% endif %}
+            
             <article class="story-card">
                 <div class="story-header">
                     <a href="{{ story.url }}" target="_blank" class="story-title">{{ story.title }}</a>
