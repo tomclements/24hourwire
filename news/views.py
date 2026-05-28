@@ -1134,12 +1134,18 @@ def poll_detail(request, poll_id):
             'vote_count': poll.vote_count,
         })
     
+    # Get user's preferred language for navigation links
+    language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))
+    if language not in SOURCES:
+        language = 'en'
+    
     context = {
         'poll': poll,
         'can_vote': can_vote,
         'has_voted': has_voted,
         'results': results,
         'is_expired': poll.ends_at and poll.ends_at <= now,
+        'language': language,
     }
     return render(request, 'poll_detail.html', context)
 
@@ -1148,7 +1154,10 @@ def poll_detail(request, poll_id):
 def polls_list(request):
     """Public polls listing page — current active polls only."""
     now = timezone.now()
-    language = request.GET.get('lang', '')
+    language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))
+    if language not in SOURCES:
+        language = 'en'
+    language_filter = request.GET.get('lang', '')
     
     # Active polls (current)
     active_polls = Poll.objects.filter(
@@ -1157,8 +1166,8 @@ def polls_list(request):
         ends_at__gt=now,
     ).order_by('-created_at')
     
-    if language:
-        active_polls = active_polls.filter(language=language)
+    if language_filter:
+        active_polls = active_polls.filter(language=language_filter)
     
     # For each active poll, check if user has voted
     for poll in active_polls:
@@ -1167,8 +1176,9 @@ def polls_list(request):
     
     context = {
         'active_polls': active_polls,
-        'language_filter': language,
+        'language_filter': language_filter,
         'languages': LANGUAGE_NAMES,
+        'language': language,
     }
     return render(request, 'polls_list.html', context)
 
@@ -1177,23 +1187,27 @@ def polls_list(request):
 def polls_archive(request):
     """Archive page for closed polls (expired only, not rejected)."""
     now = timezone.now()
-    language = request.GET.get('lang', '')
+    language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))
+    if language not in SOURCES:
+        language = 'en'
+    language_filter = request.GET.get('lang', '')
     
     # Expired polls only (not rejected)
     closed_polls = Poll.objects.filter(
         status='expired',
     ).order_by('-ends_at')
     
-    if language:
-        closed_polls = closed_polls.filter(language=language)
+    if language_filter:
+        closed_polls = closed_polls.filter(language=language_filter)
     
     for poll in closed_polls:
         poll.results_display = poll.get_results_display()
     
     context = {
         'closed_polls': closed_polls,
-        'language_filter': language,
+        'language_filter': language_filter,
         'languages': LANGUAGE_NAMES,
+        'language': language,
     }
     return render(request, 'polls_archive.html', context)
 
@@ -1203,6 +1217,9 @@ def polls_manage(request):
     """Staff-only poll review and management page."""
     status_filter = request.GET.get('status', 'pending_review')
     language_filter = request.GET.get('language', '')
+    language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))
+    if language not in SOURCES:
+        language = 'en'
     
     polls = Poll.objects.all().order_by('-created_at')
     
@@ -1216,7 +1233,68 @@ def polls_manage(request):
         action = request.POST.get('action')
         poll_id = request.POST.get('poll_id')
         
-        if poll_id and action:
+        if action == 'create_manual':
+            # Manual poll creation by staff
+            q = request.POST.get('question', '').strip()
+            options_raw = request.POST.get('options', '').strip()
+            poll_lang = request.POST.get('language', 'en')
+            poll_type = request.POST.get('poll_type', 'topical')
+            english_translation = request.POST.get('english_translation', '').strip()
+            ends_at_str = request.POST.get('ends_at', '')
+            
+            if not q or not options_raw:
+                messages.error(request, 'Question and options are required.')
+            else:
+                options = [opt.strip() for opt in options_raw.split('\n') if opt.strip()]
+                if len(options) < 2:
+                    messages.error(request, 'At least 2 options are required.')
+                else:
+                    ends_at = timezone.now() + timedelta(days=14)
+                    if ends_at_str:
+                        from datetime import datetime
+                        ends_at = datetime.fromisoformat(ends_at_str.replace('Z', '+00:00'))
+                    
+                    if poll_lang == 'en':
+                        english_translation = q
+                    
+                    Poll.objects.create(
+                        language=poll_lang,
+                        question=q,
+                        options=options,
+                        poll_type=poll_type,
+                        english_translation=english_translation or q,
+                        status='pending_review',
+                        is_active=False,
+                        ends_at=ends_at,
+                        source='manual',
+                    )
+                    messages.success(request, f'Created poll: {q[:50]}...')
+        
+        elif action == 'generate_now':
+            # Trigger OpenAI generation immediately
+            import os
+            from io import StringIO
+            from django.core.management import call_command
+            
+            out = StringIO()
+            try:
+                call_command('generate_polls', '--language', language, '--num', '3', stdout=out, stderr=out)
+                output = out.getvalue()
+                if 'Created' in output:
+                    created = output.count('Created:')
+                    messages.success(request, f'OpenAI generation complete. {created} polls created. Check pending review.')
+                elif 'DRY RUN' in output:
+                    messages.warning(request, 'Dry run detected — no polls created.')
+                elif 'disabled' in output.lower():
+                    messages.warning(request, 'Auto-generation is disabled in config.')
+                elif 'OPENAI_API_KEY' in output:
+                    messages.error(request, 'OPENAI_API_KEY is not set. Add it in Render environment variables.')
+                else:
+                    messages.info(request, f'Generation output: {output[:200]}')
+            except Exception as e:
+                messages.error(request, f'Generation failed: {e}')
+        
+        elif poll_id and action:
             poll = Poll.objects.filter(id=poll_id).first()
             if poll:
                 if action == 'activate':
@@ -1284,6 +1362,7 @@ def polls_manage(request):
         'poll_types': Poll.POLL_TYPE_CHOICES,
         'statuses': Poll.STATUS_CHOICES,
         'gen_config': gen_config,
+        'language': language,
     }
     return render(request, 'polls_manage.html', context)
 

@@ -1885,7 +1885,7 @@
                             {% endfor %}
                             <button class="poll-option-btn-inline" onclick="showInlineOptionsForPoll({{ cat_data.poll.id }})" style="background: transparent; border-style: dashed; margin-top: 8px;">Back to voting</button>
                         </div>
-                        <a href="/poll/{{ cat_data.poll.id }}/" class="poll-view-full">View full poll &rarr;</a>
+                        <a href="/poll/{{ cat_data.poll.id }}/?lang={{ language }}" class="poll-view-full">View full poll &rarr;</a>
                     </article>
                     {% endcache %}
                     {% endif %}
@@ -1927,14 +1927,14 @@
             
             <div class="footer-section">
                 <h4>Community</h4>
-                <p><a href="/polls/">Polls</a></p>
+                <p><a href="/polls/?lang={{ language }}">Polls</a></p>
             </div>
             
             <div class="footer-section">
                 <h4>Legal</h4>
                 <p><a href="/terms/?lang={{ language }}">Terms of Service</a></p>
                 <p><a href="/privacy/?lang={{ language }}">Privacy Policy</a></p>
-                <p><a href="/copyright/">Copyright Policy</a></p>
+                <p><a href="/copyright/?lang={{ language }}">Copyright Policy</a></p>
             </div>
         </div>
         

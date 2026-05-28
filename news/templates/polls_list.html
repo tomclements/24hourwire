@@ -116,14 +116,14 @@
     
     <div class="container">
         <div class="header">
-            <a href="/">← 24HourWire</a>
+            <a href="/?lang={{ language }}">← 24HourWire</a>
         </div>
         
         <h1>Community Polls</h1>
         <p class="subtitle">Vote and see what the community thinks</p>
         
         <div class="lang-filter">
-            <a href="/polls/" class="lang-pill {% if not language_filter %}active{% endif %}">All Languages</a>
+            <a href="/polls/?lang={{ language }}" class="lang-pill {% if not language_filter %}active{% endif %}">All Languages</a>
             {% for code, name in languages.items %}
             <a href="/polls/?lang={{ code }}" class="lang-pill {% if language_filter == code %}active{% endif %}">{{ name }}</a>
             {% endfor %}
@@ -132,7 +132,7 @@
         {% if active_polls %}
         {% for poll in active_polls %}
         <div class="poll-card">
-            <a href="/poll/{{ poll.id }}/">
+            <a href="/poll/{{ poll.id }}/?lang={{ language }}">
                 <span class="poll-badge">{{ poll.get_poll_type_display }}</span>
                 <div class="poll-question">{{ poll.question }}</div>
                 <div class="poll-meta">{{ poll.vote_count }} vote{{ poll.vote_count|pluralize }} · {{ poll.get_language_display }}</div>
@@ -170,7 +170,7 @@
         {% endif %}
         
         <div class="archive-link">
-            <a href="/polls/archive/{% if language_filter %}?lang={{ language_filter }}{% endif %}">View closed polls →</a>
+            <a href="/polls/archive/{% if language_filter %}?lang={{ language_filter }}{% else %}?lang={{ language }}{% endif %}">View closed polls →</a>
         </div>
     </div>
     

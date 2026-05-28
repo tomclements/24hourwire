@@ -105,14 +105,14 @@
     
     <div class="container">
         <div class="header">
-            <a href="/polls/">← Back to polls</a>
+            <a href="/polls/{% if language_filter %}?lang={{ language_filter }}{% else %}?lang={{ language }}{% endif %}">← Back to polls</a>
         </div>
         
         <h1>Poll Archive</h1>
         <p class="subtitle">Browse past polls and final results</p>
         
         <div class="lang-filter">
-            <a href="/polls/archive/" class="lang-pill {% if not language_filter %}active{% endif %}">All Languages</a>
+            <a href="/polls/archive/?lang={{ language }}" class="lang-pill {% if not language_filter %}active{% endif %}">All Languages</a>
             {% for code, name in languages.items %}
             <a href="/polls/archive/?lang={{ code }}" class="lang-pill {% if language_filter == code %}active{% endif %}">{{ name }}</a>
             {% endfor %}
@@ -121,7 +121,7 @@
         {% if closed_polls %}
         {% for poll in closed_polls %}
         <div class="poll-card">
-            <a href="/poll/{{ poll.id }}/">
+            <a href="/poll/{{ poll.id }}/?lang={{ language }}">
                 <span class="poll-badge">{{ poll.get_poll_type_display }}<span class="closed-badge">Closed</span></span>
                 <div class="poll-question">{{ poll.question }}</div>
                 <div class="poll-meta">{{ poll.vote_count }} vote{{ poll.vote_count|pluralize }} · {{ poll.get_language_display }} · Ended {{ poll.ends_at|date:"M d" }}</div>
@@ -147,7 +147,7 @@
         {% endif %}
         
         <div class="back-link">
-            <a href="/polls/{% if language_filter %}?lang={{ language_filter }}{% endif %}">← Back to active polls</a>
+            <a href="/polls/{% if language_filter %}?lang={{ language_filter }}{% else %}?lang={{ language }}{% endif %}">← Back to active polls</a>
         </div>
     </div>
     
