@@ -1257,7 +1257,44 @@
         [data-theme="dark"] .scroll-btn:hover svg {
             fill: var(--primary);
         }
-
+        
+        [data-theme="dark"] .poll-card-inline {
+            background: linear-gradient(135deg, #1e3a5f 0%, #172554 100%);
+            border-color: #3b82f6;
+        }
+        
+        [data-theme="dark"] .poll-card-inline:hover {
+            border-color: #60a5fa;
+            box-shadow: 0 8px 16px -4px rgba(59, 130, 246, 0.3);
+        }
+        
+        [data-theme="dark"] .poll-option-btn-inline {
+            background: var(--bg-secondary);
+            border-color: #3b82f6;
+            color: var(--text-primary);
+        }
+        
+        [data-theme="dark"] .poll-option-btn-inline:hover {
+            background: #1e3a5f;
+            border-color: #60a5fa;
+        }
+        
+        [data-theme="dark"] .poll-result-bar-bg {
+            background: #1e3a5f;
+        }
+        
+        [data-theme="dark"] .poll-result-bar-fill {
+            background: #60a5fa;
+        }
+        
+        [data-theme="dark"] .poll-result-label {
+            color: var(--text-primary);
+        }
+        
+        [data-theme="dark"] .poll-view-full {
+            color: #60a5fa;
+        }
+        
         /* Share Overlay */
         #share-overlay {
             position: fixed;
@@ -1822,6 +1859,7 @@
                             {% for option in cat_data.poll.options %}
                             <button class="poll-option-btn-inline" onclick="voteInlinePoll({{ cat_data.poll.id }}, {{ forloop.counter0 }}, this)" data-option="{{ forloop.counter0 }}">{{ option }}</button>
                             {% endfor %}
+                            <button class="poll-option-btn-inline" onclick="showInlineResultsForPoll({{ cat_data.poll.id }})" style="background: transparent; border-style: dashed;">View results</button>
                         </div>
                         <div class="poll-results-inline" id="poll-results-{{ cat_data.poll.id }}" style="display: none;">
                             {% for r in cat_data.poll.get_results_display %}
@@ -1835,6 +1873,7 @@
                                 </div>
                             </div>
                             {% endfor %}
+                            <button class="poll-option-btn-inline" onclick="showInlineOptionsForPoll({{ cat_data.poll.id }})" style="background: transparent; border-style: dashed; margin-top: 8px;">Back to voting</button>
                         </div>
                         <a href="/poll/{{ cat_data.poll.id }}/" class="poll-view-full">View full poll &rarr;</a>
                     </article>
@@ -2538,9 +2577,32 @@
                         </div>
                     `;
                 });
+                // Append back-to-voting button
+                html += `<button class="poll-option-btn-inline" onclick="showInlineOptionsForPoll(${container.dataset.pollId})" style="background: transparent; border-style: dashed; margin-top: 8px;">Back to voting</button>`;
                 resultsDiv.innerHTML = html;
                 resultsDiv.style.display = 'flex';
             }
+        }
+        
+        function showInlineResultsForPoll(pollId) {
+            const container = document.querySelector('.poll-card-inline[data-poll-id="' + pollId + '"]');
+            if (!container) return;
+            const optionsDiv = container.querySelector('.poll-options-inline');
+            const resultsDiv = container.querySelector('.poll-results-inline');
+            if (optionsDiv) optionsDiv.style.display = 'none';
+            if (resultsDiv) resultsDiv.style.display = 'flex';
+        }
+        
+        function showInlineOptionsForPoll(pollId) {
+            const container = document.querySelector('.poll-card-inline[data-poll-id="' + pollId + '"]');
+            if (!container) return;
+            const optionsDiv = container.querySelector('.poll-options-inline');
+            const resultsDiv = container.querySelector('.poll-results-inline');
+            if (optionsDiv) optionsDiv.style.display = 'flex';
+            if (resultsDiv) resultsDiv.style.display = 'none';
+            // Re-enable buttons if they were disabled after voting
+            const buttons = container.querySelectorAll('.poll-option-btn-inline');
+            buttons.forEach(b => b.disabled = false);
         }
     </script>
     
