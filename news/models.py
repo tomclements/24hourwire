@@ -169,6 +169,8 @@ class AnalyticsEvent(models.Model):
         ('share', 'Share'),
         ('feed_access', 'Feed Access'),
         ('widget_load', 'Widget Load'),
+        ('poll_view', 'Poll View'),
+        ('poll_vote', 'Poll Vote'),
     ]
     
     event_type = models.CharField(max_length=20, choices=EVENT_TYPES, db_index=True)
@@ -420,3 +422,171 @@ class Topic(models.Model):
         qs = Story.objects.filter(base_q).distinct().values_list('language', flat=True)
         
         return sorted(set(qs))
+
+
+class Poll(models.Model):
+    """Community polls for engagement — news-related and fun."""
+    
+    STATUS_CHOICES = [
+        ('pending_review', 'Pending Review'),
+        ('active', 'Active'),
+        ('rejected', 'Rejected'),
+        ('expired', 'Expired'),
+    ]
+    
+    POLL_TYPE_CHOICES = [
+        ('topical', 'Topical'),
+        ('fun', 'Fun'),
+        ('lifestyle', 'Lifestyle'),
+        ('opinion', 'Opinion'),
+        ('sports', 'Sports'),
+        ('culture', 'Culture'),
+    ]
+    
+    LANGUAGE_CHOICES = [
+        ('en', 'English'),
+        ('es', 'Español'),
+        ('fr', 'Français'),
+        ('de', 'Deutsch'),
+        ('pt', 'Português'),
+        ('it', 'Italiano'),
+        ('ar', 'العربية'),
+        ('ru', 'Русский'),
+        ('ja', '日本語'),
+        ('zh', '中文'),
+        ('ko', '한국어'),
+        ('tr', 'Türkçe'),
+        ('hi', 'हिन्दी'),
+    ]
+    
+    language = models.CharField(max_length=5, choices=LANGUAGE_CHOICES, default='en', db_index=True)
+    question = models.CharField(max_length=300)
+    options = models.JSONField(default=list, help_text="List of option strings")
+    poll_type = models.CharField(max_length=20, choices=POLL_TYPE_CHOICES, default='topical', db_index=True)
+    english_translation = models.CharField(max_length=300, blank=True, help_text="For review of non-English polls")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending_review', db_index=True)
+    is_active = models.BooleanField(default=False, db_index=True)
+    starts_at = models.DateTimeField(null=True, blank=True)
+    ends_at = models.DateTimeField(null=True, blank=True)
+    vote_count = models.IntegerField(default=0)
+    results = models.JSONField(default=dict, help_text="{option_index: count}")
+    source = models.CharField(max_length=20, default='auto', help_text="auto or manual")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status', 'language']),
+            models.Index(fields=['is_active', 'language', 'ends_at']),
+            models.Index(fields=['poll_type', 'created_at']),
+        ]
+    
+    def __str__(self):
+        return f"[{self.language}] {self.question[:50]}"
+    
+    def get_results_display(self):
+        """Return list of {option, count, percentage} for each option."""
+        total = self.vote_count
+        display = []
+        for idx, option in enumerate(self.options):
+            # Support both integer and string keys for backward compatibility
+            count = self.results.get(idx, self.results.get(str(idx), 0))
+            pct = round((count / total) * 100, 1) if total > 0 else 0
+            display.append({
+                'index': idx,
+                'option': option,
+                'count': count,
+                'percentage': pct,
+            })
+        return display
+    
+    def has_voted(self, request):
+        """Check if this request (IP+UA hash) has already voted."""
+        vote_hash = self._make_vote_hash(request)
+        return PollVote.objects.filter(poll=self, vote_hash=vote_hash).exists()
+    
+    def record_vote(self, option_index, request):
+        """Record a vote with light anti-abuse."""
+        vote_hash = self._make_vote_hash(request)
+        
+        # Idempotent: ignore duplicate votes from same hash
+        if PollVote.objects.filter(poll=self, vote_hash=vote_hash).exists():
+            return False
+        
+        PollVote.objects.create(
+            poll=self,
+            option_index=option_index,
+            vote_hash=vote_hash,
+        )
+        
+        # Update results counter atomically-ish (safe for our scale)
+        # Normalize keys to integers for consistency
+        key = option_index
+        self.results[key] = self.results.get(key, self.results.get(str(key), 0)) + 1
+        self.vote_count += 1
+        self.save(update_fields=['results', 'vote_count'])
+        return True
+    
+    def _make_vote_hash(self, request):
+        """Create a hash from IP + User-Agent + poll ID.
+        
+        Note: In production (Render + Cloudflare), HTTP_X_FORWARDED_FOR
+        may contain multiple IPs (client, Cloudflare, Render). We take the
+        first (leftmost) IP which is the original client address.
+        """
+        ip = request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR', '')).split(',')[0].strip()
+        ua = request.META.get('HTTP_USER_AGENT', '')
+        raw = f"{ip}:{ua}:{self.id}"
+        return hashlib.sha256(raw.encode()).hexdigest()[:32]
+
+
+class PollVote(models.Model):
+    """Individual vote record for analytics and anti-abuse."""
+    
+    poll = models.ForeignKey(Poll, on_delete=models.CASCADE, related_name='votes')
+    option_index = models.IntegerField()
+    vote_hash = models.CharField(max_length=32, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['poll', 'vote_hash']),
+        ]
+    
+    def __str__(self):
+        return f"Vote on Poll {self.poll_id}: option {self.option_index}"
+
+
+class PollGenerationConfig(models.Model):
+    """Simple configuration for poll generation frequency and volume."""
+    
+    frequency_hours = models.PositiveIntegerField(
+        default=24,
+        help_text="Hours between automatic poll generation runs"
+    )
+    polls_per_language = models.PositiveIntegerField(
+        default=3,
+        help_text="Polls to generate per language per run"
+    )
+    is_enabled = models.BooleanField(
+        default=True,
+        help_text="Whether automatic generation is enabled"
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Poll Generation Config"
+        verbose_name_plural = "Poll Generation Configs"
+    
+    def __str__(self):
+        return f"Every {self.frequency_hours}h, {self.polls_per_language}/lang"
+    
+    @classmethod
+    def get_active_config(cls):
+        """Get the current active config (singleton pattern)."""
+        config = cls.objects.first()
+        if not config:
+            config = cls.objects.create()
+        return config

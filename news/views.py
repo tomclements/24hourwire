@@ -3,11 +3,12 @@ from django.core import signing
 from django.http import Http404, HttpResponse
 from django.utils import timezone
 from django.views.decorators.cache import cache_page
+from django.views.decorators.csrf import csrf_exempt
 from datetime import timedelta
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from .models import Story, StoryCluster, AnalyticsEvent, Topic
+from .models import Story, StoryCluster, AnalyticsEvent, Topic, Poll, PollGenerationConfig
 from .sources_config import (
     LANGUAGE_SOURCE_INFO, DEFAULT_SOURCES, SOURCES, LANGUAGE_NAMES,
     PAYWALLED_SOURCES, CATEGORY_KEYWORDS, CATEGORY_NAMES, UI_STRINGS, LANGUAGE_NAMES,
@@ -160,6 +161,15 @@ def home(request):
             recommended_books[book.category].append(book)
             all_books.append(book)
     
+    # Fetch active poll for this language (at most 1, light presence)
+    now = timezone.now()
+    active_poll = Poll.objects.filter(
+        language=language,
+        is_active=True,
+        status='active',
+        ends_at__gt=now,
+    ).order_by('?').first()
+    
     grouped = {}
     for cat_id, cat_name in category_names.items():
         if cat_id == 'all':
@@ -169,7 +179,6 @@ def home(request):
         else:
             cat_stories = [s for s in stories if cat_id in s.story_categories]
         
-        # Get books for this category (randomize order)
         import random
         if cat_id == 'all' and all_books:
             cat_books = list(all_books)
@@ -189,6 +198,7 @@ def home(request):
             'loaded': min(20, len(cat_stories)),
             'has_more': len(cat_stories) > 20,
             'books': cat_books,
+            'poll': active_poll if cat_id == 'all' else None,
         }
     
     return render(request, 'home.html', {
@@ -201,6 +211,7 @@ def home(request):
         't': UI_STRINGS.get(language, UI_STRINGS['en']),
         'source_filter': selected_sources_param or 'default',
         'active_topics': active_topics,
+        'active_poll': active_poll,
     })
 
 
@@ -695,9 +706,29 @@ def load_more_stories(request):
                     'asin': book.asin,
                 })
     
+    # Include active poll for 'all' tab (at most one per loaded batch)
+    poll_data = None
+    if category_id == 'all':
+        now = timezone.now()
+        active_poll = Poll.objects.filter(
+            language=language,
+            is_active=True,
+            status='active',
+            ends_at__gt=now,
+        ).order_by('?').first()
+        if active_poll:
+            poll_data = {
+                'id': active_poll.id,
+                'question': active_poll.question,
+                'options': active_poll.options,
+                'poll_type': active_poll.get_poll_type_display(),
+                'vote_count': active_poll.vote_count,
+            }
+    
     return JsonResponse({
         'stories': story_data,
         'books': book_data,
+        'poll': poll_data,
         'total': total,
         'has_more': offset + len(batch) < total,
     })
@@ -1019,3 +1050,206 @@ def topic_detail(request, slug):
     }
     
     return render(request, 'topic_detail.html', context)
+
+
+def poll_detail(request, poll_id):
+    """Public poll page — works even for expired polls."""
+    from django.http import JsonResponse
+    
+    poll = Poll.objects.filter(id=poll_id).first()
+    if not poll:
+        raise Http404("Poll not found")
+    
+    # Determine if voting is open
+    now = timezone.now()
+    can_vote = (
+        poll.is_active and
+        poll.status == 'active' and
+        (poll.ends_at is None or poll.ends_at > now)
+    )
+    
+    has_voted = poll.has_voted(request) if can_vote else False
+    results = poll.get_results_display()
+    
+    # Track poll view analytics
+    if request.method == 'GET' and not request.headers.get('X-Requested-With'):
+        AnalyticsEvent.objects.create(
+            event_type='poll_view',
+            path=f'/poll/{poll.id}/',
+            language=poll.language,
+        )
+    
+    # Handle AJAX vote
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        if not can_vote:
+            return JsonResponse({'error': 'Poll is closed'}, status=403)
+        
+        try:
+            option_index = int(request.POST.get('option'))
+        except (ValueError, TypeError):
+            return JsonResponse({'error': 'Invalid option'}, status=400)
+        
+        if option_index < 0 or option_index >= len(poll.options):
+            return JsonResponse({'error': 'Invalid option'}, status=400)
+        
+        success = poll.record_vote(option_index, request)
+        if not success:
+            return JsonResponse({'error': 'Already voted'}, status=409)
+        
+        # Also track in AnalyticsEvent
+        AnalyticsEvent.objects.create(
+            event_type='poll_vote',
+            path=f'/poll/{poll.id}/',
+            language=poll.language,
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'results': poll.get_results_display(),
+            'vote_count': poll.vote_count,
+        })
+    
+    context = {
+        'poll': poll,
+        'can_vote': can_vote,
+        'has_voted': has_voted,
+        'results': results,
+        'is_expired': poll.ends_at and poll.ends_at <= now,
+    }
+    return render(request, 'poll_detail.html', context)
+
+
+@user_passes_test(is_staff_or_superuser, login_url='/login/')
+def polls_manage(request):
+    """Staff-only poll review and management page."""
+    status_filter = request.GET.get('status', 'pending_review')
+    language_filter = request.GET.get('language', '')
+    
+    polls = Poll.objects.all().order_by('-created_at')
+    
+    if status_filter:
+        polls = polls.filter(status=status_filter)
+    if language_filter:
+        polls = polls.filter(language=language_filter)
+    
+    # Handle actions
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        poll_id = request.POST.get('poll_id')
+        
+        if poll_id and action:
+            poll = Poll.objects.filter(id=poll_id).first()
+            if poll:
+                if action == 'activate':
+                    poll.status = 'active'
+                    poll.is_active = True
+                    if not poll.starts_at:
+                        poll.starts_at = timezone.now()
+                    poll.save()
+                    messages.success(request, f'Activated: {poll.question[:50]}')
+                elif action == 'reject':
+                    poll.status = 'rejected'
+                    poll.is_active = False
+                    poll.save()
+                    messages.success(request, f'Rejected: {poll.question[:50]}')
+                elif action == 'expire':
+                    poll.status = 'expired'
+                    poll.is_active = False
+                    poll.ends_at = timezone.now()
+                    poll.save()
+                    messages.success(request, f'Expired: {poll.question[:50]}')
+                elif action == 'update':
+                    poll.question = request.POST.get('question', poll.question)
+                    poll.english_translation = request.POST.get('english_translation', poll.english_translation)
+                    poll.poll_type = request.POST.get('poll_type', poll.poll_type)
+                    # Parse options from textarea (one per line)
+                    options_raw = request.POST.get('options', '')
+                    if options_raw:
+                        poll.options = [opt.strip() for opt in options_raw.split('\n') if opt.strip()]
+                    # Parse ends_at
+                    ends_at_str = request.POST.get('ends_at', '')
+                    if ends_at_str:
+                        from datetime import datetime
+                        poll.ends_at = datetime.fromisoformat(ends_at_str.replace('Z', '+00:00'))
+                    poll.save()
+                    messages.success(request, f'Updated: {poll.question[:50]}')
+                elif action == 'update_config':
+                    config = PollGenerationConfig.get_active_config()
+                    try:
+                        config.frequency_hours = int(request.POST.get('frequency_hours', config.frequency_hours))
+                        config.polls_per_language = int(request.POST.get('polls_per_language', config.polls_per_language))
+                        config.is_enabled = request.POST.get('is_enabled') == 'on'
+                        config.save()
+                        messages.success(request, 'Generation config updated.')
+                    except (ValueError, TypeError):
+                        messages.error(request, 'Invalid config values.')
+        
+        return redirect(f'/polls/manage/?status={status_filter}&language={language_filter}')
+    
+    # Pagination
+    from django.core.paginator import Paginator
+    paginator = Paginator(polls, 25)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+    
+    # Generation config
+    gen_config = PollGenerationConfig.get_active_config()
+    
+    context = {
+        'polls': page_obj,
+        'page_obj': page_obj,
+        'paginator': paginator,
+        'status_filter': status_filter,
+        'language_filter': language_filter,
+        'languages': LANGUAGE_NAMES,
+        'poll_types': Poll.POLL_TYPE_CHOICES,
+        'statuses': Poll.STATUS_CHOICES,
+        'gen_config': gen_config,
+    }
+    return render(request, 'polls_manage.html', context)
+
+
+def poll_vote_api(request, poll_id):
+    """Standalone API endpoint for voting (used by feed inline polls)."""
+    from django.http import JsonResponse
+    
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    
+    poll = Poll.objects.filter(id=poll_id).first()
+    if not poll:
+        return JsonResponse({'error': 'Poll not found'}, status=404)
+    
+    now = timezone.now()
+    can_vote = (
+        poll.is_active and
+        poll.status == 'active' and
+        (poll.ends_at is None or poll.ends_at > now)
+    )
+    
+    if not can_vote:
+        return JsonResponse({'error': 'Poll is closed'}, status=403)
+    
+    try:
+        option_index = int(request.POST.get('option'))
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Invalid option'}, status=400)
+    
+    if option_index < 0 or option_index >= len(poll.options):
+        return JsonResponse({'error': 'Invalid option'}, status=400)
+    
+    success = poll.record_vote(option_index, request)
+    if not success:
+        return JsonResponse({'error': 'Already voted'}, status=409)
+    
+    AnalyticsEvent.objects.create(
+        event_type='poll_vote',
+        path=f'/poll/{poll.id}/',
+        language=poll.language,
+    )
+    
+    return JsonResponse({
+        'success': True,
+        'results': poll.get_results_display(),
+        'vote_count': poll.vote_count,
+    })

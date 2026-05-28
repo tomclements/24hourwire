@@ -649,6 +649,124 @@
             transform: translateY(-1px);
         }
         
+        /* Inline Poll Card */
+        .poll-card-inline {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e0f2fe 100%);
+            border: 2px solid #7dd3fc;
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+        
+        .poll-card-inline:hover {
+            box-shadow: 0 8px 16px -4px rgba(14, 165, 233, 0.25);
+            transform: translateY(-2px);
+            border-color: #0ea5e9;
+        }
+        
+        .poll-badge-inline {
+            display: inline-block;
+            background: #0ea5e9;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 4px 10px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            align-self: flex-start;
+        }
+        
+        .poll-question-inline {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1.4;
+            margin: 0 0 14px 0;
+        }
+        
+        .poll-options-inline {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        
+        .poll-option-btn-inline {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid #bae6fd;
+            border-radius: var(--radius);
+            background: white;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+        }
+        
+        .poll-option-btn-inline:hover {
+            border-color: var(--accent);
+            background: #f0f7ff;
+        }
+        
+        .poll-option-btn-inline:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .poll-results-inline {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        
+        .poll-result-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .poll-result-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .poll-result-bar-bg {
+            height: 6px;
+            background: #e0f2fe;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .poll-result-bar-fill {
+            height: 100%;
+            background: #0ea5e9;
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+        
+        .poll-view-full {
+            font-size: 0.8rem;
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .poll-view-full:hover {
+            text-decoration: underline;
+        }
+        
         .story-header {
             display: flex;
             align-items: flex-start;
@@ -1678,22 +1796,50 @@
                         {% endwith %}
                         
                         {% if story.related_topics %}
-                        <div style="margin-bottom: 12px;">
+                        <div class="topic-pills">
                             {% for topic in story.related_topics %}
-                            <a href="{{ topic.get_absolute_url }}" style="display: inline-block; padding: 3px 10px; background: rgba(0,102,204,0.08); color: var(--accent); border-radius: 12px; font-size: 0.75rem; font-weight: 500; text-decoration: none; margin-right: 6px; border: 1px solid rgba(0,102,204,0.15);">{{ topic.title }}</a>
+                            <a href="{{ topic.get_absolute_url }}?lang={{ language }}" class="topic-pill">{{ topic.title }}</a>
                             {% endfor %}
                         </div>
                         {% endif %}
                         
                         <div class="story-actions">
                             <div class="story-links">
-                                <a href="{{ story.url }}" target="_blank" itemprop="url">Read full story ↗</a>
-                                <a href="https://www.bing.com/news/search?q={{ story.get_search_terms }}" target="_blank" title="{{ t.search_related }}">{{ t.find_coverage_btn }}</a>
+                                <a href="{{ story.url }}" target="_blank" itemprop="url">{{ t.read_full }} &rarr;</a>
+                                <a href="https://www.bing.com/news/search?q={{ story.get_search_terms }}" target="_blank">{{ t.find_coverage }}</a>
                                 <button class="different-angle-btn" onclick="showDifferentAngle({{ story.id }}, '{{ story.title|escapejs }}', '{{ story.source }}', '{{ story.bias_label }}')" title="{{ t.different_perspectives }}">{{ t.different_angle_btn }}</button>
                             </div>
-                                <button class="share-btn" onclick="shareStory('{{ story.title|escapejs }}', '{{ story.source|escapejs }}', '{{ story|sign_share_data|escapejs }}')" title="{{ t.share_btn }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-primary);"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button>
+                            <button class="share-btn" onclick="shareStory('{{ story.title|escapejs }}', '{{ story.source|escapejs }}', '{{ story|sign_share_data|escapejs }}')" title="{{ t.share_btn }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-primary);"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button>
                         </div>
                     </article>
+                    
+                    {# Insert inline poll after 8th story in "all" tab #}
+                    {% if forloop.counter == 8 and cat_data.poll %}
+                    <article class="poll-card-inline" data-poll-id="{{ cat_data.poll.id }}">
+                        <span class="poll-badge-inline">{{ cat_data.poll.get_poll_type_display }}</span>
+                        <h3 class="poll-question-inline">{{ cat_data.poll.question }}</h3>
+                        <div class="poll-options-inline" id="poll-options-{{ cat_data.poll.id }}">
+                            {% for option in cat_data.poll.options %}
+                            <button class="poll-option-btn-inline" onclick="voteInlinePoll({{ cat_data.poll.id }}, {{ forloop.counter0 }}, this)" data-option="{{ forloop.counter0 }}">{{ option }}</button>
+                            {% endfor %}
+                        </div>
+                        <div class="poll-results-inline" id="poll-results-{{ cat_data.poll.id }}" style="display: none;">
+                            {% for r in cat_data.poll.get_results_display %}
+                            <div class="poll-result-row">
+                                <div class="poll-result-label">
+                                    <span>{{ r.option }}</span>
+                                    <span>{{ r.percentage }}%</span>
+                                </div>
+                                <div class="poll-result-bar-bg">
+                                    <div class="poll-result-bar-fill" style="width: {{ r.percentage }}%;"></div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <a href="/poll/{{ cat_data.poll.id }}/" class="poll-view-full">View full poll &rarr;</a>
+                    </article>
+                    {% endif %}
+                    
                     {% endfor %}
                 </div>
                 
@@ -1835,6 +1981,9 @@
                         }
                     }
                     
+                    // Insert poll card once in the loaded batch (after first story) if present
+                    let pollInserted = false;
+                    
                     data.stories.forEach((story, index) => {
                         const globalStoryNum = loaded + index + 1; // 1-based position in overall story list
                         
@@ -1843,6 +1992,12 @@
                             fragment.appendChild(createBookCard(bookForInsertion));
                             shownAsins.add(bookForInsertion.asin);
                             bookForInsertion = null; // Only insert once
+                        }
+                        
+                        // Insert poll after first story in loaded batch
+                        if (index === 1 && data.poll && !pollInserted) {
+                            fragment.appendChild(createPollCard(data.poll));
+                            pollInserted = true;
                         }
                         
                         const article = document.createElement('article');
@@ -2008,6 +2163,25 @@
                 <p class="book-author">by ${book.author}</p>
                 ${book.description ? `<p class="book-description">${book.description.substring(0, 140)}${book.description.length > 140 ? '...' : ''}</p>` : ''}
                 <a href="${book.amazon_url}" target="_blank" class="book-link" onclick="trackBookClick('${book.asin}')">View on Amazon →</a>
+            `;
+            return article;
+        }
+        
+        function createPollCard(poll) {
+            const article = document.createElement('article');
+            article.className = 'poll-card-inline';
+            article.setAttribute('data-poll-id', poll.id);
+            const optionsHtml = poll.options.map((opt, idx) =>
+                `<button class="poll-option-btn-inline" onclick="voteInlinePoll(${poll.id}, ${idx}, this)" data-option="${idx}">${opt}</button>`
+            ).join('');
+            article.innerHTML = `
+                <span class="poll-badge-inline">${poll.poll_type}</span>
+                <h3 class="poll-question-inline">${poll.question}</h3>
+                <div class="poll-options-inline" id="poll-options-${poll.id}">
+                    ${optionsHtml}
+                </div>
+                <div class="poll-results-inline" id="poll-results-${poll.id}" style="display: none;"></div>
+                <a href="/poll/${poll.id}/" class="poll-view-full">View full poll →</a>
             `;
             return article;
         }
@@ -2307,6 +2481,62 @@
                 });
             }
         });
+        
+        // Inline poll voting
+        function voteInlinePoll(pollId, optionIndex, btn) {
+            const container = btn.closest('.poll-card-inline');
+            const buttons = container.querySelectorAll('.poll-option-btn-inline');
+            buttons.forEach(b => b.disabled = true);
+            
+            fetch('/poll/' + pollId + '/vote/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'option=' + optionIndex
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showInlineResults(container, data.results);
+                } else {
+                    alert(data.error || 'Error voting');
+                    buttons.forEach(b => b.disabled = false);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Error voting. Please try again.');
+                buttons.forEach(b => b.disabled = false);
+            });
+        }
+        
+        function showInlineResults(container, results) {
+            const optionsDiv = container.querySelector('.poll-options-inline');
+            const resultsDiv = container.querySelector('.poll-results-inline');
+            
+            if (optionsDiv) optionsDiv.style.display = 'none';
+            if (resultsDiv) {
+                let html = '';
+                results.forEach(r => {
+                    html += `
+                        <div class="poll-result-row">
+                            <div class="poll-result-label">
+                                <span>${r.option}</span>
+                                <span>${r.percentage}%</span>
+                            </div>
+                            <div class="poll-result-bar-bg">
+                                <div class="poll-result-bar-fill" style="width: ${r.percentage}%;"></div>
+                            </div>
+                        </div>
+                    `;
+                });
+                resultsDiv.innerHTML = html;
+                resultsDiv.style.display = 'flex';
+            }
+        }
     </script>
     
     <!-- Different Angle Modal -->

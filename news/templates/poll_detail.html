@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="{{ poll.language }}">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ poll.question }} | Poll | 24HourWire</title>
+    <meta name="description" content="Vote on this poll and see what the 24HourWire community thinks.">
+    
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://24hourwire.news/poll/{{ poll.id }}/">
+    <meta property="og:title" content="{{ poll.question }}">
+    <meta property="og:description" content="Vote on this poll and see what the 24HourWire community thinks.">
+    <meta property="og:site_name" content="24HourWire">
+    <meta property="og:image" content="https://24hourwire.news{% static 'news/images/logo.jpg' %}">
+    <meta property="og:image:alt" content="24HourWire - News from all angles">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@24HourWire">
+    <meta name="twitter:creator" content="@24HourWire">
+    <meta name="twitter:title" content="{{ poll.question }}">
+    <meta name="twitter:description" content="Vote on this poll and see what the 24HourWire community thinks.">
+    <meta name="twitter:image" content="https://24hourwire.news{% static 'news/images/logo.jpg' %}">
+    
+    <link rel="canonical" href="https://24hourwire.news/poll/{{ poll.id }}/">
+    <link rel="icon" type="image/jpeg" href="{% static 'news/images/logo.jpg' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0A2540;
+            --accent: #0066cc;
+            --text-primary: #1a1a1a;
+            --text-secondary: #4a5568;
+            --text-muted: #718096;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f7fafc;
+            --bg-tertiary: #edf2f7;
+            --border: #e2e8f0;
+            --radius: 8px;
+            --radius-lg: 12px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; line-height: 1.6; color: var(--text-primary); background: var(--bg-secondary); min-height: 100vh; }
+        .container { max-width: 640px; margin: 0 auto; padding: 40px 20px; }
+        .header { text-align: center; margin-bottom: 32px; }
+        .header a { color: var(--accent); text-decoration: none; font-weight: 600; font-size: 1.1rem; }
+        .poll-card { background: var(--bg-primary); border-radius: var(--radius-lg); padding: 32px; box-shadow: var(--shadow); }
+        .poll-badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; background: var(--bg-tertiary); color: var(--text-muted); margin-bottom: 16px; }
+        .poll-question { font-size: 1.4rem; font-weight: 700; line-height: 1.4; margin-bottom: 24px; color: var(--primary); }
+        .poll-status { padding: 10px 14px; border-radius: var(--radius); font-size: 0.85rem; margin-bottom: 20px; }
+        .poll-status.open { background: #dcfce7; color: #166534; }
+        .poll-status.closed { background: #fee2e2; color: #991b1b; }
+        .poll-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+        .poll-option-btn { width: 100%; padding: 14px 18px; border: 2px solid var(--border); border-radius: var(--radius); background: var(--bg-primary); color: var(--text-primary); font-size: 1rem; font-weight: 500; cursor: pointer; text-align: left; transition: all 0.2s; }
+        .poll-option-btn:hover { border-color: var(--accent); background: #f0f7ff; }
+        .poll-option-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .poll-results { display: flex; flex-direction: column; gap: 14px; margin-bottom: 24px; }
+        .result-row { display: flex; flex-direction: column; gap: 6px; }
+        .result-label { display: flex; justify-content: space-between; font-size: 0.95rem; font-weight: 500; }
+        .result-bar-bg { height: 8px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden; }
+        .result-bar-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.5s ease; }
+        .vote-count { text-align: center; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px; }
+        .share-section { border-top: 1px solid var(--border); padding-top: 20px; }
+        .share-section p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px; }
+        .share-btn-inline { padding: 8px 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-secondary); color: var(--text-primary); font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+        .share-btn-inline:hover { background: var(--border); }
+        .back-link { display: inline-block; margin-top: 24px; color: var(--accent); text-decoration: none; font-size: 0.9rem; }
+        .back-link:hover { text-decoration: underline; }
+        .ended-message { font-style: italic; color: var(--text-muted); text-align: center; padding: 16px; background: var(--bg-secondary); border-radius: var(--radius); margin-bottom: 20px; }
+        @media (max-width: 480px) {
+            .container { padding: 20px 16px; }
+            .poll-card { padding: 24px 20px; }
+            .poll-question { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/">24HourWire</a>
+        </div>
+        
+        <div class="poll-card">
+            <span class="poll-badge">{{ poll.get_poll_type_display }}</span>
+            
+            <h1 class="poll-question">{{ poll.question }}</h1>
+            
+            {% if is_expired or not can_vote %}
+                <div class="poll-status closed">This poll has ended</div>
+            {% else %}
+                <div class="poll-status open">Open — cast your vote</div>
+            {% endif %}
+            
+            <div id="poll-content">
+                {% if can_vote and not has_voted %}
+                    <div class="poll-options" id="poll-options">
+                        {% for option in poll.options %}
+                        <button class="poll-option-btn" onclick="submitVote({{ forloop.counter0 }})" data-option="{{ forloop.counter0 }}">{{ option }}</button>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {% if not can_vote %}
+                        <div class="ended-message">Voting is closed for this poll.</div>
+                    {% elif has_voted %}
+                        <div class="ended-message">You have already voted.</div>
+                    {% endif %}
+                    
+                    <div class="poll-results">
+                        {% for r in results %}
+                        <div class="result-row">
+                            <div class="result-label">
+                                <span>{{ r.option }}</span>
+                                <span>{{ r.percentage }}%</span>
+                            </div>
+                            <div class="result-bar-bg">
+                                <div class="result-bar-fill" style="width: {{ r.percentage }}%;"></div>
+                            </div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">{{ r.count }} vote{{ r.count|pluralize }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="vote-count" id="vote-count">
+                {{ poll.vote_count }} vote{{ poll.vote_count|pluralize }} total
+            </div>
+            
+            <div class="share-section">
+                <p>Share this poll</p>
+                <button class="share-btn-inline" onclick="sharePoll()">Copy link</button>
+            </div>
+        </div>
+        
+        <a href="/" class="back-link">&larr; Back to news</a>
+    </div>
+    
+    <script>
+        function submitVote(optionIndex) {
+            const buttons = document.querySelectorAll('.poll-option-btn');
+            buttons.forEach(b => b.disabled = true);
+            
+            fetch('/poll/{{ poll.id }}/vote/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'option=' + optionIndex
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showResults(data.results, data.vote_count);
+                } else {
+                    alert(data.error || 'Error voting');
+                    buttons.forEach(b => b.disabled = false);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Error voting. Please try again.');
+                buttons.forEach(b => b.disabled = false);
+            });
+        }
+        
+        function showResults(results, voteCount) {
+            const container = document.getElementById('poll-content');
+            let html = '<div class="poll-results">';
+            results.forEach(r => {
+                html += `
+                    <div class="result-row">
+                        <div class="result-label">
+                            <span>${r.option}</span>
+                            <span>${r.percentage}%</span>
+                        </div>
+                        <div class="result-bar-bg">
+                            <div class="result-bar-fill" style="width: ${r.percentage}%;"></div>
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">${r.count} vote${r.count === 1 ? '' : 's'}</div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+            document.getElementById('vote-count').textContent = voteCount + ' vote' + (voteCount === 1 ? '' : 's') + ' total';
+        }
+        
+        function sharePoll() {
+            const url = 'https://24hourwire.news/poll/{{ poll.id }}/';
+            navigator.clipboard.writeText(url).then(() => {
+                const btn = document.querySelector('.share-btn-inline');
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy link', 1500);
+            });
+        }
+    </script>
+</body>
+</html>

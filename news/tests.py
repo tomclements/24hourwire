@@ -3,14 +3,18 @@ Unit tests for 24HourWire news app.
 Run with: python manage.py test
 """
 
+import json
+import os
 import re
 from datetime import datetime, timedelta
+from unittest.mock import patch, MagicMock
 from django.test import TestCase, Client, RequestFactory
 from django.utils import timezone
 from django.urls import reverse
 from django.http import JsonResponse
 
-from news.models import Story, StoryCluster, Topic, title_fingerprint, normalize_url
+from django.contrib.auth.models import User
+from news.models import Story, StoryCluster, Topic, Poll, PollVote, AnalyticsEvent, title_fingerprint, normalize_url
 from news.views import story_share, different_angle, branded_redirect
 from django.core import signing
 from news.templatetags.news_extras import sign_share_data
@@ -1381,3 +1385,403 @@ class HomepageTopicCardsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         # The template uses {% if active_topics %} so context must include it
         # We verify the response renders successfully with topics in the DB
+
+
+class PollModelTests(TestCase):
+    """Tests for Poll and PollVote models."""
+    
+    def setUp(self):
+        self.poll = Poll.objects.create(
+            language='en',
+            question='What is your favorite season?',
+            options=['Spring', 'Summer', 'Fall', 'Winter'],
+            poll_type='fun',
+            status='active',
+            is_active=True,
+            ends_at=timezone.now() + timedelta(days=14),
+        )
+    
+    def test_poll_str(self):
+        """Poll string representation should include language and question."""
+        self.assertIn('en', str(self.poll))
+        self.assertIn('What is your favorite season?', str(self.poll))
+    
+    def test_get_results_display(self):
+        """get_results_display should return options with counts and percentages."""
+        # No votes yet
+        results = self.poll.get_results_display()
+        self.assertEqual(len(results), 4)
+        self.assertEqual(results[0]['count'], 0)
+        self.assertEqual(results[0]['percentage'], 0)
+        
+        # Add votes
+        self.poll.results = {'0': 2, '1': 4, '2': 3, '3': 1}
+        self.poll.vote_count = 10
+        self.poll.save()
+        
+        results = self.poll.get_results_display()
+        self.assertEqual(results[0]['count'], 2)
+        self.assertEqual(results[0]['percentage'], 20.0)
+        self.assertEqual(results[1]['count'], 4)
+        self.assertEqual(results[1]['percentage'], 40.0)
+    
+    def test_record_vote(self):
+        """record_vote should create a PollVote and update results."""
+        from django.test import RequestFactory
+        request = RequestFactory().post('/')
+        request.META['REMOTE_ADDR'] = '127.0.0.1'
+        request.META['HTTP_USER_AGENT'] = 'TestAgent'
+        
+        success = self.poll.record_vote(1, request)
+        self.assertTrue(success)
+        self.assertEqual(self.poll.vote_count, 1)
+        # Results keys are normalized to integers
+        self.assertEqual(self.poll.results[1], 1)
+        
+        # Duplicate vote should fail
+        success = self.poll.record_vote(2, request)
+        self.assertFalse(success)
+        self.assertEqual(self.poll.vote_count, 1)
+    
+    def test_has_voted(self):
+        """has_voted should detect previous votes."""
+        from django.test import RequestFactory
+        request = RequestFactory().post('/')
+        request.META['REMOTE_ADDR'] = '127.0.0.1'
+        request.META['HTTP_USER_AGENT'] = 'TestAgent'
+        
+        self.assertFalse(self.poll.has_voted(request))
+        self.poll.record_vote(0, request)
+        self.assertTrue(self.poll.has_voted(request))
+    
+    def test_non_english_poll_has_translation_field(self):
+        """Non-English polls should store english_translation."""
+        spanish_poll = Poll.objects.create(
+            language='es',
+            question='Cual es tu estacion favorita?',
+            options=['Primavera', 'Verano', 'Otono', 'Invierno'],
+            poll_type='fun',
+            english_translation='What is your favorite season?',
+            status='pending_review',
+        )
+        self.assertEqual(spanish_poll.english_translation, 'What is your favorite season?')
+
+
+class PollDetailViewTests(TestCase):
+    """Tests for the public poll detail page at /poll/<id>/."""
+    
+    def setUp(self):
+        self.client = Client()
+        self.active_poll = Poll.objects.create(
+            language='en',
+            question='Is AI regulation necessary?',
+            options=['Yes, urgently', 'Yes, carefully', 'No, let market decide', 'No opinion'],
+            poll_type='opinion',
+            status='active',
+            is_active=True,
+            ends_at=timezone.now() + timedelta(days=7),
+        )
+        self.expired_poll = Poll.objects.create(
+            language='en',
+            question='Old poll question?',
+            options=['A', 'B'],
+            poll_type='fun',
+            status='expired',
+            is_active=False,
+            ends_at=timezone.now() - timedelta(days=1),
+        )
+    
+    def test_poll_detail_page_renders(self):
+        """/poll/<id>/ should render with 200 status."""
+        response = self.client.get(f'/poll/{self.active_poll.id}/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Is AI regulation necessary?')
+        self.assertContains(response, 'Yes, urgently')
+    
+    def test_poll_detail_shows_open_status(self):
+        """Active poll should show 'Open' status."""
+        response = self.client.get(f'/poll/{self.active_poll.id}/')
+        self.assertContains(response, 'Open')
+    
+    def test_expired_poll_page_still_works(self):
+        """Expired polls should still be viewable."""
+        response = self.client.get(f'/poll/{self.expired_poll.id}/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Old poll question?')
+        self.assertContains(response, 'This poll has ended')
+    
+    def test_poll_detail_404_for_missing(self):
+        """Non-existent poll IDs should return 404."""
+        response = self.client.get('/poll/99999/')
+        self.assertEqual(response.status_code, 404)
+    
+    def test_poll_detail_has_og_tags(self):
+        """Poll detail should have Open Graph meta tags."""
+        response = self.client.get(f'/poll/{self.active_poll.id}/')
+        content = response.content.decode()
+        self.assertIn('og:title', content)
+        self.assertIn('Is AI regulation necessary?', content)
+        self.assertIn('og:url', content)
+        self.assertIn(f'/poll/{self.active_poll.id}/', content)
+    
+    def test_poll_detail_allows_voting_when_active(self):
+        """Active poll should allow voting via AJAX."""
+        response = self.client.post(
+            f'/poll/{self.active_poll.id}/vote/',
+            {'option': '0'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertTrue(data['success'])
+        self.assertEqual(data['vote_count'], 1)
+    
+    def test_poll_detail_blocks_voting_when_expired(self):
+        """Expired poll should reject votes."""
+        response = self.client.post(
+            f'/poll/{self.expired_poll.id}/vote/',
+            {'option': '0'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        self.assertEqual(response.status_code, 403)
+    
+    def test_poll_detail_prevents_double_voting(self):
+        """Same IP+UA should not be able to vote twice."""
+        self.client.post(
+            f'/poll/{self.active_poll.id}/vote/',
+            {'option': '0'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        response = self.client.post(
+            f'/poll/{self.active_poll.id}/vote/',
+            {'option': '1'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        self.assertEqual(response.status_code, 409)
+
+
+class PollManageViewTests(TestCase):
+    """Tests for staff-only poll management page."""
+    
+    def setUp(self):
+        self.client = Client()
+        self.staff_user = User.objects.create_user(
+            username='staff', password='testpass', is_staff=True
+        )
+        self.normal_user = User.objects.create_user(
+            username='normal', password='testpass'
+        )
+        self.poll = Poll.objects.create(
+            language='es',
+            question='Cual prefieres?',
+            options=['A', 'B', 'C'],
+            poll_type='fun',
+            english_translation='Which do you prefer?',
+            status='pending_review',
+        )
+    
+    def test_manage_page_requires_staff(self):
+        """Non-staff users should be redirected to login."""
+        response = self.client.get('/polls/manage/')
+        self.assertEqual(response.status_code, 302)
+    
+    def test_staff_can_access_manage_page(self):
+        """Staff users should see the manage page."""
+        self.client.login(username='staff', password='testpass')
+        response = self.client.get('/polls/manage/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Poll Management')
+    
+    def test_manage_page_shows_pending_first(self):
+        """Manage page should show pending polls."""
+        self.client.login(username='staff', password='testpass')
+        response = self.client.get('/polls/manage/?status=pending_review')
+        self.assertContains(response, 'Cual prefieres?')
+        self.assertContains(response, 'Which do you prefer?')
+    
+    def test_staff_can_activate_poll(self):
+        """Staff should be able to activate a pending poll."""
+        self.client.login(username='staff', password='testpass')
+        response = self.client.post('/polls/manage/', {
+            'action': 'activate',
+            'poll_id': self.poll.id,
+        })
+        self.assertEqual(response.status_code, 302)
+        self.poll.refresh_from_db()
+        self.assertEqual(self.poll.status, 'active')
+        self.assertTrue(self.poll.is_active)
+    
+    def test_staff_can_reject_poll(self):
+        """Staff should be able to reject a pending poll."""
+        self.client.login(username='staff', password='testpass')
+        response = self.client.post('/polls/manage/', {
+            'action': 'reject',
+            'poll_id': self.poll.id,
+        })
+        self.poll.refresh_from_db()
+        self.assertEqual(self.poll.status, 'rejected')
+        self.assertFalse(self.poll.is_active)
+
+
+class PollFeedIntegrationTests(TestCase):
+    """Tests for poll presence in the main news feed."""
+    
+    def setUp(self):
+        self.client = Client()
+        # Clear cache to prevent cross-test contamination from cache_page
+        from django.core.cache import cache
+        cache.clear()
+        # Create 12 stories so poll can appear after 8th
+        for i in range(12):
+            Story.objects.create(
+                source='BBC',
+                title=f'Test story {i}',
+                excerpt='Test',
+                url=f'https://example.com/s{i}',
+                language='en',
+                category='world',
+                published=timezone.now(),
+                url_hash=f'h{i}',
+                title_fingerprint=f'f{i}'
+            )
+        self.active_poll = Poll.objects.create(
+            language='en',
+            question='Test poll question?',
+            options=['Option 1', 'Option 2'],
+            poll_type='topical',
+            status='active',
+            is_active=True,
+            ends_at=timezone.now() + timedelta(days=7),
+        )
+    
+    def test_homepage_shows_inline_poll(self):
+        """Homepage 'all' tab should include inline poll after 8th story."""
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Test poll question?')
+        self.assertContains(response, 'poll-card-inline')
+    
+    def test_homepage_no_poll_when_none_active(self):
+        """Homepage should not show poll card when no active polls exist."""
+        self.active_poll.is_active = False
+        self.active_poll.save()
+        response = self.client.get('/')
+        self.assertNotContains(response, 'Test poll question?')
+    
+    def test_inline_poll_links_to_full_page(self):
+        """Inline poll should link to /poll/<id>/."""
+        response = self.client.get('/')
+        content = response.content.decode()
+        self.assertIn(f'/poll/{self.active_poll.id}/', content)
+
+
+class PollGenerationCommandTests(TestCase):
+    """Tests for generate_polls management command."""
+    
+    def test_command_requires_openai_key(self):
+        """Command should fail gracefully without OPENAI_API_KEY."""
+        from io import StringIO
+        from django.core.management import call_command
+        
+        out = StringIO()
+        # Ensure key is not set
+        import os
+        original_key = os.environ.pop('OPENAI_API_KEY', None)
+        try:
+            call_command('generate_polls', stdout=out, stderr=out)
+            output = out.getvalue()
+            self.assertIn('OPENAI_API_KEY', output)
+        finally:
+            if original_key:
+                os.environ['OPENAI_API_KEY'] = original_key
+    
+    def test_command_respects_dry_run(self):
+        """Dry run should not create any polls."""
+        from io import StringIO
+        from django.core.management import call_command
+        
+        initial_count = Poll.objects.count()
+        out = StringIO()
+        
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock()]
+        mock_response.choices[0].message.content = '[{"question": "Dry run test?", "options": ["A", "B"], "poll_type": "topical", "english_translation": "Dry run test?"}]'
+        
+        with patch.dict(os.environ, {'OPENAI_API_KEY': 'fake-key'}):
+            with patch('openai.OpenAI') as mock_openai:
+                mock_client = MagicMock()
+                mock_client.chat.completions.create.return_value = mock_response
+                mock_openai.return_value = mock_client
+                call_command('generate_polls', '--dry-run', '--language', 'en', '--num', '1', stdout=out)
+        
+        self.assertEqual(Poll.objects.count(), initial_count)
+        self.assertIn('DRY RUN', out.getvalue())
+    
+    def test_command_skips_duplicate_questions(self):
+        """Command should skip polls with duplicate questions."""
+        from io import StringIO
+        from django.core.management import call_command
+        
+        # Create an existing poll
+        Poll.objects.create(
+            language='en',
+            question='Duplicate test question?',
+            options=['A', 'B'],
+            status='pending_review',
+        )
+        
+        initial_count = Poll.objects.count()
+        out = StringIO()
+        
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock()]
+        mock_response.choices[0].message.content = '[{"question": "Duplicate test question?", "options": ["A", "B"], "poll_type": "topical", "english_translation": "Duplicate test question?"}]'
+        
+        with patch.dict(os.environ, {'OPENAI_API_KEY': 'fake-key'}):
+            with patch('openai.OpenAI') as mock_openai:
+                mock_client = MagicMock()
+                mock_client.chat.completions.create.return_value = mock_response
+                mock_openai.return_value = mock_client
+                call_command('generate_polls', '--language', 'en', '--num', '1', stdout=out)
+        
+        # Should not create a duplicate
+        self.assertEqual(Poll.objects.count(), initial_count)
+        self.assertIn('Skipped duplicate', out.getvalue())
+
+
+class PollAnalyticsTests(TestCase):
+    """Tests for poll analytics tracking."""
+    
+    def setUp(self):
+        self.client = Client()
+        self.poll = Poll.objects.create(
+            language='en',
+            question='Analytics test?',
+            options=['Yes', 'No'],
+            poll_type='topical',
+            status='active',
+            is_active=True,
+            ends_at=timezone.now() + timedelta(days=7),
+        )
+    
+    def test_vote_creates_analytics_event(self):
+        """Voting should create an AnalyticsEvent with type poll_vote."""
+        initial_count = AnalyticsEvent.objects.filter(event_type='poll_vote').count()
+        self.client.post(
+            f'/poll/{self.poll.id}/vote/',
+            {'option': '0'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        self.assertEqual(
+            AnalyticsEvent.objects.filter(event_type='poll_vote').count(),
+            initial_count + 1
+        )
+    
+    def test_poll_view_creates_analytics_event(self):
+        """Loading poll detail should create poll_view event."""
+        initial_count = AnalyticsEvent.objects.filter(event_type='poll_view').count()
+        self.client.get(f'/poll/{self.poll.id}/')
+        self.assertEqual(
+            AnalyticsEvent.objects.filter(event_type='poll_view').count(),
+            initial_count + 1
+        )

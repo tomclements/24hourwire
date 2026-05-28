@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poll Management | 24HourWire</title>
+    <style>
+        :root {
+            --primary: #0A2540;
+            --accent: #0066cc;
+            --text-primary: #1a1a1a;
+            --text-secondary: #4a5568;
+            --text-muted: #718096;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f7fafc;
+            --bg-tertiary: #edf2f7;
+            --border: #e2e8f0;
+            --radius: 8px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: var(--text-primary); max-width: 1400px; margin: 0 auto; padding: 20px; background: var(--bg-secondary); }
+        h1 { font-size: 1.6rem; margin-bottom: 5px; }
+        .subtitle { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px; }
+        .nav { margin-bottom: 20px; }
+        .nav a { color: var(--accent); text-decoration: none; margin-right: 15px; font-size: 0.9rem; }
+        .nav a:hover { text-decoration: underline; }
+        .card { background: var(--bg-primary); border-radius: var(--radius); padding: 15px 20px; margin-bottom: 20px; box-shadow: var(--shadow); }
+        .filters { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+        .filters select, .filters button { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; }
+        .filters button { background: var(--accent); color: white; border: none; cursor: pointer; }
+        .filters button:hover { background: #0052a3; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: var(--bg-primary); border-radius: var(--radius); padding: 15px; box-shadow: var(--shadow); text-align: center; }
+        .stat-card .value { font-size: 1.8rem; font-weight: 700; color: #1565c0; }
+        .stat-card .label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
+        table { width: 100%; background: var(--bg-primary); border-radius: var(--radius); box-shadow: var(--shadow); border-collapse: collapse; margin-bottom: 25px; font-size: 0.9rem; }
+        th { background: var(--bg-tertiary); text-align: left; padding: 12px 15px; font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); border-bottom: 2px solid var(--border); }
+        td { padding: 12px 15px; border-bottom: 1px solid var(--bg-tertiary); vertical-align: top; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #fafafa; }
+        .status-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+        .status-pending_review { background: #fff3cd; color: #856404; }
+        .status-active { background: #d4edda; color: #155724; }
+        .status-rejected { background: #f8d7da; color: #721c24; }
+        .status-expired { background: #e2e3e5; color: #383d41; }
+        .type-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; background: #e3f2fd; color: #1565c0; }
+        .lang-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; background: #f3e5f5; color: #6a1b9a; }
+        .question-cell { max-width: 350px; }
+        .question-original { font-weight: 500; margin-bottom: 4px; }
+        .question-translation { font-size: 0.85rem; color: var(--text-secondary); font-style: italic; }
+        .question-preview { font-size: 0.8rem; color: var(--text-muted); }
+        .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+        .actions button, .actions a { padding: 6px 12px; border: none; border-radius: 4px; font-size: 0.8rem; cursor: pointer; text-decoration: none; display: inline-block; }
+        .btn-activate { background: #16a34a; color: white; }
+        .btn-reject { background: #dc2626; color: white; }
+        .btn-expire { background: #6b7280; color: white; }
+        .btn-edit { background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border); }
+        .btn-view { background: #e0f2fe; color: #0369a1; }
+        .edit-form { display: none; background: var(--bg-secondary); padding: 15px; border-radius: 6px; margin-top: 10px; }
+        .edit-form.active { display: block; }
+        .edit-form input, .edit-form textarea, .edit-form select { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; margin-bottom: 10px; font-size: 0.9rem; font-family: inherit; }
+        .edit-form label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase; }
+        .edit-form button { padding: 8px 16px; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .section-title { font-size: 1.1rem; font-weight: 600; margin: 30px 0 15px; padding-bottom: 8px; border-bottom: 2px solid var(--border); }
+        .pending-highlight { border-left: 4px solid #f59e0b; }
+        .empty-state { text-align: center; padding: 40px; color: var(--text-muted); background: var(--bg-primary); border-radius: var(--radius); }
+        .messages { margin-bottom: 20px; }
+        .message { padding: 12px 15px; border-radius: 6px; margin-bottom: 10px; }
+        .message.success { background: #d4edda; color: #155724; }
+        .message.error { background: #f8d7da; color: #721c24; }
+        .pagination { display: flex; gap: 6px; justify-content: center; margin: 20px 0; }
+        .pagination a, .pagination span { padding: 8px 14px; border-radius: 6px; text-decoration: none; font-size: 0.9rem; }
+        .pagination a { background: var(--bg-primary); color: var(--accent); border: 1px solid var(--border); }
+        .pagination a:hover { background: var(--bg-tertiary); }
+        .pagination .current { background: var(--accent); color: white; }
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .config-grid label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; }
+        .config-grid input, .config-grid select { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem; }
+        .config-grid .checkbox-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+        .config-grid .checkbox-row input { width: auto; }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <a href="/">Home</a>
+        <a href="/dashboard/">Dashboard</a>
+        <a href="/analytics/">Analytics</a>
+        <a href="/polls/manage/">Polls</a>
+        {% if user.is_authenticated %}
+            <span style="color: #666; margin-left: 15px;">Hello, {{ user.username }}</span>
+            <a href="/logout/" style="margin-left: 15px;">Logout</a>
+        {% endif %}
+    </div>
+
+    <h1>Poll Management</h1>
+    <p class="subtitle">Review, activate, and manage community polls</p>
+
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="message {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="stats">
+        <div class="stat-card">
+            <div class="value">{{ paginator.count }}</div>
+            <div class="label">Total Polls</div>
+        </div>
+        <div class="stat-card">
+            <div class="value">{{ page_obj|length }}</div>
+            <div class="label">On This Page</div>
+        </div>
+    </div>
+
+    <div class="card filters">
+        <form method="get" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+            <label for="status" style="font-size: 0.85rem; font-weight: 500;">Status:</label>
+            <select name="status" id="status" onchange="this.form.submit()">
+                {% for code, name in statuses %}
+                <option value="{{ code }}" {% if status_filter == code %}selected{% endif %}>{{ name }}</option>
+                {% endfor %}
+            </select>
+            
+            <label for="language" style="font-size: 0.85rem; font-weight: 500;">Language:</label>
+            <select name="language" id="language" onchange="this.form.submit()">
+                <option value="">All</option>
+                {% for code, name in languages.items %}
+                <option value="{{ code }}" {% if language_filter == code %}selected{% endif %}>{{ name }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2 class="section-title" style="margin-top: 0;">Generation Settings</h2>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_config">
+            <div class="config-grid">
+                <div>
+                    <label for="freq">Frequency (hours)</label>
+                    <input type="number" name="frequency_hours" id="freq" value="{{ gen_config.frequency_hours }}" min="1" max="168">
+                </div>
+                <div>
+                    <label for="per_lang">Polls per language</label>
+                    <input type="number" name="polls_per_language" id="per_lang" value="{{ gen_config.polls_per_language }}" min="1" max="10">
+                </div>
+                <div>
+                    <div class="checkbox-row">
+                        <input type="checkbox" name="is_enabled" id="is_enabled" {% if gen_config.is_enabled %}checked{% endif %}>
+                        <label for="is_enabled" style="margin: 0;">Auto-generation enabled</label>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: flex-end;">
+                    <button type="submit" class="btn-view" style="border: none; cursor: pointer;">Save Settings</button>
+                </div>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 10px;">
+                Current cron schedule: daily at 6 AM UTC. Adjusting frequency here updates the target; the actual cron schedule is controlled in Render dashboard.
+            </p>
+        </form>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Language</th>
+                <th>Type</th>
+                <th>Question</th>
+                <th>Votes</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for poll in polls %}
+            <tr class="{% if poll.status == 'pending_review' %}pending-highlight{% endif %}">
+                <td>{{ poll.id }}</td>
+                <td><span class="lang-badge">{{ poll.language }}</span></td>
+                <td><span class="type-badge">{{ poll.get_poll_type_display }}</span></td>
+                <td class="question-cell">
+                    <div class="question-original">{{ poll.question }}</div>
+                    {% if poll.language != 'en' and poll.english_translation %}
+                    <div class="question-translation">EN: {{ poll.english_translation }}</div>
+                    {% endif %}
+                    <div class="question-preview">{{ poll.options|join:", " }}</div>
+                </td>
+                <td>{{ poll.vote_count }}</td>
+                <td><span class="status-badge status-{{ poll.status }}">{{ poll.get_status_display }}</span></td>
+                <td>{{ poll.created_at|date:"M d" }}<br><span style="font-size: 0.75rem; color: #888;">{{ poll.created_at|timesince }} ago</span></td>
+                <td>
+                    <div class="actions">
+                        <a href="/poll/{{ poll.id }}/" target="_blank" class="btn-view">View</a>
+                        {% if poll.status == 'pending_review' %}
+                        <form method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="activate">
+                            <input type="hidden" name="poll_id" value="{{ poll.id }}">
+                            <button type="submit" class="btn-activate">Activate</button>
+                        </form>
+                        <form method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="reject">
+                            <input type="hidden" name="poll_id" value="{{ poll.id }}">
+                            <button type="submit" class="btn-reject">Reject</button>
+                        </form>
+                        {% elif poll.status == 'active' %}
+                        <form method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="expire">
+                            <input type="hidden" name="poll_id" value="{{ poll.id }}">
+                            <button type="submit" class="btn-expire">Expire</button>
+                        </form>
+                        {% endif %}
+                        <button type="button" class="btn-edit" onclick="toggleEdit({{ poll.id }})">Edit</button>
+                    </div>
+                    
+                    <div class="edit-form" id="edit-form-{{ poll.id }}">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="update">
+                            <input type="hidden" name="poll_id" value="{{ poll.id }}">
+                            
+                            <label>Question</label>
+                            <input type="text" name="question" value="{{ poll.question }}">
+                            
+                            {% if poll.language != 'en' %}
+                            <label>English Translation</label>
+                            <input type="text" name="english_translation" value="{{ poll.english_translation }}">
+                            {% endif %}
+                            
+                            <label>Options (one per line)</label>
+                            <textarea name="options" rows="4">{{ poll.options|join:"\n" }}</textarea>
+                            
+                            <label>Type</label>
+                            <select name="poll_type">
+                                {% for code, name in poll_types %}
+                                <option value="{{ code }}" {% if poll.poll_type == code %}selected{% endif %}>{{ name }}</option>
+                                {% endfor %}
+                            </select>
+                            
+                            <label>Expires At</label>
+                            <input type="datetime-local" name="ends_at" value="{% if poll.ends_at %}{{ poll.ends_at|date:'Y-m-d\\TH:i' }}{% endif %}">
+                            
+                            <button type="submit">Save Changes</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" class="empty-state">No polls found for this filter.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if paginator.num_pages > 1 %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page=1&status={{ status_filter }}&language={{ language_filter }}">&laquo; First</a>
+            <a href="?page={{ page_obj.previous_page_number }}&status={{ status_filter }}&language={{ language_filter }}">Previous</a>
+        {% endif %}
+        
+        {% for num in page_obj.paginator.page_range %}
+            {% if num == page_obj.number %}
+                <span class="current">{{ num }}</span>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <a href="?page={{ num }}&status={{ status_filter }}&language={{ language_filter }}">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+        
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}&status={{ status_filter }}&language={{ language_filter }}">Next</a>
+            <a href="?page={{ paginator.num_pages }}&status={{ status_filter }}&language={{ language_filter }}">Last &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <script>
+        function toggleEdit(pollId) {
+            const form = document.getElementById('edit-form-' + pollId);
+            form.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>

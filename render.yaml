@@ -72,6 +72,28 @@ services:
           name: 24hourwire
           envVarKey: SECRET_KEY
 
+  # Cron job for generating poll candidates
+  - type: cron
+    name: 24hourwire-polls
+    runtime: python
+    plan: starter
+    region: ohio
+    buildCommand: pip install -r requirements.txt
+    startCommand: python manage.py generate_polls
+    schedule: "0 6 * * *"  # Daily at 6 AM UTC
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: 24hourwire-db
+          property: connectionString
+      - key: SECRET_KEY
+        fromService:
+          type: web
+          name: 24hourwire
+          envVarKey: SECRET_KEY
+      - key: OPENAI_API_KEY
+        sync: false
+
 databases:
   - name: 24hourwire-db
     plan: basic-256mb

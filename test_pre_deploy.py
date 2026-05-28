@@ -42,6 +42,12 @@ CRITICAL_TEST_CLASSES = [
     'news.tests.TopicThemeToggleTests',      # Theme toggle on topic pages
     'news.tests.TopicTranslationTests',      # Topic page language translations
     'news.tests.TopicMerchandiseTests',      # Topic merchandise affiliate links
+    'news.tests.PollModelTests',             # Poll model logic
+    'news.tests.PollDetailViewTests',        # Poll detail page
+    'news.tests.PollManageViewTests',        # Poll management page
+    'news.tests.PollFeedIntegrationTests',   # Poll feed integration
+    'news.tests.PollAnalyticsTests',         # Poll analytics tracking
+    'news.tests.PollGenerationCommandTests', # Poll generation command
 ]
 
 def run_tests():
