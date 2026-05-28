@@ -79,16 +79,48 @@
         .config-grid input, .config-grid select { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem; }
         .config-grid .checkbox-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
         .config-grid .checkbox-row input { width: auto; }
+        .theme-toggle { position: fixed; top: 16px; right: 16px; padding: 8px 12px; border-radius: var(--radius); background: var(--bg-primary); border: 1px solid var(--border); cursor: pointer; font-size: 0.85rem; color: var(--text-secondary); }
+        .theme-toggle:hover { background: var(--bg-tertiary); }
+        
+        /* Dark Mode */
+        [data-theme="dark"] {
+            --primary: #60a5fa;
+            --accent: #60a5fa;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --border: #475569;
+            --shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        [data-theme="dark"] tr:hover td { background: #1e293b; }
+        [data-theme="dark"] .stat-card .value { color: #60a5fa; }
+        [data-theme="dark"] .status-pending_review { background: #451a03; color: #fcd34d; }
+        [data-theme="dark"] .status-active { background: #14532d; color: #86efac; }
+        [data-theme="dark"] .status-rejected { background: #7f1d1d; color: #fecaca; }
+        [data-theme="dark"] .status-expired { background: #374151; color: #d1d5db; }
+        [data-theme="dark"] .type-badge { background: #1e3a5f; color: #93c5fd; }
+        [data-theme="dark"] .lang-badge { background: #4a044e; color: #e9d5ff; }
+        [data-theme="dark"] .btn-view { background: #1e3a5f; color: #93c5fd; }
+        [data-theme="dark"] .btn-edit { background: var(--bg-tertiary); color: var(--text-primary); }
+        [data-theme="dark"] .message.success { background: #14532d; color: #86efac; }
+        [data-theme="dark"] .message.error { background: #7f1d1d; color: #fecaca; }
+        [data-theme="dark"] .pagination a { background: var(--bg-primary); border-color: var(--border); }
+        [data-theme="dark"] .pagination a:hover { background: var(--bg-tertiary); }
     </style>
 </head>
 <body>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">🌓</button>
+    
     <div class="nav">
         <a href="/">Home</a>
         <a href="/dashboard/">Dashboard</a>
         <a href="/analytics/">Analytics</a>
         <a href="/polls/manage/">Polls</a>
         {% if user.is_authenticated %}
-            <span style="color: #666; margin-left: 15px;">Hello, {{ user.username }}</span>
+            <span style="color: var(--text-muted); margin-left: 15px;">Hello, {{ user.username }}</span>
             <a href="/logout/" style="margin-left: 15px;">Logout</a>
         {% endif %}
     </div>
@@ -287,6 +319,18 @@
             const form = document.getElementById('edit-form-' + pollId);
             form.classList.toggle('active');
         }
+        
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+        }
+        (function() {
+            const saved = localStorage.getItem('theme');
+            if (saved) document.documentElement.setAttribute('data-theme', saved);
+        })();
     </script>
 </body>
 </html>

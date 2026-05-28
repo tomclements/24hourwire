@@ -4,23 +4,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Community Polls | 24HourWire</title>
-    <meta name="description" content="Vote on community polls and see what the 24HourWire community thinks about news and daily life.">
+    <title>Poll Archive | 24HourWire</title>
+    <meta name="description" content="Browse past community polls and see how the 24HourWire community voted.">
     <meta name="robots" content="index, follow">
     
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://24hourwire.news/polls/">
-    <meta property="og:title" content="Community Polls | 24HourWire">
-    <meta property="og:description" content="Vote on community polls and see what the 24HourWire community thinks.">
+    <meta property="og:url" content="https://24hourwire.news/polls/archive/">
+    <meta property="og:title" content="Poll Archive | 24HourWire">
+    <meta property="og:description" content="Browse past community polls and see how the 24HourWire community voted.">
     <meta property="og:site_name" content="24HourWire">
     <meta property="og:image" content="https://24hourwire.news{% static 'news/images/logo.jpg' %}">
     
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:site" content="@24HourWire">
-    <meta name="twitter:title" content="Community Polls | 24HourWire">
-    <meta name="twitter:description" content="Vote on community polls and see what the 24HourWire community thinks.">
-    
-    <link rel="canonical" href="https://24hourwire.news/polls/">
+    <link rel="canonical" href="https://24hourwire.news/polls/archive/">
     <link rel="icon" type="image/jpeg" href="{% static 'news/images/logo.jpg' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -52,24 +47,18 @@
         .lang-pill { padding: 6px 14px; border-radius: 20px; background: var(--bg-primary); border: 1px solid var(--border); font-size: 0.85rem; color: var(--text-secondary); text-decoration: none; cursor: pointer; }
         .lang-pill:hover { border-color: var(--accent); color: var(--accent); }
         .lang-pill.active { background: var(--accent); color: white; border-color: var(--accent); }
-        .section-title { font-size: 1.2rem; font-weight: 600; margin: 32px 0 16px; color: var(--primary); }
         .poll-card {
             background: var(--bg-primary);
             border-radius: var(--radius-lg);
             padding: 24px;
             margin-bottom: 16px;
             box-shadow: var(--shadow);
-            transition: transform 0.15s, box-shadow 0.15s;
         }
-        .poll-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
         .poll-card a { text-decoration: none; color: inherit; }
         .poll-badge { display: inline-block; padding: 3px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; background: var(--bg-tertiary); color: var(--text-muted); margin-bottom: 12px; }
+        .closed-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; background: #fee2e2; color: #991b1b; font-weight: 600; margin-left: 8px; }
         .poll-question { font-size: 1.15rem; font-weight: 600; line-height: 1.4; margin-bottom: 16px; color: var(--primary); }
         .poll-meta { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; }
-        .poll-options-preview { display: flex; flex-wrap: wrap; gap: 8px; }
-        .poll-option-pill { padding: 6px 14px; border-radius: 20px; background: var(--bg-secondary); border: 1px solid var(--border); font-size: 0.85rem; color: var(--text-secondary); }
-        .vote-btn { display: inline-block; margin-top: 12px; padding: 8px 18px; background: var(--accent); color: white; border-radius: var(--radius); font-size: 0.9rem; font-weight: 500; text-decoration: none; }
-        .vote-btn:hover { background: #0052a3; }
         .results-preview { margin-top: 12px; }
         .result-mini { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
         .result-mini-label { font-size: 0.85rem; color: var(--text-secondary); min-width: 120px; }
@@ -77,9 +66,9 @@
         .result-mini-bar-fill { height: 100%; background: var(--accent); border-radius: 3px; }
         .result-mini-pct { font-size: 0.8rem; color: var(--text-muted); min-width: 40px; text-align: right; }
         .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); background: var(--bg-primary); border-radius: var(--radius-lg); }
-        .archive-link { text-align: center; margin-top: 24px; font-size: 0.9rem; }
-        .archive-link a { color: var(--accent); text-decoration: none; }
-        .archive-link a:hover { text-decoration: underline; }
+        .back-link { text-align: center; margin-top: 24px; font-size: 0.9rem; }
+        .back-link a { color: var(--accent); text-decoration: none; }
+        .back-link a:hover { text-decoration: underline; }
         .theme-toggle { position: fixed; top: 16px; right: 16px; padding: 8px 12px; border-radius: var(--radius); background: var(--bg-primary); border: 1px solid var(--border); cursor: pointer; font-size: 0.85rem; color: var(--text-secondary); }
         .theme-toggle:hover { background: var(--bg-tertiary); }
         @media (max-width: 480px) {
@@ -103,7 +92,7 @@
             --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.4);
         }
         [data-theme="dark"] .poll-badge { background: var(--bg-tertiary); color: var(--text-muted); }
-        [data-theme="dark"] .poll-option-pill { background: var(--bg-secondary); border-color: var(--border); color: var(--text-secondary); }
+        [data-theme="dark"] .closed-badge { background: #7f1d1d; color: #fecaca; }
         [data-theme="dark"] .result-mini-bar-bg { background: var(--bg-tertiary); }
         [data-theme="dark"] .result-mini-bar-fill { background: var(--accent); }
         [data-theme="dark"] .lang-pill { background: var(--bg-primary); border-color: var(--border); color: var(--text-secondary); }
@@ -116,61 +105,49 @@
     
     <div class="container">
         <div class="header">
-            <a href="/">← 24HourWire</a>
+            <a href="/polls/">← Back to polls</a>
         </div>
         
-        <h1>Community Polls</h1>
-        <p class="subtitle">Vote and see what the community thinks</p>
+        <h1>Poll Archive</h1>
+        <p class="subtitle">Browse past polls and final results</p>
         
         <div class="lang-filter">
-            <a href="/polls/" class="lang-pill {% if not language_filter %}active{% endif %}">All Languages</a>
+            <a href="/polls/archive/" class="lang-pill {% if not language_filter %}active{% endif %}">All Languages</a>
             {% for code, name in languages.items %}
-            <a href="/polls/?lang={{ code }}" class="lang-pill {% if language_filter == code %}active{% endif %}">{{ name }}</a>
+            <a href="/polls/archive/?lang={{ code }}" class="lang-pill {% if language_filter == code %}active{% endif %}">{{ name }}</a>
             {% endfor %}
         </div>
         
-        {% if active_polls %}
-        {% for poll in active_polls %}
+        {% if closed_polls %}
+        {% for poll in closed_polls %}
         <div class="poll-card">
             <a href="/poll/{{ poll.id }}/">
-                <span class="poll-badge">{{ poll.get_poll_type_display }}</span>
+                <span class="poll-badge">{{ poll.get_poll_type_display }}<span class="closed-badge">Closed</span></span>
                 <div class="poll-question">{{ poll.question }}</div>
-                <div class="poll-meta">{{ poll.vote_count }} vote{{ poll.vote_count|pluralize }} · {{ poll.get_language_display }}</div>
-                
-                {% if poll.user_has_voted %}
-                    <div class="results-preview">
-                        {% for r in poll.results_display %}
-                        <div class="result-mini">
-                            <span class="result-mini-label">{{ r.option }}</span>
-                            <div class="result-mini-bar-bg">
-                                <div class="result-mini-bar-fill" style="width: {{ r.percentage }}%;"></div>
-                            </div>
-                            <span class="result-mini-pct">{{ r.percentage }}%</span>
+                <div class="poll-meta">{{ poll.vote_count }} vote{{ poll.vote_count|pluralize }} · {{ poll.get_language_display }} · Ended {{ poll.ends_at|date:"M d" }}</div>
+                <div class="results-preview">
+                    {% for r in poll.results_display %}
+                    <div class="result-mini">
+                        <span class="result-mini-label">{{ r.option }}</span>
+                        <div class="result-mini-bar-bg">
+                            <div class="result-mini-bar-fill" style="width: {{ r.percentage }}%;"></div>
                         </div>
-                        {% endfor %}
+                        <span class="result-mini-pct">{{ r.percentage }}%</span>
                     </div>
-                {% else %}
-                    <div class="poll-options-preview">
-                        {% for option in poll.options %}
-                        <span class="poll-option-pill">{{ option }}</span>
-                        {% endfor %}
-                    </div>
-                    <div style="margin-top: 12px;">
-                        <span class="vote-btn">Cast your vote →</span>
-                    </div>
-                {% endif %}
+                    {% endfor %}
+                </div>
             </a>
         </div>
         {% endfor %}
         {% else %}
         <div class="empty-state">
-            <p style="font-size: 1.1rem; margin-bottom: 8px;">No active polls right now</p>
-            <p>Check back soon — new polls are added regularly.</p>
+            <p style="font-size: 1.1rem; margin-bottom: 8px;">No closed polls yet</p>
+            <p>Once polls expire, they will appear here.</p>
         </div>
         {% endif %}
         
-        <div class="archive-link">
-            <a href="/polls/archive/{% if language_filter %}?lang={{ language_filter }}{% endif %}">View closed polls →</a>
+        <div class="back-link">
+            <a href="/polls/{% if language_filter %}?lang={{ language_filter }}{% endif %}">← Back to active polls</a>
         </div>
     </div>
     

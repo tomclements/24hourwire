@@ -1120,36 +1120,55 @@ def poll_detail(request, poll_id):
 
 
 def polls_list(request):
-    """Public polls listing page — active and recently closed polls."""
+    """Public polls listing page — current active polls only."""
     now = timezone.now()
+    language = request.GET.get('lang', '')
     
-    # Active polls
+    # Active polls (current)
     active_polls = Poll.objects.filter(
         is_active=True,
         status='active',
         ends_at__gt=now,
     ).order_by('-created_at')
     
-    # Recently closed (last 7 days)
-    recent_cutoff = now - timedelta(days=7)
-    recent_closed = Poll.objects.filter(
-        status__in=['expired', 'rejected'],
-        ends_at__gte=recent_cutoff,
-    ).order_by('-ends_at')[:10]
+    if language:
+        active_polls = active_polls.filter(language=language)
     
     # For each active poll, check if user has voted
     for poll in active_polls:
         poll.user_has_voted = poll.has_voted(request)
         poll.results_display = poll.get_results_display()
     
-    for poll in recent_closed:
+    context = {
+        'active_polls': active_polls,
+        'language_filter': language,
+        'languages': LANGUAGE_NAMES,
+    }
+    return render(request, 'polls_list.html', context)
+
+
+def polls_archive(request):
+    """Archive page for closed polls (expired only, not rejected)."""
+    now = timezone.now()
+    language = request.GET.get('lang', '')
+    
+    # Expired polls only (not rejected)
+    closed_polls = Poll.objects.filter(
+        status='expired',
+    ).order_by('-ends_at')
+    
+    if language:
+        closed_polls = closed_polls.filter(language=language)
+    
+    for poll in closed_polls:
         poll.results_display = poll.get_results_display()
     
     context = {
-        'active_polls': active_polls,
-        'recent_closed': recent_closed,
+        'closed_polls': closed_polls,
+        'language_filter': language,
+        'languages': LANGUAGE_NAMES,
     }
-    return render(request, 'polls_list.html', context)
+    return render(request, 'polls_archive.html', context)
 
 
 @user_passes_test(is_staff_or_superuser, login_url='/login/')
