@@ -3,7 +3,8 @@ from django.core import signing
 from django.http import Http404, HttpResponse
 from django.utils import timezone
 from django.views.decorators.cache import cache_page
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.vary import vary_on_cookie, vary_on_headers
+from django.views.decorators.http import condition
 from datetime import timedelta
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -14,6 +15,13 @@ from .sources_config import (
     PAYWALLED_SOURCES, CATEGORY_KEYWORDS, CATEGORY_NAMES, UI_STRINGS, LANGUAGE_NAMES,
 )
 from .categorization import categorize_story, get_story_categories, check_exclusion
+
+
+def _latest_story_timestamp(request):
+    """Return the timestamp of the most recently published story for conditional GET."""
+    cutoff = timezone.now() - timedelta(hours=24)
+    latest = Story.objects.filter(published__gte=cutoff).order_by('-published').values_list('published', flat=True).first()
+    return latest
 
 
 def get_related_topics(story, active_topics=None):
@@ -109,11 +117,15 @@ def home(request):
         # Default to ALL sources (same as sources=all) so "All" bias filter shows everything
         selected_sources = [s[0] for s in lang_sources]
     
-    # PERFORMANCE: Filter by source in DB, then process in Python
+    # PERFORMANCE: Filter by source in DB, use only() to reduce data transfer,
+    # then process in Python. Index: language + published + source covers this.
     stories = list(Story.objects.filter(
         published__gte=cutoff,
         language=language,
         source__in=selected_sources
+    ).only(
+        'id', 'title', 'excerpt', 'url', 'source', 'published',
+        'language', 'category', 'image_url', 'url_hash', 'title_fingerprint'
     ).order_by('-published'))
     
     # Pre-fetch active topics once to avoid N+1 queries in get_related_topics
@@ -215,6 +227,7 @@ def home(request):
     })
 
 
+@cache_page(86400)  # 24 hours — robots.txt rarely changes
 def robots_txt(request):
     """Serve robots.txt dynamically.
     
@@ -279,6 +292,7 @@ def about_view(request):
     })
 
 
+@cache_page(3600)
 def terms_view(request):
     language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))
     if language == 'es':
@@ -286,6 +300,7 @@ def terms_view(request):
     return render(request, 'terms.html')
 
 
+@cache_page(3600)
 def privacy_view(request):
     language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))
     if language == 'es':
@@ -293,6 +308,7 @@ def privacy_view(request):
     return render(request, 'privacy.html')
 
 
+@cache_page(3600)
 def copyright_view(request):
     return render(request, 'copyright.html')
 
@@ -611,6 +627,8 @@ def feeds_view(request):
     return render(request, 'feeds.html', context)
 
 
+@condition(last_modified_func=_latest_story_timestamp)
+@cache_page(60)  # Cache AJAX endpoint for 1 minute
 def load_more_stories(request):
     """API endpoint for loading more stories via AJAX.
     
@@ -652,6 +670,9 @@ def load_more_stories(request):
         published__gte=cutoff,
         language=language,
         source__in=selected_sources
+    ).only(
+        'id', 'title', 'excerpt', 'url', 'source', 'published',
+        'language', 'category', 'image_url', 'url_hash', 'title_fingerprint'
     ).order_by('-published'))
     
     # Filter by category
@@ -734,6 +755,8 @@ def load_more_stories(request):
     })
 
 
+@condition(last_modified_func=_latest_story_timestamp)
+@cache_page(300)  # 5 minutes — widget content changes with stories
 def widget_js(request):
     """Generate an embeddable JavaScript widget for external sites.
     
@@ -986,6 +1009,7 @@ def analytics_dashboard(request):
     return render(request, 'analytics_dashboard.html', context)
 
 
+@cache_page(300)  # 5 minutes — topic content changes with new stories
 def topic_detail(request, slug):
     """Display an evergreen topic hub page with live matching stories.
     
@@ -1052,6 +1076,7 @@ def topic_detail(request, slug):
     return render(request, 'topic_detail.html', context)
 
 
+@cache_page(60)  # 1 minute — votes change frequently
 def poll_detail(request, poll_id):
     """Public poll page — works even for expired polls."""
     from django.http import JsonResponse
@@ -1119,6 +1144,7 @@ def poll_detail(request, poll_id):
     return render(request, 'poll_detail.html', context)
 
 
+@cache_page(60)  # 1 minute — poll list changes when new polls activate
 def polls_list(request):
     """Public polls listing page — current active polls only."""
     now = timezone.now()
@@ -1147,6 +1173,7 @@ def polls_list(request):
     return render(request, 'polls_list.html', context)
 
 
+@cache_page(600)  # 10 minutes — archive rarely changes
 def polls_archive(request):
     """Archive page for closed polls (expired only, not rejected)."""
     now = timezone.now()

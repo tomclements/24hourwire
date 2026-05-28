@@ -61,8 +61,14 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [BASE_DIR / 'templates'],
-        'APP_DIRS': True,
+        'APP_DIRS': False,  # Required when using cached.Loader
         'OPTIONS': {
+            'loaders': [
+                ('django.template.loaders.cached.Loader', [
+                    'django.template.loaders.filesystem.Loader',
+                    'django.template.loaders.app_directories.Loader',
+                ]),
+            ],
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
@@ -122,16 +128,26 @@ else:
 
 # Caching
 # Use LocMemCache for simple in-memory caching (no extra dependencies)
+# For production at scale, swap to Redis: django.core.cache.backends.redis.RedisCache
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         'LOCATION': '24hourwire-cache',
         'TIMEOUT': 300,  # 5 minutes default
         'OPTIONS': {
-            'MAX_ENTRIES': 1000,
+            'MAX_ENTRIES': 5000,  # Increased for fragment caching
         }
     }
 }
+
+# View-specific cache timeouts (seconds)
+CACHE_TIMEOUT_HOME = 60       # Home page: 1 min (stories change frequently)
+CACHE_TIMEOUT_TOPIC = 300   # Topic pages: 5 min
+CACHE_TIMEOUT_POLL = 60     # Poll detail: 1 min (votes change)
+CACHE_TIMEOUT_POLLS_LIST = 60  # Polls list: 1 min
+CACHE_TIMEOUT_ARCHIVE = 600  # Archive: 10 min (rarely changes)
+CACHE_TIMEOUT_SITEMAP = 3600 # Sitemap: 1 hour
+CACHE_TIMEOUT_ROBOTS = 86400 # robots.txt: 24 hours
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
@@ -169,6 +185,11 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# WhiteNoise: serve compressed static files with far-future cache headers
+# Enable Brotli and Gzip compression; add immutable file cache headers
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+WHITENOISE_MAX_AGE = 31536000  # 1 year for immutable files (hashed filenames)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/6.0/ref/settings/#default-auto-field

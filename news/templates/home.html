@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="{{ language }}">
 {% load static %}
+{% load cache %}
 {% load news_extras %}
 <head>
     <meta charset="UTF-8">
@@ -28,6 +29,12 @@
     <meta name="twitter:image:alt" content="24HourWire - {{ t.logo_tagline }}">
     
     <link rel="canonical" href="https://24hourwire.news">
+    
+    <!-- Prefetch key pages for faster navigation -->
+    <link rel="prefetch" href="/polls/">
+    <link rel="prefetch" href="/about/?lang={{ language }}">
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
     <link rel="icon" type="image/jpeg" href="{% static 'news/images/logo.jpg' %}">
     <!-- RSS/JSON Feed Auto-Discovery (language-aware) -->
     <link rel="alternate" type="application/rss+xml" title="24HourWire - Global News Feed" href="/feed/">
@@ -1746,7 +1753,8 @@
     </div>
 
     <main>
-        {# Ongoing Coverage: Topic Hub Cards #}
+        {# Ongoing Coverage: Topic Hub Cards — cached for 5 min, varies by language #}
+        {% cache 300 topics_section language %}
         {% if active_topics %}
         <section class="topics-section">
             <div class="topics-header">
@@ -1770,6 +1778,7 @@
             </div>
         </section>
         {% endif %}
+        {% endcache %}
 
         {% for cat_id, cat_data in grouped.items %}
         {% if cat_data.stories|length > 0 %}
@@ -1850,8 +1859,9 @@
                         </div>
                     </article>
                     
-                    {# Insert inline poll after 8th story in "all" tab #}
+                    {# Insert inline poll after 8th story in "all" tab — cached for 30s, varies by poll+lang #}
                     {% if forloop.counter == 8 and cat_data.poll %}
+                    {% cache 30 inline_poll cat_data.poll.id language %}
                     <article class="poll-card-inline" data-poll-id="{{ cat_data.poll.id }}">
                         <span class="poll-badge-inline">{{ cat_data.poll.get_poll_type_display }}</span>
                         <h3 class="poll-question-inline">{{ cat_data.poll.question }}</h3>
@@ -1877,6 +1887,7 @@
                         </div>
                         <a href="/poll/{{ cat_data.poll.id }}/" class="poll-view-full">View full poll &rarr;</a>
                     </article>
+                    {% endcache %}
                     {% endif %}
                     
                     {% endfor %}
