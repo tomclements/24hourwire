@@ -40,6 +40,7 @@ urlpatterns = [
     # Polls
     path('poll/<int:poll_id>/', views.poll_detail, name='poll_detail'),
     path('poll/<int:poll_id>/vote/', views.poll_vote_api, name='poll_vote_api'),
+    path('polls/', views.polls_list, name='polls_list'),
     path('polls/manage/', user_passes_test(views.is_staff_or_superuser, login_url='/login/')(views.polls_manage), name='polls_manage'),
     # API
     path('api/stories/', views.load_more_stories, name='load_more_stories'),

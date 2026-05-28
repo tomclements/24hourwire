@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Community Polls | 24HourWire</title>
+    <meta name="description" content="Vote on community polls and see what the 24HourWire community thinks about news and daily life.">
+    <meta name="robots" content="index, follow">
+    
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://24hourwire.news/polls/">
+    <meta property="og:title" content="Community Polls | 24HourWire">
+    <meta property="og:description" content="Vote on community polls and see what the 24HourWire community thinks.">
+    <meta property="og:site_name" content="24HourWire">
+    <meta property="og:image" content="https://24hourwire.news{% static 'news/images/logo.jpg' %}">
+    
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@24HourWire">
+    <meta name="twitter:title" content="Community Polls | 24HourWire">
+    <meta name="twitter:description" content="Vote on community polls and see what the 24HourWire community thinks.">
+    
+    <link rel="canonical" href="https://24hourwire.news/polls/">
+    <link rel="icon" type="image/jpeg" href="{% static 'news/images/logo.jpg' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0A2540;
+            --accent: #0066cc;
+            --text-primary: #1a1a1a;
+            --text-secondary: #4a5568;
+            --text-muted: #718096;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f7fafc;
+            --bg-tertiary: #edf2f7;
+            --border: #e2e8f0;
+            --radius: 8px;
+            --radius-lg: 12px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; line-height: 1.6; color: var(--text-primary); background: var(--bg-secondary); min-height: 100vh; }
+        .container { max-width: 720px; margin: 0 auto; padding: 40px 20px; }
+        .header { text-align: center; margin-bottom: 32px; }
+        .header a { color: var(--accent); text-decoration: none; font-weight: 600; font-size: 1.1rem; }
+        h1 { font-size: 1.8rem; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+        .subtitle { color: var(--text-muted); font-size: 0.95rem; }
+        .section-title { font-size: 1.2rem; font-weight: 600; margin: 32px 0 16px; color: var(--primary); }
+        .poll-card {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .poll-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+        .poll-card a { text-decoration: none; color: inherit; }
+        .poll-badge { display: inline-block; padding: 3px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; background: var(--bg-tertiary); color: var(--text-muted); margin-bottom: 12px; }
+        .poll-question { font-size: 1.15rem; font-weight: 600; line-height: 1.4; margin-bottom: 16px; color: var(--primary); }
+        .poll-meta { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; }
+        .poll-options-preview { display: flex; flex-wrap: wrap; gap: 8px; }
+        .poll-option-pill { padding: 6px 14px; border-radius: 20px; background: var(--bg-secondary); border: 1px solid var(--border); font-size: 0.85rem; color: var(--text-secondary); }
+        .vote-btn { display: inline-block; margin-top: 12px; padding: 8px 18px; background: var(--accent); color: white; border-radius: var(--radius); font-size: 0.9rem; font-weight: 500; text-decoration: none; }
+        .vote-btn:hover { background: #0052a3; }
+        .results-preview { margin-top: 12px; }
+        .result-mini { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .result-mini-label { font-size: 0.85rem; color: var(--text-secondary); min-width: 120px; }
+        .result-mini-bar-bg { flex: 1; height: 6px; background: var(--bg-tertiary); border-radius: 3px; overflow: hidden; }
+        .result-mini-bar-fill { height: 100%; background: var(--accent); border-radius: 3px; }
+        .result-mini-pct { font-size: 0.8rem; color: var(--text-muted); min-width: 40px; text-align: right; }
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); background: var(--bg-primary); border-radius: var(--radius-lg); }
+        .closed-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; background: #fee2e2; color: #991b1b; font-weight: 600; margin-left: 8px; }
+        @media (max-width: 480px) {
+            .container { padding: 24px 16px; }
+            h1 { font-size: 1.5rem; }
+            .poll-card { padding: 20px 16px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/">← 24HourWire</a>
+        </div>
+        
+        <h1>Community Polls</h1>
+        <p class="subtitle">Vote and see what the community thinks</p>
+        
+        {% if active_polls %}
+        <h2 class="section-title">Open Polls</h2>
+        {% for poll in active_polls %}
+        <div class="poll-card">
+            <a href="/poll/{{ poll.id }}/">
+                <span class="poll-badge">{{ poll.get_poll_type_display }}</span>
+                <div class="poll-question">{{ poll.question }}</div>
+                <div class="poll-meta">{{ poll.vote_count }} vote{{ poll.vote_count|pluralize }} · {{ poll.get_language_display }}</div>
+                
+                {% if poll.user_has_voted %}
+                    <div class="results-preview">
+                        {% for r in poll.results_display %}
+                        <div class="result-mini">
+                            <span class="result-mini-label">{{ r.option }}</span>
+                            <div class="result-mini-bar-bg">
+                                <div class="result-mini-bar-fill" style="width: {{ r.percentage }}%;"></div>
+                            </div>
+                            <span class="result-mini-pct">{{ r.percentage }}%</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="poll-options-preview">
+                        {% for option in poll.options %}
+                        <span class="poll-option-pill">{{ option }}</span>
+                        {% endfor %}
+                    </div>
+                    <div style="margin-top: 12px;">
+                        <span class="vote-btn">Cast your vote →</span>
+                    </div>
+                {% endif %}
+            </a>
+        </div>
+        {% endfor %}
+        {% endif %}
+        
+        {% if recent_closed %}
+        <h2 class="section-title">Recently Closed</h2>
+        {% for poll in recent_closed %}
+        <div class="poll-card">
+            <a href="/poll/{{ poll.id }}/">
+                <span class="poll-badge">{{ poll.get_poll_type_display }}<span class="closed-badge">Closed</span></span>
+                <div class="poll-question">{{ poll.question }}</div>
+                <div class="poll-meta">{{ poll.vote_count }} vote{{ poll.vote_count|pluralize }} · {{ poll.get_language_display }}</div>
+                <div class="results-preview">
+                    {% for r in poll.results_display %}
+                    <div class="result-mini">
+                        <span class="result-mini-label">{{ r.option }}</span>
+                        <div class="result-mini-bar-bg">
+                            <div class="result-mini-bar-fill" style="width: {{ r.percentage }}%;"></div>
+                        </div>
+                        <span class="result-mini-pct">{{ r.percentage }}%</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+        {% endif %}
+        
+        {% if not active_polls and not recent_closed %}
+        <div class="empty-state">
+            <p style="font-size: 1.1rem; margin-bottom: 8px;">No polls right now</p>
+            <p>Check back soon — new polls are added regularly.</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
