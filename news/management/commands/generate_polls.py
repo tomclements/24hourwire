@@ -392,7 +392,7 @@ class Command(BaseCommand):
                 # Groq is OpenAI-compatible — just change base_url
                 base_url = os.environ.get('GROQ_BASE_URL', 'https://api.groq.com/openai/v1')
                 client = OpenAI(api_key=api_key, base_url=base_url)
-                model = os.environ.get('GROQ_MODEL', 'llama-3.1-70b-versatile')
+                model = os.environ.get('GROQ_MODEL', 'llama-3.3-70b-versatile')
                 self.stdout.write(self.style.SUCCESS(f'Using Groq with model {model}'))
                 return client, model
             except ImportError:
