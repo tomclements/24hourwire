@@ -103,23 +103,25 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        api_key = os.environ.get('OPENAI_API_KEY')
+        # Support multiple LLM providers via environment variables
+        # Priority: GROQ_API_KEY > GOOGLE_API_KEY > OPENAI_API_KEY
+        api_key = (
+            os.environ.get('GROQ_API_KEY') or
+            os.environ.get('GOOGLE_API_KEY') or
+            os.environ.get('OPENAI_API_KEY')
+        )
         if not api_key:
             self.stdout.write(self.style.ERROR(
-                'OPENAI_API_KEY environment variable is required. Set it and try again.'
+                'No LLM API key found. Set one of: GROQ_API_KEY (recommended, free $200), '
+                'GOOGLE_API_KEY (free 1500 req/day), or OPENAI_API_KEY (cheap).'
             ))
             return
 
-        try:
-            from openai import OpenAI
-        except ImportError:
-            self.stdout.write(self.style.ERROR(
-                'openai package not installed. Run: pip install openai'
-            ))
+        # Determine provider and configure client
+        provider = self._detect_provider()
+        client, model = self._create_client(provider, api_key)
+        if not client:
             return
-
-        client = OpenAI(api_key=api_key)
-        model = os.environ.get('OPENAI_MODEL', 'gpt-4o-mini')
         dry_run = options['dry_run']
         target_language = options['language']
         
@@ -165,27 +167,41 @@ class Command(BaseCommand):
                 existing_poll_questions=existing_questions,
             )
 
-            # Retry logic for transient OpenAI failures
+            # Retry logic for transient LLM failures
             polls_data = None
             last_error = None
             for attempt in range(1, 4):
                 try:
-                    response = client.chat.completions.create(
-                        model=model,
-                        messages=[
-                            {"role": "system", "content": SYSTEM_PROMPT},
-                            {"role": "user", "content": user_prompt},
-                        ],
-                        temperature=0.8,
-                        max_tokens=2000,
-                    )
+                    # Use the appropriate API method for the provider
+                    # (try/except instead of hasattr so tests with MagicMock work correctly)
+                    try:
+                        response = client.chat.completions.create(
+                            model=model,
+                            messages=[
+                                {"role": "system", "content": SYSTEM_PROMPT},
+                                {"role": "user", "content": user_prompt},
+                            ],
+                            temperature=0.8,
+                            max_tokens=2000,
+                        )
+                    except AttributeError:
+                        # Google Gemini wrapper
+                        response = client.chat_completions_create(
+                            model=model,
+                            messages=[
+                                {"role": "system", "content": SYSTEM_PROMPT},
+                                {"role": "user", "content": user_prompt},
+                            ],
+                            temperature=0.8,
+                            max_tokens=2000,
+                        )
                     raw_content = response.choices[0].message.content.strip()
                     polls_data = self._parse_response(raw_content)
                     break
                 except Exception as e:
                     last_error = e
                     self.stdout.write(self.style.WARNING(
-                        f"  OpenAI attempt {attempt}/3 failed for {lang}: {e}"
+                        f"  LLM attempt {attempt}/3 failed for {lang}: {e}"
                     ))
                     import time
                     time.sleep(2 ** attempt)  # Exponential backoff: 2, 4, 8 seconds
@@ -359,3 +375,97 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS('Notification email sent to admin.'))
         except Exception as e:
             self.stdout.write(self.style.WARNING(f'Failed to send email: {e}'))
+
+    def _detect_provider(self):
+        """Determine which LLM provider to use based on env vars."""
+        if os.environ.get('GROQ_API_KEY'):
+            return 'groq'
+        if os.environ.get('GOOGLE_API_KEY'):
+            return 'google'
+        return 'openai'
+
+    def _create_client(self, provider, api_key):
+        """Create LLM client and select default model for the provider."""
+        if provider == 'groq':
+            try:
+                from openai import OpenAI
+                # Groq is OpenAI-compatible — just change base_url
+                base_url = os.environ.get('GROQ_BASE_URL', 'https://api.groq.com/openai/v1')
+                client = OpenAI(api_key=api_key, base_url=base_url)
+                model = os.environ.get('GROQ_MODEL', 'llama-3.1-70b-versatile')
+                self.stdout.write(self.style.SUCCESS(f'Using Groq with model {model}'))
+                return client, model
+            except ImportError:
+                self.stdout.write(self.style.ERROR(
+                    'openai package required for Groq. Run: pip install openai'
+                ))
+                return None, None
+
+        elif provider == 'google':
+            try:
+                import google.generativeai as genai
+                genai.configure(api_key=api_key)
+                model_name = os.environ.get('GOOGLE_MODEL', 'gemini-1.5-flash')
+                self.stdout.write(self.style.SUCCESS(f'Using Google Gemini ({model_name})'))
+                # Return a wrapper that mimics OpenAI's chat.completions.create interface
+                return GoogleGeminiWrapper(model_name), model_name
+            except ImportError:
+                self.stdout.write(self.style.ERROR(
+                    'google-generativeai package required. Run: pip install google-generativeai'
+                ))
+                return None, None
+
+        else:  # openai
+            try:
+                from openai import OpenAI
+                client = OpenAI(api_key=api_key)
+                model = os.environ.get('OPENAI_MODEL', 'gpt-4o-mini')
+                self.stdout.write(self.style.SUCCESS(f'Using OpenAI with model {model}'))
+                return client, model
+            except ImportError:
+                self.stdout.write(self.style.ERROR(
+                    'openai package not installed. Run: pip install openai'
+                ))
+                return None, None
+
+
+class GoogleGeminiWrapper:
+    """Minimal wrapper to make Google Gemini look like OpenAI's client."""
+
+    def __init__(self, model_name):
+        import google.generativeai as genai
+        self.model = genai.GenerativeModel(model_name)
+
+    class _FakeChoice:
+        def __init__(self, content):
+            self.message = self._FakeMessage(content)
+
+    class _FakeMessage:
+        def __init__(self, content):
+            self.content = content
+
+    class _FakeResponse:
+        def __init__(self, choices):
+            self.choices = choices
+
+    def chat_completions_create(self, **kwargs):
+        """Accept same kwargs as OpenAI but use Gemini API."""
+        messages = kwargs.get('messages', [])
+        # Concatenate system + user prompts
+        prompt_parts = []
+        for msg in messages:
+            role = msg.get('role', 'user')
+            content = msg.get('content', '')
+            label = 'System' if role == 'system' else 'User' if role == 'user' else 'Assistant'
+            prompt_parts.append(f"[{label}]\n{content}")
+        full_prompt = "\n\n".join(prompt_parts)
+
+        response = self.model.generate_content(
+            full_prompt,
+            generation_config={
+                'temperature': kwargs.get('temperature', 0.8),
+                'max_output_tokens': kwargs.get('max_tokens', 2000),
+            }
+        )
+        content = response.text if hasattr(response, 'text') else str(response)
+        return self._FakeResponse([self._FakeChoice(content)])
