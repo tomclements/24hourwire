@@ -1886,7 +1886,7 @@
                             <button class="poll-option-btn-inline" onclick="showInlineOptionsForPoll({{ cat_data.poll.id }})" style="background: transparent; border-style: dashed; margin-top: 8px;">Back to voting</button>
                         </div>
                         <a href="/poll/{{ cat_data.poll.id }}/?lang={{ language }}" class="poll-view-full">View full poll &rarr;</a>
-                        <button class="poll-option-btn-inline" onclick="shareInlinePoll({{ cat_data.poll.id }})" style="background: transparent; border-style: dashed; margin-top: 8px; font-size: 0.8rem;">Share poll</button>
+                        <button class="poll-option-btn-inline" onclick="openShareOverlay('{{ cat_data.poll.question|escapejs }}', '24HourWire Poll', 'https://24hourwire.news/poll/{{ cat_data.poll.id }}/')" style="background: transparent; border-style: dashed; margin-top: 8px; font-size: 0.8rem;">Share poll</button>
                     </article>
                     {% endcache %}
                     {% endif %}
@@ -2230,6 +2230,7 @@
             const optionsHtml = poll.options.map((opt, idx) =>
                 `<button class="poll-option-btn-inline" onclick="voteInlinePoll(${poll.id}, ${idx}, this)" data-option="${idx}">${opt}</button>`
             ).join('');
+            const pollWireUrl = 'https://24hourwire.news/poll/' + poll.id + '/';
             article.innerHTML = `
                 <span class="poll-badge-inline">${poll.poll_type}</span>
                 <h3 class="poll-question-inline">${poll.question}</h3>
@@ -2238,7 +2239,7 @@
                 </div>
                 <div class="poll-results-inline" id="poll-results-${poll.id}" style="display: none;"></div>
                 <a href="/poll/${poll.id}/" class="poll-view-full">View full poll &rarr;</a>
-                <button class="poll-option-btn-inline" onclick="shareInlinePoll(${poll.id})" style="background: transparent; border-style: dashed; margin-top: 8px; font-size: 0.8rem;">Share poll</button>
+                <button class="poll-option-btn-inline" onclick="openShareOverlay('${poll.question.replace(/'/g, "\\'")}', '24HourWire Poll', '${pollWireUrl}')" style="background: transparent; border-style: dashed; margin-top: 8px; font-size: 0.8rem;">Share poll</button>
             `;
             return article;
         }
@@ -2618,46 +2619,7 @@
             buttons.forEach(b => b.disabled = false);
         }
 
-        function shareInlinePoll(pollId) {
-            const url = 'https://24hourwire.news/poll/' + pollId + '/';
-            const container = document.querySelector('.poll-card-inline[data-poll-id="' + pollId + '"]');
-            const btn = container ? container.querySelector('button[onclick^="shareInlinePoll"]') : null;
 
-            function setBtn(text) {
-                if (btn) {
-                    btn.textContent = text;
-                    setTimeout(() => btn.textContent = 'Share poll', 1500);
-                }
-            }
-
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(url).then(() => {
-                    setBtn('Copied!');
-                }).catch(() => {
-                    fallbackCopyInline(url, setBtn);
-                });
-            } else {
-                fallbackCopyInline(url, setBtn);
-            }
-        }
-
-        function fallbackCopyInline(text, setBtn) {
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            textarea.style.position = 'fixed';
-            textarea.style.left = '-9999px';
-            document.body.appendChild(textarea);
-            textarea.focus();
-            textarea.select();
-            try {
-                document.execCommand('copy');
-                setBtn('Copied!');
-            } catch (err) {
-                console.error('Copy failed', err);
-                setBtn('Failed');
-            }
-            document.body.removeChild(textarea);
-        }
     </script>
     
     <!-- Different Angle Modal -->
