@@ -1,0 +1,66 @@
+﻿python : Creating test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+At line:1 char:1
++ python manage.py test news.tests.PollFeedIntegrationTests.test_homepa ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Creating test d...che=shared')...:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+Found 1 test(s).
+Operations to perform:
+  Synchronize unmigrated apps: messages, staticfiles
+  Apply all migrations: admin, auth, contenttypes, news, sessions
+Synchronizing apps without migrations:
+  Creating tables...
+    Running deferred SQL...
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying auth.0001_initial... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying auth.0012_alter_user_first_name_max_length... OK
+  Applying news.0001_initial... OK
+  Applying news.0002_story_category... OK
+  Applying news.0003_story_language_alter_story_category... OK
+  Applying news.0004_story_title_fingerprint_story_url_hash_and_more... OK
+  Applying news.0005_alter_story_url... OK
+  Applying news.0006_storycluster... OK
+  Applying news.0007_alter_story_category... OK
+  Applying news.0008_story_tweeted... OK
+  Applying news.0009_story_image_url... OK
+  Applying news.0010_analyticsevent... OK
+  Applying news.0011_story_news_story_languag_8ad071_idx_and_more... OK
+  Applying news.0012_recommendedbook... OK
+  Applying news.0013_analyticsevent_is_bot... OK
+  Applying news.0014_topic... OK
+  Applying news.0015_topic_translations... OK
+  Applying news.0016_topic_merchandise... OK
+  Applying news.0017_poll_pollvote... OK
+  Applying news.0018_alter_analyticsevent_event_type... OK
+test_homepage_shows_inline_poll (news.tests.PollFeedIntegrationTests.test_homepage_shows_inline_poll)
+Homepage 'all' tab should include inline poll after 8th story. ... 
+C:\Users\tomcl\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\django\core\handlers\base.py:62: UserWarning: 
+No directory at: C:\Users\tomcl\Source\24hourwire\staticfiles\
+  mw_instance = middleware(adapted_handler)
+ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.082s
+
+OK
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+
+  Applying sessions.0001_initial... OK
+System check identified no issues (0 silenced).

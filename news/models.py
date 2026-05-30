@@ -193,9 +193,189 @@ class AnalyticsEvent(models.Model):
         return f"{self.event_type}: {self.path} ({self.country_code})"
 
 
+# Common entity synonyms and acronym expansions for clustering
+# Maps alternative names to a canonical form
+ENTITY_SYNONYMS = {
+    # Political figures
+    'biden': 'us_president',
+    'trump': 'us_president',
+    'obama': 'us_president',
+    'us president': 'us_president',
+    'president of the united states': 'us_president',
+    'putin': 'russia_leader',
+    'russian president': 'russia_leader',
+    'zelensky': 'ukraine_leader',
+    'zelenskyy': 'ukraine_leader',
+    'netanyahu': 'israel_leader',
+    'xi jinping': 'china_leader',
+    'xi': 'china_leader',
+    'macron': 'france_leader',
+    'scholz': 'germany_leader',
+    'starmer': 'uk_leader',
+    'sunak': 'uk_leader',
+    'meloni': 'italy_leader',
+    # Countries / geopolitical entities
+    'uk': 'britain',
+    'united kingdom': 'britain',
+    'british': 'britain',
+    'england': 'britain',
+    'usa': 'america',
+    'us': 'america',
+    'united states': 'america',
+    'america': 'america',
+    'russia': 'russia',
+    'russian': 'russia',
+    'moscow': 'russia',
+    'ukraine': 'ukraine',
+    'ukrainian': 'ukraine',
+    'kyiv': 'ukraine',
+    'kiev': 'ukraine',
+    'china': 'china',
+    'chinese': 'china',
+    'chinese leader': 'china_leader',
+    'beijing': 'china',
+    'israel': 'israel',
+    'israeli': 'israel',
+    'gaza': 'gaza',
+    'palestine': 'gaza',
+    'palestinian': 'gaza',
+    'iran': 'iran',
+    'iranian': 'iran',
+    'tehran': 'iran',
+    'north korea': 'north_korea',
+    'dprk': 'north_korea',
+    'eu': 'european_union',
+    'european union': 'european_union',
+    'nato': 'nato',
+    'un': 'united_nations',
+    'united nations': 'united_nations',
+    # Organizations
+    'fed': 'federal_reserve',
+    'federal reserve': 'federal_reserve',
+    'ecb': 'ecb',
+    'european central bank': 'ecb',
+    'imf': 'imf',
+    'who': 'who',
+    'cdc': 'cdc',
+    # Events / generic
+    'covid': 'covid',
+    'coronavirus': 'covid',
+    'pandemic': 'covid',
+    'climate change': 'climate',
+    'global warming': 'climate',
+}
+
+# Acronyms to expand in titles
+ACRONYM_EXPANSIONS = {
+    'u.s.': 'united states',
+    'u.s': 'united states',
+    'u.k.': 'united kingdom',
+    'u.k': 'united kingdom',
+    'e.u.': 'european union',
+    'eu': 'european union',
+    'nato': 'nato',
+    'n.h.s.': 'national health service',
+    'nhs': 'national health service',
+    'n.y.': 'new york',
+    'ny': 'new york',
+    'l.a.': 'los angeles',
+    'la': 'los angeles',
+    'g.d.p.': 'gross domestic product',
+    'gdp': 'gross domestic product',
+    'a.i.': 'artificial intelligence',
+    'ai': 'artificial intelligence',
+    'i.p.o.': 'initial public offering',
+    'ipo': 'initial public offering',
+}
+
+
+def _normalize_title(title, stop_words):
+    """Normalize a title for clustering: lowercase, strip punctuation, expand acronyms."""
+    text = title.lower()
+    # Expand acronyms (whole word only)
+    for acr, expansion in ACRONYM_EXPANSIONS.items():
+        text = re.sub(rf'\b{re.escape(acr)}\b', expansion, text)
+    # Remove possessive 's and trailing punctuation
+    text = re.sub(r"'s\b", '', text)
+    text = re.sub(r'[^\w\s]', ' ', text)
+    # Collapse multiple spaces
+    text = re.sub(r'\s+', ' ', text).strip()
+    words = text.split()
+    # Filter stop words and very short tokens
+    words = [w for w in words if w not in stop_words and len(w) > 1]
+    return words
+
+
+def _extract_entities(words):
+    """Extract canonical entity tokens from a word list."""
+    entities = set()
+    # Single-word entities
+    for w in words:
+        if w in ENTITY_SYNONYMS:
+            entities.add(ENTITY_SYNONYMS[w])
+    # Multi-word entities (bigrams and trigrams)
+    for i in range(len(words) - 1):
+        bigram = f"{words[i]} {words[i + 1]}"
+        if bigram in ENTITY_SYNONYMS:
+            entities.add(ENTITY_SYNONYMS[bigram])
+    for i in range(len(words) - 2):
+        trigram = f"{words[i]} {words[i + 1]} {words[i + 2]}"
+        if trigram in ENTITY_SYNONYMS:
+            entities.add(ENTITY_SYNONYMS[trigram])
+    return entities
+
+
+def _compute_similarity(words_a, words_b, entities_a, entities_b):
+    """Compute similarity between two title word lists.
+
+    Returns a score from 0.0 to 1.0. Uses multiple signals:
+    - Entity overlap (strong signal)
+    - Jaccard similarity on content words
+    - Bigram overlap boost
+    """
+    if not words_a or not words_b:
+        return 0.0
+
+    set_a = set(words_a)
+    set_b = set(words_b)
+
+    # 1. Entity overlap: if they share any major entity, high similarity
+    if entities_a and entities_b:
+        shared_entities = entities_a & entities_b
+        if shared_entities:
+            # Boost based on how many content words also overlap
+            jaccard = len(set_a & set_b) / max(len(set_a), len(set_b))
+            return max(0.55, min(0.95, 0.55 + jaccard * 0.4))
+
+    # 2. Bigram overlap (adjacent word pairs matter)
+    bigrams_a = {f"{words_a[i]} {words_a[i + 1]}" for i in range(len(words_a) - 1)}
+    bigrams_b = {f"{words_b[i]} {words_b[i + 1]}" for i in range(len(words_b) - 1)}
+    if bigrams_a and bigrams_b:
+        bigram_overlap = len(bigrams_a & bigrams_b) / max(len(bigrams_a), len(bigrams_b))
+        if bigram_overlap >= 0.5:
+            return 0.55  # Enough to cluster
+
+    # 3. Standard Jaccard on content words
+    intersection = len(set_a & set_b)
+    union_size = max(len(set_a), len(set_b))
+    if union_size == 0:
+        return 0.0
+    jaccard = intersection / union_size
+
+    # 4. Short-title bonus: if both are short and share >=1 key word, boost
+    if len(words_a) <= 4 and len(words_b) <= 4:
+        if intersection >= 1:
+            jaccard = max(jaccard, 0.45)
+
+    return jaccard
+
+
 def build_clusters(language, max_stories=500):
     """Build StoryClusters for a language by grouping stories with similar titles.
-    
+
+    Improved algorithm with entity matching, acronym expansion, synonym
+    detection, and two-tier similarity scoring.
+
     Args:
         language: Language code
         max_stories: Maximum stories to process (to prevent memory issues)
@@ -206,35 +386,52 @@ def build_clusters(language, max_stories=500):
     from news.sources_config import LANGUAGE_STOP_WORDS
 
     cutoff = timezone.now() - timedelta(hours=24)
-    # Limit stories to prevent memory issues
     stories = list(Story.objects.filter(
-        published__gte=cutoff, 
+        published__gte=cutoff,
         language=language
     ).order_by('-published')[:max_stories])
 
     stop_words = LANGUAGE_STOP_WORDS.get(language, LANGUAGE_STOP_WORDS['en'])
 
-    # Group stories by word overlap
-    story_groups = OrderedDict()
+    # Pre-normalize every story
+    normalized_stories = []
     for story in stories:
-        normalized = re.sub(r'[^\w\s]', '', story.title.lower())
-        normalized_words = set(normalized.split()) - stop_words
-        normalized_key = ' '.join(sorted(normalized_words))
+        words = _normalize_title(story.title, stop_words)
+        entities = _extract_entities(words)
+        normalized_stories.append({
+            'story': story,
+            'words': words,
+            'entities': entities,
+            'key': ' '.join(sorted(set(words))),
+        })
 
-        matched_key = None
-        for existing_key in story_groups:
-            existing_words = set(existing_key.split())
-            if not existing_words or not normalized_words:
-                continue
-            overlap = len(existing_words & normalized_words) / max(len(existing_words), len(normalized_words))
-            if overlap >= 0.6:
-                matched_key = existing_key
+    # Greedy grouping by similarity
+    SIMILARITY_THRESHOLD = 0.45
+    story_groups = OrderedDict()
+    group_keys = []  # parallel list of representative keys
+
+    for ns in normalized_stories:
+        matched_idx = None
+        for idx, gk in enumerate(group_keys):
+            # Fast path: exact key match
+            if ns['key'] == gk:
+                matched_idx = idx
+                break
+            # Compute similarity against representative story (first in group)
+            rep = story_groups[gk][0]
+            rep_words = rep['words']
+            rep_entities = rep['entities']
+            score = _compute_similarity(ns['words'], rep_words, ns['entities'], rep_entities)
+            if score >= SIMILARITY_THRESHOLD:
+                matched_idx = idx
                 break
 
-        if matched_key:
-            story_groups[matched_key].append(story)
+        if matched_idx is not None:
+            gk = group_keys[matched_idx]
+            story_groups[gk].append(ns)
         else:
-            story_groups[normalized_key] = [story]
+            story_groups[ns['key']] = [ns]
+            group_keys.append(ns['key'])
 
     # Clear existing clusters for this language
     StoryCluster.objects.filter(language=language).delete()
@@ -243,7 +440,8 @@ def build_clusters(language, max_stories=500):
     clusters_to_create = []
     cluster_stories = []
 
-    for group_stories in story_groups.values():
+    for group in story_groups.values():
+        group_stories = [ns['story'] for ns in group]
         unique_sources = set(s.source for s in group_stories)
         if len(unique_sources) >= 2:
             clusters_to_create.append(StoryCluster(

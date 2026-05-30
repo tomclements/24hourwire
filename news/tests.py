@@ -14,7 +14,7 @@ from django.urls import reverse
 from django.http import JsonResponse
 
 from django.contrib.auth.models import User
-from news.models import Story, StoryCluster, Topic, Poll, PollVote, AnalyticsEvent, title_fingerprint, normalize_url
+from news.models import Story, StoryCluster, Topic, Poll, PollVote, AnalyticsEvent, title_fingerprint, normalize_url, build_clusters
 from news.views import story_share, different_angle, branded_redirect
 from django.core import signing
 from news.templatetags.news_extras import sign_share_data
@@ -262,6 +262,105 @@ class StoryClusterModelTests(TestCase):
         self.assertEqual(len(stories), 2)
         self.assertIn(self.story1, stories)
         self.assertIn(self.story2, stories)
+
+
+class ImprovedClusteringTests(TestCase):
+    """Tests for the improved build_clusters algorithm."""
+
+    def setUp(self):
+        self.now = timezone.now()
+        self.source_a = 'BBC'
+        self.source_b = 'CNN'
+        self.source_c = 'Reuters'
+
+    def _create_story(self, title, source='BBC'):
+        slug = title.replace(' ', '_').replace("'", '')[:50]
+        return Story.objects.create(
+            title=title,
+            url=f'http://example.com/{slug}',
+            source=source,
+            category='world',
+            language='en',
+            published=self.now,
+            fetched_at=self.now,
+        )
+
+    def test_entity_synonym_clustering(self):
+        """Stories about same entity with different names should cluster."""
+        s1 = self._create_story('Biden announces new climate policy', self.source_a)
+        s2 = self._create_story('US president unveils green energy plan', self.source_b)
+        s3 = self._create_story('Apple unveils new iPhone features', self.source_c)
+
+        build_clusters('en')
+        clusters = StoryCluster.objects.filter(language='en')
+        # Biden and US president should be in same cluster
+        biden_cluster = clusters.filter(stories=s1)
+        self.assertTrue(biden_cluster.exists())
+        c1 = biden_cluster.first()
+        self.assertIn(s2, list(c1.stories.all()))
+        # Unrelated story should NOT be in that cluster
+        self.assertNotIn(s3, list(c1.stories.all()))
+
+    def test_acronym_expansion_clustering(self):
+        """U.S. and United States should match."""
+        s1 = self._create_story('U.S. markets rally on tech earnings', self.source_a)
+        s2 = self._create_story('United States stocks surge after big tech reports', self.source_b)
+
+        build_clusters('en')
+        clusters = StoryCluster.objects.filter(language='en')
+        cluster = clusters.filter(stories=s1).first()
+        self.assertIsNotNone(cluster)
+        self.assertIn(s2, list(cluster.stories.all()))
+
+    def test_bigram_overlap_clustering(self):
+        """Adjacent word pairs should boost clustering."""
+        s1 = self._create_story('Gaza ceasefire talks collapse', self.source_a)
+        s2 = self._create_story('Gaza ceasefire negotiations break down', self.source_b)
+
+        build_clusters('en')
+        clusters = StoryCluster.objects.filter(language='en')
+        cluster = clusters.filter(stories=s1).first()
+        self.assertIsNotNone(cluster)
+        self.assertIn(s2, list(cluster.stories.all()))
+
+    def test_country_synonym_clustering(self):
+        """Russia and Moscow should cluster together."""
+        s1 = self._create_story('Russia launches new missile tests', self.source_a)
+        s2 = self._create_story('Moscow confirms military drills near border', self.source_b)
+
+        build_clusters('en')
+        clusters = StoryCluster.objects.filter(language='en')
+        cluster = clusters.filter(stories=s1).first()
+        self.assertIsNotNone(cluster)
+        self.assertIn(s2, list(cluster.stories.all()))
+
+    def test_low_jaccard_with_shared_entity(self):
+        """Low word overlap but shared entity should still cluster."""
+        s1 = self._create_story('Xi arrives in Paris for state visit', self.source_a)
+        s2 = self._create_story('Chinese leader meets Macron at Elysee Palace', self.source_b)
+
+        build_clusters('en')
+        clusters = StoryCluster.objects.filter(language='en')
+        cluster = clusters.filter(stories=s1).first()
+        self.assertIsNotNone(cluster)
+        self.assertIn(s2, list(cluster.stories.all()))
+
+    def test_no_false_positive_on_unrelated(self):
+        """Unrelated stories should NOT cluster."""
+        s1 = self._create_story('Apple unveils new iPhone features', self.source_a)
+        s2 = self._create_story('Mars rover discovers water evidence', self.source_b)
+        s3 = self._create_story('Federal Reserve holds interest rates steady', self.source_c)
+
+        build_clusters('en')
+        clusters = StoryCluster.objects.filter(language='en')
+        # Each should be in its own cluster or not clustered at all
+        for story in [s1, s2, s3]:
+            story_clusters = clusters.filter(stories=story)
+            if story_clusters.exists():
+                c = story_clusters.first()
+                other_stories = list(c.stories.exclude(id=story.id))
+                # None of these should share a cluster
+                self.assertEqual(len(other_stories), 0, f"{story.title} should not cluster with others")
 
 
 class BrandedRedirectTests(TestCase):
