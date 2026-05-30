@@ -2620,14 +2620,43 @@
 
         function shareInlinePoll(pollId) {
             const url = 'https://24hourwire.news/poll/' + pollId + '/';
-            navigator.clipboard.writeText(url).then(() => {
-                const container = document.querySelector('.poll-card-inline[data-poll-id="' + pollId + '"]');
-                const btn = container.querySelector('button[onclick^="shareInlinePoll"]');
+            const container = document.querySelector('.poll-card-inline[data-poll-id="' + pollId + '"]');
+            const btn = container ? container.querySelector('button[onclick^="shareInlinePoll"]') : null;
+
+            function setBtn(text) {
                 if (btn) {
-                    btn.textContent = 'Copied!';
+                    btn.textContent = text;
                     setTimeout(() => btn.textContent = 'Share poll', 1500);
                 }
-            });
+            }
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(() => {
+                    setBtn('Copied!');
+                }).catch(() => {
+                    fallbackCopyInline(url, setBtn);
+                });
+            } else {
+                fallbackCopyInline(url, setBtn);
+            }
+        }
+
+        function fallbackCopyInline(text, setBtn) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.left = '-9999px';
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                setBtn('Copied!');
+            } catch (err) {
+                console.error('Copy failed', err);
+                setBtn('Failed');
+            }
+            document.body.removeChild(textarea);
         }
     </script>
     
