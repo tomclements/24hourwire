@@ -249,7 +249,7 @@ ENTITY_SYNONYMS = {
     'nato': 'nato',
     'un': 'united_nations',
     'united nations': 'united_nations',
-    # Organizations
+    # Organizations (keep these, they are proper nouns)
     'fed': 'federal_reserve',
     'federal reserve': 'federal_reserve',
     'ecb': 'ecb',
@@ -257,12 +257,8 @@ ENTITY_SYNONYMS = {
     'imf': 'imf',
     'who': 'who',
     'cdc': 'cdc',
-    # Events / generic
-    'covid': 'covid',
-    'coronavirus': 'covid',
-    'pandemic': 'covid',
-    'climate change': 'climate',
-    'global warming': 'climate',
+    # NOTE: removed generic event terms (covid, pandemic, climate) — too broad,
+    # caused sports + health false positives
 }
 
 # Acronyms to expand in titles
@@ -339,13 +335,16 @@ def _compute_similarity(words_a, words_b, entities_a, entities_b):
     set_a = set(words_a)
     set_b = set(words_b)
 
-    # 1. Entity overlap: if they share any major entity, high similarity
+    # 1. Entity overlap: shared proper nouns are a strong signal, but we
+    # still need some content-word overlap to avoid false positives
+    # (e.g. sports + health both mentioning "WHO" should not cluster).
     if entities_a and entities_b:
         shared_entities = entities_a & entities_b
         if shared_entities:
-            # Boost based on how many content words also overlap
             jaccard = len(set_a & set_b) / max(len(set_a), len(set_b))
-            return max(0.55, min(0.95, 0.55 + jaccard * 0.4))
+            # Entity match alone = 0.40 (below threshold). Need ~25%
+            # word overlap to reach 0.50 threshold.
+            return max(0.40, min(0.90, 0.40 + jaccard * 0.5))
 
     # 2. Bigram overlap (adjacent word pairs matter)
     bigrams_a = {f"{words_a[i]} {words_a[i + 1]}" for i in range(len(words_a) - 1)}
@@ -353,7 +352,7 @@ def _compute_similarity(words_a, words_b, entities_a, entities_b):
     if bigrams_a and bigrams_b:
         bigram_overlap = len(bigrams_a & bigrams_b) / max(len(bigrams_a), len(bigrams_b))
         if bigram_overlap >= 0.5:
-            return 0.55  # Enough to cluster
+            return 0.50  # Meets threshold
 
     # 3. Standard Jaccard on content words
     intersection = len(set_a & set_b)
@@ -362,10 +361,10 @@ def _compute_similarity(words_a, words_b, entities_a, entities_b):
         return 0.0
     jaccard = intersection / union_size
 
-    # 4. Short-title bonus: if both are short and share >=1 key word, boost
+    # 4. Short-title bonus: if both are short and share >=2 key words, boost
     if len(words_a) <= 4 and len(words_b) <= 4:
-        if intersection >= 1:
-            jaccard = max(jaccard, 0.45)
+        if intersection >= 2:
+            jaccard = max(jaccard, 0.50)
 
     return jaccard
 
@@ -403,10 +402,12 @@ def build_clusters(language, max_stories=500):
             'words': words,
             'entities': entities,
             'key': ' '.join(sorted(set(words))),
+            'category': story.category,
         })
 
     # Greedy grouping by similarity
-    SIMILARITY_THRESHOLD = 0.45
+    BASE_THRESHOLD = 0.50
+    CROSS_CATEGORY_THRESHOLD = 0.65  # stricter when categories differ
     story_groups = OrderedDict()
     group_keys = []  # parallel list of representative keys
 
@@ -422,7 +423,15 @@ def build_clusters(language, max_stories=500):
             rep_words = rep['words']
             rep_entities = rep['entities']
             score = _compute_similarity(ns['words'], rep_words, ns['entities'], rep_entities)
-            if score >= SIMILARITY_THRESHOLD:
+            # Cross-category penalty: sports vs non-sports needs much stronger match
+            if ns['category'] != rep['category']:
+                if ns['category'] == 'sports' or rep['category'] == 'sports':
+                    threshold = CROSS_CATEGORY_THRESHOLD
+                else:
+                    threshold = BASE_THRESHOLD
+            else:
+                threshold = BASE_THRESHOLD
+            if score >= threshold:
                 matched_idx = idx
                 break
 

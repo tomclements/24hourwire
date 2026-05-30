@@ -273,27 +273,28 @@ class ImprovedClusteringTests(TestCase):
         self.source_b = 'CNN'
         self.source_c = 'Reuters'
 
-    def _create_story(self, title, source='BBC'):
+    def _create_story(self, title, source='BBC', category='world'):
         slug = title.replace(' ', '_').replace("'", '')[:50]
         return Story.objects.create(
             title=title,
             url=f'http://example.com/{slug}',
             source=source,
-            category='world',
+            category=category,
             language='en',
             published=self.now,
             fetched_at=self.now,
         )
 
     def test_entity_synonym_clustering(self):
-        """Stories about same entity with different names should cluster."""
+        """Stories about same entity with different names should cluster when
+        they also share content words (entity alone is not enough)."""
         s1 = self._create_story('Biden announces new climate policy', self.source_a)
-        s2 = self._create_story('US president unveils green energy plan', self.source_b)
+        s2 = self._create_story('US president unveils new climate plan', self.source_b)
         s3 = self._create_story('Apple unveils new iPhone features', self.source_c)
 
         build_clusters('en')
         clusters = StoryCluster.objects.filter(language='en')
-        # Biden and US president should be in same cluster
+        # Biden and US president share entity + 'climate' word
         biden_cluster = clusters.filter(stories=s1)
         self.assertTrue(biden_cluster.exists())
         c1 = biden_cluster.first()
@@ -324,8 +325,8 @@ class ImprovedClusteringTests(TestCase):
         self.assertIn(s2, list(cluster.stories.all()))
 
     def test_country_synonym_clustering(self):
-        """Russia and Moscow should cluster together."""
-        s1 = self._create_story('Russia launches new missile tests', self.source_a)
+        """Russia and Moscow should cluster together when they also share content words."""
+        s1 = self._create_story('Russia launches missile tests near border', self.source_a)
         s2 = self._create_story('Moscow confirms military drills near border', self.source_b)
 
         build_clusters('en')
@@ -335,9 +336,9 @@ class ImprovedClusteringTests(TestCase):
         self.assertIn(s2, list(cluster.stories.all()))
 
     def test_low_jaccard_with_shared_entity(self):
-        """Low word overlap but shared entity should still cluster."""
-        s1 = self._create_story('Xi arrives in Paris for state visit', self.source_a)
-        s2 = self._create_story('Chinese leader meets Macron at Elysee Palace', self.source_b)
+        """Shared entity + some word overlap should cluster."""
+        s1 = self._create_story('Xi Jinping arrives in Paris for state visit', self.source_a)
+        s2 = self._create_story('Chinese leader arrives in Paris for visit', self.source_b)
 
         build_clusters('en')
         clusters = StoryCluster.objects.filter(language='en')
@@ -361,6 +362,72 @@ class ImprovedClusteringTests(TestCase):
                 other_stories = list(c.stories.exclude(id=story.id))
                 # None of these should share a cluster
                 self.assertEqual(len(other_stories), 0, f"{story.title} should not cluster with others")
+
+    def test_sports_not_clustered_with_generic_terms(self):
+        """Sports stories mentioning WHO/pandemic should NOT cluster with health stories.
+
+        This was the original bug: sports stories were incorrectly grouped
+        into pandemic/WHO clusters because of shared generic words.
+        """
+        # Health story
+        s1 = self._create_story(
+            'WHO declares pandemic emergency across Europe',
+            self.source_a
+        )
+        # Sports story that happens to mention WHO
+        s2 = self._create_story(
+            'NBA players cleared by WHO after COVID tests before finals',
+            self.source_b,
+            category='sports'
+        )
+        # Another sports story
+        s3 = self._create_story(
+            'Premier League postpones matches due to outbreak concerns',
+            self.source_c,
+            category='sports'
+        )
+
+        build_clusters('en')
+        clusters = StoryCluster.objects.filter(language='en')
+
+        # Health story should not be in same cluster as sports stories
+        health_clusters = clusters.filter(stories=s1)
+        if health_clusters.exists():
+            hc = health_clusters.first()
+            self.assertNotIn(s2, list(hc.stories.all()),
+                "Sports story should NOT cluster with health story")
+
+        # Sports stories should not be in same cluster as health
+        sports_clusters = clusters.filter(stories=s2)
+        if sports_clusters.exists():
+            sc = sports_clusters.first()
+            self.assertNotIn(s1, list(sc.stories.all()),
+                "Health story should NOT cluster with sports story")
+
+    def test_cross_category_sports_stricter(self):
+        """Sports and non-sports need much higher similarity to cluster."""
+        # Business story
+        s1 = self._create_story(
+            'Tech stocks rally as markets reopen after holiday',
+            self.source_a
+        )
+        # Sports story with some overlapping words (stocks, rally)
+        s2 = self._create_story(
+            'Draft stocks rally after teams trade picks on deadline day',
+            self.source_b,
+            category='sports'
+        )
+
+        build_clusters('en')
+        clusters = StoryCluster.objects.filter(language='en')
+
+        # These should NOT cluster because they are different categories
+        # and sports vs non-sports requires 0.65 threshold
+        business_clusters = clusters.filter(stories=s1)
+        if business_clusters.exists():
+            bc = business_clusters.first()
+            self.assertNotIn(s2, list(bc.stories.all()),
+                "Sports and business should not cluster on weak overlap")
 
 
 class BrandedRedirectTests(TestCase):
