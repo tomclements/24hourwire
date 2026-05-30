@@ -639,16 +639,70 @@ class ShareFunctionalityTests(TestCase):
     def test_share_token_generation(self):
         """Template filter should generate valid signed token."""
         token = sign_share_data(self.story)
-        
+
         # Token should be a non-empty string
         self.assertIsInstance(token, str)
         self.assertTrue(len(token) > 0)
-        
+
         # Should be verifiable
         signer = signing.Signer()
         payload = signer.unsign(token)
         data = signing.loads(payload)
         self.assertEqual(data['title'], self.story.title)
+
+    def test_poll_share_token_generation(self):
+        """sign_poll_data filter should generate valid signed token for polls."""
+        from news.templatetags.news_extras import sign_poll_data
+        poll = Poll.objects.create(
+            language='en',
+            question='Test poll question?',
+            options=['A', 'B', 'C'],
+            poll_type='fun',
+            status='active',
+            is_active=True,
+            ends_at=timezone.now() + timedelta(days=7),
+        )
+
+        token = sign_poll_data(poll)
+        self.assertIsInstance(token, str)
+        self.assertTrue(len(token) > 0)
+
+        signer = signing.Signer()
+        payload = signer.unsign(token)
+        data = signing.loads(payload)
+        self.assertEqual(data['type'], 'poll')
+        self.assertEqual(data['poll_id'], poll.id)
+        self.assertEqual(data['question'], poll.question)
+        self.assertEqual(data['options'], poll.options)
+
+    def test_branded_redirect_poll_token(self):
+        """Branded redirect should handle poll tokens and show OG tags."""
+        from news.templatetags.news_extras import sign_poll_data
+        poll = Poll.objects.create(
+            language='en',
+            question='Shareable poll question?',
+            options=['Yes', 'No'],
+            poll_type='opinion',
+            status='active',
+            is_active=True,
+            ends_at=timezone.now() + timedelta(days=7),
+        )
+
+        token = sign_poll_data(poll)
+        response = self.client.get(f'/go/{token}/')
+        self.assertEqual(response.status_code, 200)
+
+        content = response.content.decode()
+        # OG tags for poll
+        self.assertIn('og:title', content)
+        self.assertIn(poll.question, content)
+        self.assertIn('og:description', content)
+        self.assertIn('twitter:card', content)
+        # Should show poll options
+        self.assertIn('Yes', content)
+        self.assertIn('No', content)
+        # Should have redirect to poll detail page
+        self.assertIn(f'/poll/{poll.id}/', content)
 
 
 class BiasFilterRegressionTests(TestCase):

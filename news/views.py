@@ -378,10 +378,10 @@ def story_share(request, story_id):
 
 def branded_redirect(request, token):
     """Stateless branded redirect using signed tokens.
-    
-    Verifies a signed token containing story metadata, renders a branded
+
+    Verifies a signed token containing story or poll metadata, renders a branded
     landing page with OG/Twitter Card tags, then redirects to the
-    original article. No database storage required.
+    original article or poll page. No database storage required.
     """
     signer = signing.Signer()
     try:
@@ -390,21 +390,47 @@ def branded_redirect(request, token):
         data = signing.loads(payload)
     except (signing.BadSignature, signing.SignatureExpired):
         raise Http404("Invalid or expired link")
-    
+
+    token_type = data.get('type', 'story')
+
+    if token_type == 'poll':
+        # Poll token: redirect to poll detail page
+        poll_id = data.get('poll_id')
+        if not poll_id:
+            raise Http404("Invalid poll link")
+        url = f"/poll/{poll_id}/"
+        title = data.get('question', 'Poll')
+        source = '24HourWire Poll'
+        image_url = ''
+        options = data.get('options', [])
+        language = data.get('language', 'en')
+        return render(request, 'branded_redirect.html', {
+            'url': url,
+            'title': title,
+            'source': source,
+            'image_url': image_url,
+            'token': token,
+            'is_poll': True,
+            'options': options,
+            'language': language,
+        })
+
+    # Story token: redirect to original article
     url = data.get('url', '')
     title = data.get('title', '')
     source = data.get('source', '')
     image_url = data.get('image_url', '')
-    
+
     if not url:
         raise Http404("Invalid link")
-    
+
     return render(request, 'branded_redirect.html', {
         'url': url,
         'title': title,
         'source': source,
         'image_url': image_url,
         'token': token,
+        'is_poll': False,
     })
 
 

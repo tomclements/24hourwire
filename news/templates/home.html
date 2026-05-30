@@ -1886,6 +1886,7 @@
                             <button class="poll-option-btn-inline" onclick="showInlineOptionsForPoll({{ cat_data.poll.id }})" style="background: transparent; border-style: dashed; margin-top: 8px;">Back to voting</button>
                         </div>
                         <a href="/poll/{{ cat_data.poll.id }}/?lang={{ language }}" class="poll-view-full">View full poll &rarr;</a>
+                        <button class="poll-option-btn-inline" onclick="shareInlinePoll({{ cat_data.poll.id }})" style="background: transparent; border-style: dashed; margin-top: 8px; font-size: 0.8rem;">Share poll</button>
                     </article>
                     {% endcache %}
                     {% endif %}
@@ -2236,7 +2237,8 @@
                     ${optionsHtml}
                 </div>
                 <div class="poll-results-inline" id="poll-results-${poll.id}" style="display: none;"></div>
-                <a href="/poll/${poll.id}/" class="poll-view-full">View full poll →</a>
+                <a href="/poll/${poll.id}/" class="poll-view-full">View full poll &rarr;</a>
+                <button class="poll-option-btn-inline" onclick="shareInlinePoll(${poll.id})" style="background: transparent; border-style: dashed; margin-top: 8px; font-size: 0.8rem;">Share poll</button>
             `;
             return article;
         }
@@ -2614,6 +2616,18 @@
             // Re-enable buttons if they were disabled after voting
             const buttons = container.querySelectorAll('.poll-option-btn-inline');
             buttons.forEach(b => b.disabled = false);
+        }
+
+        function shareInlinePoll(pollId) {
+            const url = 'https://24hourwire.news/poll/' + pollId + '/';
+            navigator.clipboard.writeText(url).then(() => {
+                const container = document.querySelector('.poll-card-inline[data-poll-id="' + pollId + '"]');
+                const btn = container.querySelector('button[onclick^="shareInlinePoll"]');
+                if (btn) {
+                    btn.textContent = 'Copied!';
+                    setTimeout(() => btn.textContent = 'Share poll', 1500);
+                }
+            });
         }
     </script>
     

@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title }} | 24HourWire</title>
+    {% if is_poll %}
+    <meta name="description" content="Vote on this poll and see what the 24HourWire community thinks.">
+    {% else %}
     <meta name="description" content="Curated by 24HourWire - news from all angles. Read the full story at {{ source }}.">
+    {% endif %}
     
     <!-- Prevent indexing of redirect wrapper pages - OG tags still read by social crawlers -->
     <meta name="robots" content="noindex, nofollow">
@@ -13,7 +17,11 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://24hourwire.news/go/{{ token }}/">
     <meta property="og:title" content="{{ title }}">
+    {% if is_poll %}
+    <meta property="og:description" content="Vote on this poll and see what the 24HourWire community thinks.">
+    {% else %}
     <meta property="og:description" content="Curated by 24HourWire - news from all angles. Read the full story at {{ source }}.">
+    {% endif %}
     <meta property="og:site_name" content="24HourWire">
     <meta property="og:locale" content="en_US">
     {% if image_url %}
@@ -33,7 +41,11 @@
     <meta name="twitter:site" content="@24HourWire">
     <meta name="twitter:creator" content="@24HourWire">
     <meta name="twitter:title" content="{{ title }}">
+    {% if is_poll %}
+    <meta name="twitter:description" content="Vote on this poll and see what the 24HourWire community thinks.">
+    {% else %}
     <meta name="twitter:description" content="Curated by 24HourWire - news from all angles. Read the full story at {{ source }}.">
+    {% endif %}
     {% if image_url %}
     <meta name="twitter:image" content="{{ image_url }}">
     <meta name="twitter:image:alt" content="{{ title }}">
@@ -204,16 +216,36 @@
         </div>
         
         <div class="story-card">
+            {% if is_poll %}
+            <div class="source">24HourWire Community Poll</div>
+            <h2 class="title">{{ title }}</h2>
+            {% if options %}
+            <div style="margin-top: 16px; text-align: left;">
+                {% for opt in options %}
+                <div style="padding: 8px 12px; background: #edf2f7; border-radius: 6px; margin-bottom: 6px; font-size: 0.9rem; color: var(--text-primary);">{{ opt }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% else %}
             <div class="source">Source: {{ source }}</div>
             <h2 class="title">{{ title }}</h2>
+            {% endif %}
         </div>
-        
+
         <p class="redirect-msg">
+            {% if is_poll %}
+            Opening poll in <span class="countdown" id="countdown">2</span> seconds...
+            {% else %}
             Redirecting to <strong>{{ source }}</strong> in <span class="countdown" id="countdown">2</span> seconds...
+            {% endif %}
         </p>
-        
+
         <div class="actions">
+            {% if is_poll %}
+            <a href="{{ url }}" class="btn btn-primary">Vote Now &rarr;</a>
+            {% else %}
             <a href="{{ url }}" class="btn btn-primary">Read Now &rarr;</a>
+            {% endif %}
             <a href="/" class="btn btn-secondary">Explore 24HourWire</a>
         </div>
     </div>

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="{{ poll.language }}">
 {% load static %}
+{% load news_extras %}
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -160,6 +161,7 @@
             <div class="share-section">
                 <p>Share this poll</p>
                 <button class="share-btn-inline" onclick="sharePoll()">Copy link</button>
+                <button class="share-btn-inline" onclick="sharePollBranded()" style="margin-left: 8px;">Share card</button>
             </div>
         </div>
         
@@ -221,9 +223,18 @@
         function sharePoll() {
             const url = 'https://24hourwire.news/poll/{{ poll.id }}/';
             navigator.clipboard.writeText(url).then(() => {
-                const btn = document.querySelector('.share-btn-inline');
+                const btn = document.querySelectorAll('.share-btn-inline')[0];
                 btn.textContent = 'Copied!';
                 setTimeout(() => btn.textContent = 'Copy link', 1500);
+            });
+        }
+
+        function sharePollBranded() {
+            const url = 'https://24hourwire.news/go/{{ poll|sign_poll_data }}/';
+            navigator.clipboard.writeText(url).then(() => {
+                const btn = document.querySelectorAll('.share-btn-inline')[1];
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Share card', 1500);
             });
         }
         

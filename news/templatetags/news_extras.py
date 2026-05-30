@@ -24,6 +24,25 @@ def sign_share_data(story):
 
 
 @register.filter
+def sign_poll_data(poll):
+    """Generate a signed token for stateless poll sharing.
+    
+    Usage in template: {{ poll|sign_poll_data }}
+    Returns a URL-safe signed token containing poll metadata.
+    """
+    data = {
+        'type': 'poll',
+        'poll_id': poll.id,
+        'question': poll.question,
+        'options': poll.options,
+        'language': poll.language,
+    }
+    signer = signing.Signer()
+    payload = signing.dumps(data)
+    return signer.sign(payload)
+
+
+@register.filter
 def language_name(code):
     """Return the full language name for a language code.
     
