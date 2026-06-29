@@ -26,6 +26,7 @@ urlpatterns = [
     path('feed/<str:language>.json', JSONFeedView.as_view(), name='feed_json_language'),
     path('feed/<str:language>/<str:category>.json', JSONFeedView.as_view(), name='feed_json_category'),
     # Feeds listing page
+    path('search/', views.search_stories, name='search'),
     path('feeds/', views.feeds_view, name='feeds'),
     # Sitemaps
     path('sitemap.xml', views.sitemap, name='sitemap'),

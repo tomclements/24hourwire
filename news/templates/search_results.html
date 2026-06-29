@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+{% load static %}
+{% load news_extras %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if query %}"{{ query }}" - {% endif %}Search | 24HourWire</title>
+    <meta name="description" content="Search 24HourWire news from the last 24 hours. Unbiased news aggregator showing current events from multiple perspectives.">
+    <meta name="robots" content="noindex, follow">
+    
+    <meta property="og:title" content="Search 24HourWire News">
+    <meta property="og:description" content="Search recent news from all angles.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://24hourwire.news/search/">
+    <meta property="og:site_name" content="24HourWire">
+    
+    <link rel="canonical" href="https://24hourwire.news/search/">
+    <link rel="icon" type="image/jpeg" href="{% static 'news/images/logo.jpg' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0A2540;
+            --accent: #0066cc;
+            --text-primary: #1a1a1a;
+            --text-secondary: #4a5568;
+            --text-muted: #718096;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f7fafc;
+            --bg-tertiary: #edf2f7;
+            --border: #e2e8f0;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            --radius: 8px;
+            --radius-lg: 12px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; line-height: 1.6; color: var(--text-primary); background: var(--bg-secondary); min-height: 100vh; }
+        .container { max-width: 720px; margin: 0 auto; padding: 40px 20px; }
+        .header { text-align: center; margin-bottom: 32px; }
+        .header a { color: var(--accent); text-decoration: none; font-weight: 600; font-size: 1.1rem; }
+        h1 { font-size: 1.5rem; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+        .subtitle { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 24px; }
+        
+        .search-box { display: flex; gap: 8px; margin-bottom: 32px; }
+        .search-input { flex: 1; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 1rem; background: var(--bg-primary); }
+        .search-input:focus { outline: none; border-color: var(--accent); }
+        .search-btn { padding: 12px 24px; background: var(--accent); color: white; border: none; border-radius: var(--radius); font-size: 1rem; font-weight: 600; cursor: pointer; }
+        .search-btn:hover { background: var(--primary); }
+        
+        .results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .results-count { font-size: 0.9rem; color: var(--text-muted); }
+        
+        .story-card { background: var(--bg-primary); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow); }
+        .story-header { margin-bottom: 8px; }
+        .story-title { color: var(--text-primary); text-decoration: none; font-weight: 600; font-size: 1.05rem; line-height: 1.4; }
+        .story-title:hover { color: var(--accent); }
+        .story-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; font-size: 0.8rem; }
+        .source-tag { color: var(--text-muted); }
+        .bias-badge { padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; }
+        .bias-badge.left { background: #dbeafe; color: #1e40af; }
+        .bias-badge.left-center { background: #dbeafe; color: #1e40af; }
+        .bias-badge.center { background: #f3f4f6; color: #4b5563; }
+        .bias-badge.right-center { background: #fee2e2; color: #991b1b; }
+        .bias-badge.right { background: #fee2e2; color: #991b1b; }
+        .time-badge { color: var(--text-muted); }
+        .story-excerpt { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5; margin-bottom: 12px; }
+        .story-actions a { color: var(--accent); text-decoration: none; font-size: 0.85rem; font-weight: 500; }
+        .story-actions a:hover { text-decoration: underline; }
+        
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+        .empty-state p { margin-bottom: 8px; }
+        
+        .back-link { display: inline-block; margin-top: 24px; color: var(--accent); text-decoration: none; font-size: 0.9rem; }
+        .back-link:hover { text-decoration: underline; }
+        
+        footer { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 0.85rem; border-top: 1px solid var(--border); margin-top: 40px; }
+        footer a { color: var(--accent); text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/?lang={{ language }}">24HourWire</a>
+        </div>
+        
+        <h1>{% if query %}Search Results{% else %}Search News{% endif %}</h1>
+        <p class="subtitle">{% if query %}Showing results for "{{ query }}" from the last 24 hours{% else %}Search headlines and summaries from the last 24 hours{% endif %}</p>
+        
+        <form class="search-box" action="/search/" method="get">
+            <input type="hidden" name="lang" value="{{ language }}">
+            <input type="text" name="q" class="search-input" placeholder="{{ t.search_placeholder|default:'Search news...' }}" value="{{ query|default:'' }}" required minlength="2">
+            <button type="submit" class="search-btn">Search</button>
+        </form>
+        
+        {% if query %}
+        <div class="results-header">
+            <span class="results-count">{{ results|length }} result{{ results|pluralize }} found</span>
+        </div>
+        
+        {% if results %}
+            {% for story in results %}
+            <article class="story-card">
+                <div class="story-header">
+                    <a href="{{ story.url }}" target="_blank" class="story-title">{{ story.title }}</a>
+                </div>
+                <div class="story-meta">
+                    <span class="source-tag">{{ story.source }}</span>
+                    <span class="bias-badge {{ story.bias_class }}">{{ story.bias_label }}</span>
+                    <span class="time-badge">{{ story.published|timesince }} ago</span>
+                </div>
+                {% with story.get_clean_excerpt as clean_excerpt %}
+                {% if clean_excerpt %}
+                <p class="story-excerpt">{{ clean_excerpt|truncatechars:200 }}</p>
+                {% endif %}
+                {% endwith %}
+                <div class="story-actions">
+                    <a href="{{ story.url }}" target="_blank">Read full story &rarr;</a>
+                </div>
+            </article>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p>No stories found for "{{ query }}" in the last 24 hours.</p>
+                <p>Try different keywords or check back soon — coverage updates every 15 minutes.</p>
+            </div>
+        {% endif %}
+        {% endif %}
+        
+        <a href="/?lang={{ language }}" class="back-link">&larr; Back to news</a>
+    </div>
+    
+    <footer>
+        <p><a href="/about/?lang={{ language }}">About</a> &middot; <a href="/terms/?lang={{ language }}">Terms</a> &middot; <a href="/privacy/?lang={{ language }}">Privacy</a></p>
+        <p style="margin-top: 8px;">&copy; 2026 24HourWire</p>
+    </footer>
+</body>
+</html>

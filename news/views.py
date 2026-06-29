@@ -616,6 +616,45 @@ def different_angle(request, story_id):
     })
 
 
+def search_stories(request):
+    """Search recent stories by keyword in title or excerpt.
+    
+    Searches only the last 24 hours of stories. No user tracking.
+    """
+    query = request.GET.get('q', '').strip()
+    language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))
+    if language not in SOURCES:
+        language = 'en'
+    
+    t = UI_STRINGS.get(language, UI_STRINGS['en'])
+    lang_source_info = LANGUAGE_SOURCE_INFO.get(language, LANGUAGE_SOURCE_INFO['en'])
+    
+    results = []
+    if query and len(query) >= 2:
+        cutoff = timezone.now() - timedelta(hours=24)
+        from django.db.models import Q
+        results = list(Story.objects.filter(
+            Q(title__icontains=query) | Q(excerpt__icontains=query),
+            published__gte=cutoff,
+            language=language,
+        ).only('id', 'title', 'excerpt', 'url', 'source', 'published', 'image_url').order_by('-published')[:50])
+        
+        for story in results:
+            bias_info = lang_source_info.get(story.source, ('Unknown', '#999', ''))
+            story.bias_label = bias_info[0]
+            story.bias_color = bias_info[1]
+            story.bias_class = bias_info[0].lower().replace(' ', '-').replace('/', '-') if bias_info[0] else 'unknown'
+            story.is_paywalled = story.source in PAYWALLED_SOURCES
+    
+    return render(request, 'search_results.html', {
+        'query': query,
+        'results': results,
+        'language': language,
+        't': t,
+        'language_names': LANGUAGE_NAMES,
+    })
+
+
 @cache_page(300)  # Cache feeds page for 5 minutes
 def feeds_view(request):
     """Display available RSS and JSON feeds for the selected language."""
