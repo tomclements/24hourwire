@@ -224,6 +224,7 @@ def home(request):
         'source_filter': selected_sources_param or 'default',
         'active_topics': active_topics,
         'active_poll': active_poll,
+        'most_covered': most_covered_stories[:8],  # Top 8 for dedicated homepage section
     })
 
 

@@ -1008,7 +1008,17 @@
     
     <main>
         {% if stories %}
-        <div class="stories-grid">
+        {# Client-side bias filter for topic pages #}
+        <div class="topic-bias-filters" style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;">
+            <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">Filter:</span>
+            <button class="bias-filter-btn active" data-filter="all" onclick="filterTopicStories('all', this)" style="padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-primary); font-size: 0.85rem; cursor: pointer; transition: all 0.2s;">All</button>
+            <button class="bias-filter-btn" data-filter="left" onclick="filterTopicStories('left', this)" style="padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-primary); font-size: 0.85rem; cursor: pointer; transition: all 0.2s;">Left</button>
+            <button class="bias-filter-btn" data-filter="left-center" onclick="filterTopicStories('left-center', this)" style="padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-primary); font-size: 0.85rem; cursor: pointer; transition: all 0.2s;">Left-Center</button>
+            <button class="bias-filter-btn" data-filter="center" onclick="filterTopicStories('center', this)" style="padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-primary); font-size: 0.85rem; cursor: pointer; transition: all 0.2s;">Center</button>
+            <button class="bias-filter-btn" data-filter="right-center" onclick="filterTopicStories('right-center', this)" style="padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-primary); font-size: 0.85rem; cursor: pointer; transition: all 0.2s;">Right-Center</button>
+            <button class="bias-filter-btn" data-filter="right" onclick="filterTopicStories('right', this)" style="padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-primary); font-size: 0.85rem; cursor: pointer; transition: all 0.2s;">Right</button>
+        </div>
+        <div class="stories-grid" id="topic-stories-grid">
             {% for story in stories %}
             
             {# Insert merchandise card after 4th story #}
@@ -1045,23 +1055,46 @@
                 {% endwith %}
             {% endif %}
             
-            <article class="story-card">
+            <article class="story-card" data-bias="{{ story.bias_label|lower|cut:' ' }}">
+                <script type="application/ld+json">
+                {
+                    "@context": "https://schema.org",
+                    "@type": "NewsArticle",
+                    "headline": "{{ story.title|escapejs }}",
+                    "description": "{{ story.get_clean_excerpt|default:story.title|truncatechars:200|escapejs }}",
+                    "url": "{{ story.url|escapejs }}",
+                    "datePublished": "{{ story.published|date:'c' }}",
+                    "author": {
+                        "@type": "Organization",
+                        "name": "{{ story.source|escapejs }}"
+                    },
+                    "publisher": {
+                        "@type": "NewsMediaOrganization",
+                        "name": "24HourWire",
+                        "url": "https://24hourwire.news"
+                    }{% if story.image_url %},
+                    "image": {
+                        "@type": "ImageObject",
+                        "url": "{{ story.image_url|escapejs }}"
+                    }{% endif %}
+                }
+                </script>
                 <div class="story-header">
                     <a href="{{ story.url }}" target="_blank" class="story-title">{{ story.title }}</a>
                 </div>
-                
+
                 <div class="story-meta">
                     <span class="source-tag">{{ story.source }}</span>
                     <span class="bias-badge {{ story.bias_class }}">{{ story.bias_label }}</span>
                     <span class="time-badge">{{ story.published|timesince }} ago</span>
                 </div>
-                
+
                 {% with story.get_clean_excerpt as clean_excerpt %}
                 {% if clean_excerpt %}
                 <p class="story-excerpt">{{ clean_excerpt|truncatechars:180 }}</p>
                 {% endif %}
                 {% endwith %}
-                
+
                 <div class="story-actions">
                     <div class="story-links">
                         <a href="{{ story.url }}" target="_blank">Read full story &rarr;</a>
@@ -1317,7 +1350,42 @@
             currentDifferentAngleId = null;
         }
         
-        // Close modal when clicking outside
+        // Topic page client-side bias filter
+        function filterTopicStories(filter, btn) {
+            const grid = document.getElementById('topic-stories-grid');
+            if (!grid) return;
+            const cards = grid.querySelectorAll('.story-card');
+            let visible = 0;
+
+            cards.forEach(card => {
+                const bias = card.getAttribute('data-bias') || '';
+                if (filter === 'all' || bias === filter) {
+                    card.style.display = '';
+                    visible++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Update active button state
+            document.querySelectorAll('.topic-bias-filters .bias-filter-btn').forEach(b => {
+                b.classList.remove('active');
+                b.style.background = 'var(--bg-primary)';
+                b.style.color = 'var(--text-primary)';
+                b.style.borderColor = 'var(--border)';
+                b.style.fontWeight = '400';
+            });
+            btn.classList.add('active');
+            btn.style.background = 'var(--accent)';
+            btn.style.color = '#fff';
+            btn.style.borderColor = 'var(--accent)';
+            btn.style.fontWeight = '600';
+
+            // Persist temporarily in localStorage (no server tracking)
+            try { localStorage.setItem('topicBiasFilter', filter); } catch(e) {}
+        }
+
+        // Restore last filter on page load
         document.addEventListener('DOMContentLoaded', function() {
             const modal = document.getElementById('different-angle-modal');
             if (modal) {
@@ -1327,6 +1395,14 @@
                     }
                 });
             }
+
+            try {
+                const saved = localStorage.getItem('topicBiasFilter');
+                if (saved && saved !== 'all') {
+                    const btn = document.querySelector('.topic-bias-filters .bias-filter-btn[data-filter="' + saved + '"]');
+                    if (btn) filterTopicStories(saved, btn);
+                }
+            } catch(e) {}
         });
     </script>
     

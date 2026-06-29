@@ -29,7 +29,25 @@
     <meta name="twitter:image:alt" content="24HourWire - {{ t.logo_tagline }}">
     
     <link rel="canonical" href="https://24hourwire.news">
-    
+
+    <!-- Schema.org: NewsMediaOrganization -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "NewsMediaOrganization",
+        "name": "24HourWire",
+        "url": "https://24hourwire.news",
+        "logo": {
+            "@type": "ImageObject",
+            "url": "https://24hourwire.news{% static 'news/images/logo.jpg' %}"
+        },
+        "sameAs": [
+            "https://twitter.com/24HourWire"
+        ],
+        "description": "Unbiased news aggregator showing current events from multiple perspectives. 24 hour news coverage from diverse sources."
+    }
+    </script>
+
     <!-- Prefetch key pages for faster navigation -->
     <link rel="prefetch" href="/polls/">
     <link rel="prefetch" href="/about/?lang={{ language }}">
@@ -1753,6 +1771,41 @@
     </div>
 
     <main>
+        {# Most Covered: Dedicated section above tabs #}
+        {% if most_covered %}
+        <section class="most-covered-section" style="margin-bottom: 32px;">
+            <div class="most-covered-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                <h2 style="font-size: 1.1rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 8px; margin: 0;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent);"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    Most Covered Across Sources
+                </h2>
+                <a href="#most_covered" class="tab" onclick="showCategory('most_covered'); return false;" style="font-size: 0.85rem; color: var(--accent); text-decoration: none;">View all &rarr;</a>
+            </div>
+            <div class="most-covered-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+                {% for story in most_covered %}
+                <article class="story-card" style="margin-bottom: 0;" data-source="{{ story.source|lower }}" data-bias="{{ story.bias_label|lower|cut:' ' }}" data-title="{{ story.title|lower }}">
+                    <div class="story-header">
+                        <a href="{{ story.url }}" target="_blank" class="story-title">{{ story.title }}</a>
+                    </div>
+                    <div class="story-meta">
+                        <span class="source-tag">{{ story.source }}</span>
+                        <span class="covered-badge">{{ story.covered_by_count }} sources</span>
+                        <span class="bias-badge {{ story.bias_class|default:'center' }}">{{ story.bias_label }}</span>
+                        <span class="time-badge">{{ story.published|timesince }} {{ t.ago }}</span>
+                    </div>
+                    <div class="story-actions" style="margin-top: 12px;">
+                        <div class="story-links">
+                            <a href="{{ story.url }}" target="_blank">{{ t.read_full }} &rarr;</a>
+                            <button class="different-angle-btn" onclick="showDifferentAngle({{ story.id }}, '{{ story.title|escapejs }}', '{{ story.source }}', '{{ story.bias_label }}')">{{ t.different_angle_btn }}</button>
+                        </div>
+                        <button class="share-btn" onclick="shareStory('{{ story.title|escapejs }}', '{{ story.source|escapejs }}', '{{ story|sign_share_data|escapejs }}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-primary);"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
         {# Ongoing Coverage: Topic Hub Cards — cached for 5 min, varies by language #}
         {% cache 300 topics_section language %}
         {% if active_topics %}
@@ -1812,29 +1865,52 @@
                         {% endwith %}
                     {% endif %}
 
-                    <article class="story-card" data-title="{{ story.title|lower }}" data-source="{{ story.source|lower }}" itemscope itemtype="https://schema.org/NewsArticle">
+                    <article class="story-card" data-title="{{ story.title|lower }}" data-source="{{ story.source|lower }}" data-bias="{{ story.bias_label|lower|cut:' ' }}" itemscope itemtype="https://schema.org/NewsArticle">
+                        <script type="application/ld+json">
+                        {
+                            "@context": "https://schema.org",
+                            "@type": "NewsArticle",
+                            "headline": "{{ story.title|escapejs }}",
+                            "description": "{{ story.get_clean_excerpt|default:story.title|truncatechars:200|escapejs }}",
+                            "url": "{{ story.url|escapejs }}",
+                            "datePublished": "{{ story.published|date:'c' }}",
+                            "author": {
+                                "@type": "Organization",
+                                "name": "{{ story.source|escapejs }}"
+                            },
+                            "publisher": {
+                                "@type": "NewsMediaOrganization",
+                                "name": "24HourWire",
+                                "url": "https://24hourwire.news"
+                            }{% if story.image_url %},
+                            "image": {
+                                "@type": "ImageObject",
+                                "url": "{{ story.image_url|escapejs }}"
+                            }{% endif %}
+                        }
+                        </script>
                         <div class="story-header">
                             <a href="{{ story.url }}" target="_blank" class="story-title" itemprop="headline">{{ story.title }}</a>
                         </div>
-                        
+
                         {% if story.image_url %}
                         <a href="{{ story.url }}" target="_blank" class="story-image-link" itemprop="image" itemscope itemtype="https://schema.org/ImageObject">
                             <img src="{{ story.image_url }}" alt="{{ story.title }}" class="story-image" loading="lazy" onerror="this.style.display='none'" itemprop="url">
                         </a>
                         {% endif %}
-                        
+
                         <div class="story-meta">
                             <span class="source-tag">{{ story.source }}{% if story.is_paywalled %}<span class="paywall-badge" title="{{ t.paywall_title }}">$</span>{% endif %}</span>
-                            
+
                             {% if story.covered_by_count %}
                             <span class="covered-badge">{{ story.covered_by_count }} sources</span>
                             {% endif %}
-                            
+
                             <span class="bias-badge {{ story.bias_class|default:'center' }}">{{ story.bias_label }}</span>
-                            
+
                             <span class="time-badge" itemprop="datePublished" content="{{ story.published|date:'c' }}">{{ story.published|timesince }} {{ t.ago }}</span>
                         </div>
-                        
+
                         {% with story.get_clean_excerpt as clean_excerpt %}
                         {% if clean_excerpt %}
                             <p class="story-excerpt" itemprop="description">{{ clean_excerpt|truncatechars:180 }}</p>
