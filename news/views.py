@@ -25,35 +25,28 @@ def _latest_story_timestamp(request):
 
 
 def get_related_topics(story, active_topics=None):
-    """Find active topics that match a story's title or categories.
-    
+    """Find active topics that match a story's title via keywords.
+
     Returns a list of Topic objects (max 2) for display on story cards.
-    
-    NOTE: Does NOT verify topic has matching stories in DB (avoids N+1 queries).
-    Topics are assumed to be relevant if keywords/categories match.
+
+    NOTE: Strict keyword-only matching. Category fallback removed because
+    it caused false positives (e.g. a 'world' category shooting story
+    incorrectly tagged with 'World Cup' and 'US-China Relations').
     """
     title_lower = story.title.lower()
-    categories = getattr(story, 'story_categories', [story.category])
-    
+
     related = []
     topics = active_topics or Topic.objects.filter(is_active=True)
-    
+
     for topic in topics:
-        # Check keyword match
         for kw in topic.keywords:
             if kw.lower() in title_lower:
                 related.append(topic)
                 break
-        else:
-            # Check category match if no keyword matched
-            for cat in topic.categories:
-                if cat in categories:
-                    related.append(topic)
-                    break
-        
+
         if len(related) >= 2:
             break
-    
+
     return related
 
 
