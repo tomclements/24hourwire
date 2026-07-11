@@ -104,15 +104,16 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # Support multiple LLM providers via environment variables
-        # Priority: GROQ_API_KEY > GOOGLE_API_KEY > OPENAI_API_KEY
+        # Priority: XAI_API_KEY > GROQ_API_KEY > GOOGLE_API_KEY > OPENAI_API_KEY
         api_key = (
+            os.environ.get('XAI_API_KEY') or
             os.environ.get('GROQ_API_KEY') or
             os.environ.get('GOOGLE_API_KEY') or
             os.environ.get('OPENAI_API_KEY')
         )
         if not api_key:
             self.stdout.write(self.style.ERROR(
-                'No LLM API key found. Set one of: GROQ_API_KEY (recommended, free $200), '
+                'No LLM API key found. Set one of: XAI_API_KEY (Grok), GROQ_API_KEY (recommended, free $200), '
                 'GOOGLE_API_KEY (free 1500 req/day), or OPENAI_API_KEY (cheap).'
             ))
             return
@@ -378,6 +379,8 @@ class Command(BaseCommand):
 
     def _detect_provider(self):
         """Determine which LLM provider to use based on env vars."""
+        if os.environ.get('XAI_API_KEY'):
+            return 'xai'
         if os.environ.get('GROQ_API_KEY'):
             return 'groq'
         if os.environ.get('GOOGLE_API_KEY'):
@@ -386,7 +389,22 @@ class Command(BaseCommand):
 
     def _create_client(self, provider, api_key):
         """Create LLM client and select default model for the provider."""
-        if provider == 'groq':
+        if provider == 'xai':
+            try:
+                from openai import OpenAI
+                # xAI Grok is OpenAI-compatible — just change base_url
+                base_url = os.environ.get('XAI_BASE_URL', 'https://api.x.ai/v1')
+                client = OpenAI(api_key=api_key, base_url=base_url)
+                model = os.environ.get('XAI_MODEL', 'grok-2-latest')
+                self.stdout.write(self.style.SUCCESS(f'Using xAI Grok with model {model}'))
+                return client, model
+            except ImportError:
+                self.stdout.write(self.style.ERROR(
+                    'openai package required for xAI Grok. Run: pip install openai'
+                ))
+                return None, None
+
+        elif provider == 'groq':
             try:
                 from openai import OpenAI
                 # Groq is OpenAI-compatible — just change base_url
