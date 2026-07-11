@@ -1919,6 +1919,7 @@ class PollGenerationCommandTests(TestCase):
         """Dry run should not create any polls."""
         from io import StringIO
         from django.core.management import call_command
+        from news.management.commands.generate_polls import Command
         
         initial_count = Poll.objects.count()
         out = StringIO()
@@ -1927,11 +1928,11 @@ class PollGenerationCommandTests(TestCase):
         mock_response.choices = [MagicMock()]
         mock_response.choices[0].message.content = '[{"question": "Dry run test?", "options": ["A", "B"], "poll_type": "topical", "english_translation": "Dry run test?"}]'
         
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.return_value = mock_response
+        
         with patch.dict(os.environ, {'OPENAI_API_KEY': 'fake-key'}):
-            with patch('openai.OpenAI') as mock_openai:
-                mock_client = MagicMock()
-                mock_client.chat.completions.create.return_value = mock_response
-                mock_openai.return_value = mock_client
+            with patch.object(Command, '_create_client', return_value=(mock_client, 'test-model')):
                 call_command('generate_polls', '--dry-run', '--language', 'en', '--num', '1', stdout=out)
         
         self.assertEqual(Poll.objects.count(), initial_count)
@@ -1941,6 +1942,7 @@ class PollGenerationCommandTests(TestCase):
         """Command should skip polls with duplicate questions."""
         from io import StringIO
         from django.core.management import call_command
+        from news.management.commands.generate_polls import Command
         
         # Create an existing poll
         Poll.objects.create(
@@ -1957,11 +1959,11 @@ class PollGenerationCommandTests(TestCase):
         mock_response.choices = [MagicMock()]
         mock_response.choices[0].message.content = '[{"question": "Duplicate test question?", "options": ["A", "B"], "poll_type": "topical", "english_translation": "Duplicate test question?"}]'
         
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.return_value = mock_response
+        
         with patch.dict(os.environ, {'OPENAI_API_KEY': 'fake-key'}):
-            with patch('openai.OpenAI') as mock_openai:
-                mock_client = MagicMock()
-                mock_client.chat.completions.create.return_value = mock_response
-                mock_openai.return_value = mock_client
+            with patch.object(Command, '_create_client', return_value=(mock_client, 'test-model')):
                 call_command('generate_polls', '--language', 'en', '--num', '1', stdout=out)
         
         # Should not create a duplicate
