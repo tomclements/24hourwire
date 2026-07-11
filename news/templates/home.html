@@ -1650,6 +1650,81 @@
             background: linear-gradient(135deg, var(--bg-secondary) 0%, #1e293b 100%);
         }
 
+        /* Collapsible coverage rows (Ongoing Coverage + Most Covered) */
+        .coverage-row {
+            transition: max-height 0.35s ease, opacity 0.35s ease, margin-bottom 0.35s ease;
+            max-height: 600px;
+            opacity: 1;
+            overflow: hidden;
+        }
+
+        .coverage-row.coverage-collapsed {
+            max-height: 0;
+            opacity: 0;
+            margin-bottom: 0 !important;
+        }
+
+        .coverage-toggle {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: var(--radius);
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            line-height: 1;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .coverage-toggle:hover {
+            background: var(--bg-secondary);
+            border-color: var(--accent);
+        }
+
+        /* Most Covered horizontal scroll row */
+        .most-covered-scroll {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+            padding-bottom: 8px;
+        }
+
+        .most-covered-scroll::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .most-covered-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .most-covered-scroll::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        .most-covered-scroll::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        .most-covered-card {
+            flex: 0 0 auto;
+            width: 320px;
+            margin-bottom: 0 !important;
+        }
+
+        @media (max-width: 640px) {
+            .most-covered-card {
+                width: 260px;
+            }
+        }
+
         /* Cookie Banner */
         #cookie-banner {
             display: none;
@@ -1816,7 +1891,7 @@
                 <div class="tabs-container">
                     <nav class="tabs">
                         {% for cat_id, cat_data in grouped.items %}
-                            {% if cat_data.stories|length > 0 %}
+                            {% if cat_data.stories|length > 0 and cat_id != 'most_covered' %}
                             <a href="#{{ cat_id }}" class="tab {% if forloop.first %}active{% endif %}" onclick="showCategory('{{ cat_id }}'); return false;">
                                 {{ cat_data.name }}
                                 <span class="tab-count" id="tab-count-{{ cat_id }}" data-total="{{ cat_data.total_stories }}">{{ cat_data.total_stories }}</span>
@@ -1835,19 +1910,47 @@
     </div>
 
     <main>
-        {# Most Covered: Dedicated section above tabs #}
+        {# Ongoing Coverage: Topic Hub Cards — cached for 5 min, varies by language #}
+        {% cache 300 topics_section language %}
+        {% if active_topics %}
+        <section class="topics-section coverage-row" id="topics-section">
+            <div class="topics-header">
+                <h2 class="topics-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent);"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                    Ongoing Coverage
+                </h2>
+                <button class="coverage-toggle" onclick="toggleCoverage()" aria-label="Collapse coverage" title="Collapse coverage">−</button>
+            </div>
+            <div class="topics-scroll">
+                {% for topic in active_topics %}
+                <a href="{{ topic.get_absolute_url }}" class="topic-card">
+                    <div class="topic-card-title">{{ topic.title }}</div>
+                    {% if topic.headline %}
+                    <div class="topic-card-headline">{{ topic.headline }}</div>
+                    {% elif topic.description %}
+                    <div class="topic-card-headline">{{ topic.description|truncatechars:100 }}</div>
+                    {% endif %}
+                    <div class="topic-card-arrow">Read coverage →</div>
+                </a>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+        {% endcache %}
+
+        {# Most Covered: horizontally scrolling row #}
         {% if most_covered %}
-        <section class="most-covered-section" style="margin-bottom: 32px;">
+        <section class="most-covered-section coverage-row" id="most-covered-section" style="margin-bottom: 32px;">
             <div class="most-covered-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
                 <h2 style="font-size: 1.1rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 8px; margin: 0;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent);"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                     Most Covered Across Sources
                 </h2>
-                <a href="#most_covered" class="tab" onclick="showCategory('most_covered'); return false;" style="font-size: 0.85rem; color: var(--accent); text-decoration: none;">View all &rarr;</a>
+                <button class="coverage-toggle" onclick="toggleCoverage()" aria-label="Collapse coverage" title="Collapse coverage">−</button>
             </div>
-            <div class="most-covered-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+            <div class="most-covered-scroll">
                 {% for story in most_covered %}
-                <article class="story-card" style="margin-bottom: 0;" data-source="{{ story.source|lower }}" data-bias="{{ story.bias_label|lower|cut:' ' }}" data-title="{{ story.title|lower }}">
+                <article class="story-card most-covered-card" data-source="{{ story.source|lower }}" data-bias="{{ story.bias_label|lower|cut:' ' }}" data-title="{{ story.title|lower }}">
                     <div class="story-header">
                         <a href="{{ story.url }}" target="_blank" class="story-title">{{ story.title }}</a>
                     </div>
@@ -1870,35 +1973,8 @@
         </section>
         {% endif %}
 
-        {# Ongoing Coverage: Topic Hub Cards — cached for 5 min, varies by language #}
-        {% cache 300 topics_section language %}
-        {% if active_topics %}
-        <section class="topics-section">
-            <div class="topics-header">
-                <h2 class="topics-title">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent);"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-                    Ongoing Coverage
-                </h2>
-            </div>
-            <div class="topics-scroll">
-                {% for topic in active_topics %}
-                <a href="{{ topic.get_absolute_url }}" class="topic-card">
-                    <div class="topic-card-title">{{ topic.title }}</div>
-                    {% if topic.headline %}
-                    <div class="topic-card-headline">{{ topic.headline }}</div>
-                    {% elif topic.description %}
-                    <div class="topic-card-headline">{{ topic.description|truncatechars:100 }}</div>
-                    {% endif %}
-                    <div class="topic-card-arrow">Read coverage →</div>
-                </a>
-                {% endfor %}
-            </div>
-        </section>
-        {% endif %}
-        {% endcache %}
-
         {% for cat_id, cat_data in grouped.items %}
-        {% if cat_data.stories|length > 0 %}
+        {% if cat_data.stories|length > 0 and cat_id != 'most_covered' %}
         <section id="{{ cat_id }}" class="category-section" data-count="{{ cat_data.total_stories }}">
             <div class="category-header">
                 <h2 class="category-title">{{ cat_data.name }}</h2>
@@ -2110,12 +2186,31 @@
             window.location.href = url.toString();
         });
 
+        // Collapse / expand the Ongoing Coverage and Most Covered rows
+        function toggleCoverage() {
+            const rows = document.querySelectorAll('.coverage-row');
+            const isCollapsed = rows.length > 0 && rows[0].classList.contains('coverage-collapsed');
+            rows.forEach(row => row.classList.toggle('coverage-collapsed', !isCollapsed));
+            document.querySelectorAll('.coverage-toggle').forEach(btn => {
+                btn.textContent = isCollapsed ? '−' : '+';
+                btn.setAttribute('aria-label', isCollapsed ? 'Collapse coverage' : 'Expand coverage');
+                btn.setAttribute('title', isCollapsed ? 'Collapse coverage' : 'Expand coverage');
+            });
+        }
+
         // Category tabs
         function showCategory(catId) {
             document.querySelectorAll('.category-section').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
             document.getElementById(catId).style.display = 'block';
             document.querySelector(`.tab[href="#${catId}"]`).classList.add('active');
+            // Roll up the coverage rows so the selected category is visible
+            document.querySelectorAll('.coverage-row').forEach(row => row.classList.add('coverage-collapsed'));
+            document.querySelectorAll('.coverage-toggle').forEach(btn => {
+                btn.textContent = '+';
+                btn.setAttribute('aria-label', 'Expand coverage');
+                btn.setAttribute('title', 'Expand coverage');
+            });
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
