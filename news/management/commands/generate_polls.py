@@ -395,7 +395,7 @@ class Command(BaseCommand):
                 # xAI Grok is OpenAI-compatible — just change base_url
                 base_url = os.environ.get('XAI_BASE_URL', 'https://api.x.ai/v1')
                 client = OpenAI(api_key=api_key, base_url=base_url)
-                model = os.environ.get('XAI_MODEL', 'grok-2-latest')
+                model = os.environ.get('XAI_MODEL', 'grok-2-1212')
                 self.stdout.write(self.style.SUCCESS(f'Using xAI Grok with model {model}'))
                 return client, model
             except ImportError:
