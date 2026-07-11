@@ -1919,7 +1919,7 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent);"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
                     Ongoing Coverage
                 </h2>
-                <button class="coverage-toggle" onclick="toggleCoverage()" aria-label="Collapse coverage" title="Collapse coverage">−</button>
+                <button class="coverage-toggle" onclick="toggleCoverage('topics-section')" aria-label="Collapse coverage" title="Collapse coverage">−</button>
             </div>
             <div class="coverage-row">
                 <div class="topics-scroll">
@@ -1948,7 +1948,7 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent);"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                     Most Covered Across Sources
                 </h2>
-                <button class="coverage-toggle" onclick="toggleCoverage()" aria-label="Collapse coverage" title="Collapse coverage">−</button>
+                <button class="coverage-toggle" onclick="toggleCoverage('most-covered-section')" aria-label="Collapse coverage" title="Collapse coverage">−</button>
             </div>
             <div class="coverage-row">
                 <div class="most-covered-scroll">
@@ -2190,16 +2190,19 @@
             window.location.href = url.toString();
         });
 
-        // Collapse / expand the Ongoing Coverage and Most Covered rows
-        function toggleCoverage() {
-            const rows = document.querySelectorAll('.coverage-row');
-            const isCollapsed = rows.length > 0 && rows[0].classList.contains('coverage-collapsed');
-            rows.forEach(row => row.classList.toggle('coverage-collapsed', !isCollapsed));
-            document.querySelectorAll('.coverage-toggle').forEach(btn => {
-                btn.textContent = isCollapsed ? '−' : '+';
-                btn.setAttribute('aria-label', isCollapsed ? 'Collapse coverage' : 'Expand coverage');
-                btn.setAttribute('title', isCollapsed ? 'Collapse coverage' : 'Expand coverage');
-            });
+        // Collapse / expand a single Ongoing Coverage or Most Covered row
+        function toggleCoverage(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (!section) return;
+            const row = section.querySelector('.coverage-row');
+            const btn = section.querySelector('.coverage-toggle');
+            if (!row || !btn) return;
+
+            const isCollapsed = row.classList.contains('coverage-collapsed');
+            row.classList.toggle('coverage-collapsed', !isCollapsed);
+            btn.textContent = isCollapsed ? '−' : '+';
+            btn.setAttribute('aria-label', isCollapsed ? 'Collapse coverage' : 'Expand coverage');
+            btn.setAttribute('title', isCollapsed ? 'Collapse coverage' : 'Expand coverage');
         }
 
         // Category tabs
