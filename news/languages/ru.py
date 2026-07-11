@@ -32,7 +32,7 @@ FEEDS = [
     ('РБК Экономика', 'https://www.rbc.ru/rss/economics.rss'),
     ('Коммерсант Экономика', 'https://www.kommersant.ru/RSS/section-economics.xml'),
     ('Ведомости Экономика', 'https://www.vedomosti.ru/rss/news'),
-    ('Тасс Экономика', 'https://tass.ru/rss/v2.xml?section= ekonomika'),
+    ('Тасс Экономика', 'https://tass.ru/rss/v2.xml?section=ekonomika'),
     ('РИА Новости Экономика', 'https://ria.ru/export/rss2/economy/index.xml'),
     ('Lenta.ru Экономика', 'https://lenta.ru/rss/news/economics'),
     ('Gazeta.ru Бизнес', 'https://www.gazeta.ru/export/rss/business.xml'),
@@ -48,7 +48,7 @@ FEEDS = [
     ('Lenta.ru Мир', 'https://lenta.ru/rss/news/world'),
     ('Gazeta.ru Мир', 'https://www.gazeta.ru/export/rss/world.xml'),
     ('РИА Новости Мир', 'https://ria.ru/export/rss2/world/index.xml'),
-    ('Тасс Мир', 'https://tass.ru/rss/v2.xml?section= mezhdunarodnaya-panorama'),
+    ('Тасс Мир', 'https://tass.ru/rss/v2.xml?section=mezhdunarodnaya-panorama'),
     ('BBC Русская служба Мир', 'https://feeds.bbci.co.uk/russian/rss.xml'),
     ('RT Мир', 'https://russian.rt.com/rss/world'),
     
@@ -74,7 +74,7 @@ FEEDS = [
     ('Gazeta.ru Политика', 'https://www.gazeta.ru/export/rss/politics.xml'),
     ('RT Политика', 'https://russian.rt.com/rss/politics'),
     ('РИА Новости Политика', 'https://ria.ru/export/rss2/politics/index.xml'),
-    ('Тасс Политика', 'https://tass.ru/rss/v2.xml?section= politika'),
+    ('Тасс Политика', 'https://tass.ru/rss/v2.xml?section=politika'),
     ('Новая газета Политика', 'https://novayagazeta.ru/rss'),
     ('Медуза Политика', 'https://meduza.io/rss/politics'),
 ]

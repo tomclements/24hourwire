@@ -1,3 +1,5 @@
+
+
 import feedparser
 import urllib.request
 import ssl
@@ -6,6 +8,8 @@ import logging
 import hashlib
 import gc
 import time
+import json
+import os
 from datetime import datetime, timedelta
 from difflib import SequenceMatcher
 from django.core.management.base import BaseCommand
@@ -14,6 +18,21 @@ from django.db import OperationalError, connection
 from news.models import Story, normalize_url, title_fingerprint
 from news.sources_config import LANGUAGE_FEEDS, SUPPORTED_LANGUAGES
 from news.categorization import categorize_story
+
+
+STATUS_FILE = 'feed_status.json'
+
+
+def load_disabled_feeds():
+    """Load disabled feeds from monitor_feeds status file."""
+    if not os.path.exists(STATUS_FILE):
+        return {}
+    try:
+        with open(STATUS_FILE, 'r', encoding='utf-8') as f:
+            status = json.load(f)
+        return status.get('disabled_feeds', {})
+    except (json.JSONDecodeError, IOError):
+        return {}
 
 
 # Pre-compile regex patterns for efficiency
@@ -170,8 +189,14 @@ class Command(BaseCommand):
 
     def fetch_language(self, language):
         feeds = LANGUAGE_FEEDS.get(language, [])
-        logger.info(f'Fetching {language} news from {len(feeds)} sources')
+        disabled_feeds = load_disabled_feeds().get(language, {})
+        active_feeds = [(name, url) for name, url in feeds if name not in disabled_feeds]
+        skipped_count = len(feeds) - len(active_feeds)
+
+        logger.info(f'Fetching {language} news from {len(active_feeds)} sources ({skipped_count} disabled)')
         self.safe_write(f"\nFetching {language} news...")
+        if skipped_count > 0:
+            self.safe_write(f"  ({skipped_count} disabled feeds skipped)")
 
         cutoff = timezone.now() - timedelta(hours=24)
 
@@ -197,7 +222,7 @@ class Command(BaseCommand):
         # Track recent stories per source for fuzzy deduplication
         recent_source_stories = {}
 
-        for source_name, feed_url in feeds:
+        for source_name, feed_url in active_feeds:
             # Safe encoding for Windows console
             safe_name = source_name.encode('ascii', 'replace').decode('ascii')
             self.safe_write(f"  {safe_name}...", ending=" ")

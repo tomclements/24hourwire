@@ -3,6 +3,8 @@ import urllib.request
 import ssl
 import logging
 import smtplib
+import concurrent.futures
+import sys
 from email.mime.text import MIMEText
 from datetime import datetime, timedelta
 from django.core.management.base import BaseCommand
@@ -17,53 +19,77 @@ handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)
 logger.addHandler(handler)
 
 
+def test_feed(name, url, language, timeout=10):
+    """Test a single feed and return (language, name, status, count)."""
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+
+    try:
+        req = urllib.request.Request(url, headers={
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'application/rss+xml, application/xml, text/xml, */*;q=0.8',
+        })
+        with urllib.request.urlopen(req, context=ctx, timeout=timeout) as response:
+            feed = feedparser.parse(response.read())
+            if feed.entries:
+                return language, name, 'ok', len(feed.entries)
+            else:
+                return language, name, 'empty', 0
+    except Exception as e:
+        error_msg = str(e)[:80]
+        return language, name, f'error: {error_msg}', 0
+
+
 class Command(BaseCommand):
-    help = 'Check health of all RSS feeds and email summary'
+    help = 'Check health of RSS feeds and email summary'
 
     def safe_write(self, msg, **kwargs):
         try:
             self.stdout.write(msg, **kwargs)
         except UnicodeEncodeError:
-            self.stdout.write(msg.encode('ascii', 'replace').decode('ascii'), **kwargs)
+            self.stdout.write(msg.encode(sys.stdout.encoding or 'utf-8', 'replace').decode(sys.stdout.encoding or 'utf-8'), **kwargs)
 
     def add_arguments(self, parser):
         parser.add_argument('--email', action='store_true', help='Send email summary')
         parser.add_argument('--to', type=str, default='', help='Email recipient')
-
-    def test_feed(self, name, url, language):
-        ctx = ssl.create_default_context()
-        ctx.check_hostname = False
-        ctx.verify_mode = ssl.CERT_NONE
-
-        try:
-            req = urllib.request.Request(url, headers={
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-            })
-            with urllib.request.urlopen(req, context=ctx, timeout=15) as response:
-                feed = feedparser.parse(response.read())
-                if feed.entries:
-                    return 'ok', len(feed.entries)
-                else:
-                    return 'empty', 0
-        except Exception as e:
-            error_msg = str(e)[:80]
-            return f'error: {error_msg}', 0
+        parser.add_argument('--language', type=str, default='', help='Only check feeds for this language (e.g. en, es)')
+        parser.add_argument('--timeout', type=int, default=10, help='Feed request timeout in seconds (default: 10)')
+        parser.add_argument('--workers', type=int, default=8, help='Number of parallel workers (default: 8)')
+        parser.add_argument('--save-report', action='store_true', help='Save report to health_report.txt')
 
     def handle(self, *args, **options):
-        self.safe_write("Running feed health check...\n")
+        language_filter = options['language'].lower()
+        timeout = options['timeout']
+        workers = options['workers']
+
+        self.safe_write(f"Running feed health check (timeout={timeout}s, workers={workers})...\n")
+
+        # Build feed list
+        feeds_to_check = []
+        for language, feeds in sorted(LANGUAGE_FEEDS.items()):
+            if language_filter and language != language_filter:
+                continue
+            for source_name, feed_url in feeds:
+                feeds_to_check.append((source_name, feed_url, language))
 
         results = {}  # language -> list of (name, status, count)
-        total_feeds = 0
+        total_feeds = len(feeds_to_check)
         total_ok = 0
         total_empty = 0
         total_error = 0
 
-        for language, feeds in sorted(LANGUAGE_FEEDS.items()):
-            results[language] = []
-            for source_name, feed_url in feeds:
-                total_feeds += 1
-                status, count = self.test_feed(source_name, feed_url, language)
-                results[language].append((source_name, status, count))
+        # Check feeds in parallel
+        with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
+            future_to_feed = {
+                executor.submit(test_feed, name, url, lang, timeout): (name, url, lang)
+                for name, url, lang in feeds_to_check
+            }
+            for future in concurrent.futures.as_completed(future_to_feed):
+                language, name, status, count = future.result()
+                if language not in results:
+                    results[language] = []
+                results[language].append((name, status, count))
 
                 if status == 'ok':
                     total_ok += 1
@@ -71,7 +97,7 @@ class Command(BaseCommand):
                     total_empty += 1
                 else:
                     total_error += 1
-                    logger.warning(f'{language}/{source_name}: {status}')
+                    logger.warning(f'{language}/{name}: {status}')
 
         # Build report
         lines = []
@@ -82,7 +108,7 @@ class Command(BaseCommand):
 
         for language in sorted(results.keys()):
             lang_feeds = results[language]
-            errors = [(n, s, c) for n, s, c in lang_feeds if s != 'ok']
+            errors = [(n, s, c) for n, s, c in lang_feeds if s != 'ok' and s != 'empty']
             empties = [(n, s, c) for n, s, c in lang_feeds if s == 'empty']
             oks = [(n, s, c) for n, s, c in lang_feeds if s == 'ok']
 
@@ -108,6 +134,11 @@ class Command(BaseCommand):
 
         report = "\n".join(lines)
         self.safe_write(report)
+
+        if options['save_report']:
+            with open('health_report.txt', 'w', encoding='utf-8') as f:
+                f.write(report)
+            self.safe_write(self.style.SUCCESS("\nReport saved to health_report.txt"))
 
         # Email if requested
         if options['email']:
