@@ -1913,7 +1913,7 @@
         {# Ongoing Coverage: Topic Hub Cards — cached for 5 min, varies by language #}
         {% cache 300 topics_section language %}
         {% if active_topics %}
-        <section class="topics-section coverage-row" id="topics-section">
+        <section class="topics-section" id="topics-section">
             <div class="topics-header">
                 <h2 class="topics-title">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent);"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
@@ -1921,18 +1921,20 @@
                 </h2>
                 <button class="coverage-toggle" onclick="toggleCoverage()" aria-label="Collapse coverage" title="Collapse coverage">−</button>
             </div>
-            <div class="topics-scroll">
-                {% for topic in active_topics %}
-                <a href="{{ topic.get_absolute_url }}" class="topic-card">
-                    <div class="topic-card-title">{{ topic.title }}</div>
-                    {% if topic.headline %}
-                    <div class="topic-card-headline">{{ topic.headline }}</div>
-                    {% elif topic.description %}
-                    <div class="topic-card-headline">{{ topic.description|truncatechars:100 }}</div>
-                    {% endif %}
-                    <div class="topic-card-arrow">Read coverage →</div>
-                </a>
-                {% endfor %}
+            <div class="coverage-row">
+                <div class="topics-scroll">
+                    {% for topic in active_topics %}
+                    <a href="{{ topic.get_absolute_url }}" class="topic-card">
+                        <div class="topic-card-title">{{ topic.title }}</div>
+                        {% if topic.headline %}
+                        <div class="topic-card-headline">{{ topic.headline }}</div>
+                        {% elif topic.description %}
+                        <div class="topic-card-headline">{{ topic.description|truncatechars:100 }}</div>
+                        {% endif %}
+                        <div class="topic-card-arrow">Read coverage →</div>
+                    </a>
+                    {% endfor %}
+                </div>
             </div>
         </section>
         {% endif %}
@@ -1940,7 +1942,7 @@
 
         {# Most Covered: horizontally scrolling row #}
         {% if most_covered %}
-        <section class="most-covered-section coverage-row" id="most-covered-section" style="margin-bottom: 32px;">
+        <section class="most-covered-section" id="most-covered-section" style="margin-bottom: 32px;">
             <div class="most-covered-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
                 <h2 style="font-size: 1.1rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 8px; margin: 0;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent);"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
@@ -1948,27 +1950,29 @@
                 </h2>
                 <button class="coverage-toggle" onclick="toggleCoverage()" aria-label="Collapse coverage" title="Collapse coverage">−</button>
             </div>
-            <div class="most-covered-scroll">
-                {% for story in most_covered %}
-                <article class="story-card most-covered-card" data-source="{{ story.source|lower }}" data-bias="{{ story.bias_label|lower|cut:' ' }}" data-title="{{ story.title|lower }}">
-                    <div class="story-header">
-                        <a href="{{ story.url }}" target="_blank" class="story-title">{{ story.title }}</a>
-                    </div>
-                    <div class="story-meta">
-                        <span class="source-tag">{{ story.source }}</span>
-                        <span class="covered-badge">{{ story.covered_by_count }} sources</span>
-                        <span class="bias-badge {{ story.bias_class|default:'center' }}">{{ story.bias_label }}</span>
-                        <span class="time-badge">{{ story.published|timesince }} {{ t.ago }}</span>
-                    </div>
-                    <div class="story-actions" style="margin-top: 12px;">
-                        <div class="story-links">
-                            <a href="{{ story.url }}" target="_blank">{{ t.read_full }} &rarr;</a>
-                            <button class="different-angle-btn" onclick="showDifferentAngle({{ story.id }}, '{{ story.title|escapejs }}', '{{ story.source }}', '{{ story.bias_label }}')">{{ t.different_angle_btn }}</button>
+            <div class="coverage-row">
+                <div class="most-covered-scroll">
+                    {% for story in most_covered %}
+                    <article class="story-card most-covered-card" data-source="{{ story.source|lower }}" data-bias="{{ story.bias_label|lower|cut:' ' }}" data-title="{{ story.title|lower }}">
+                        <div class="story-header">
+                            <a href="{{ story.url }}" target="_blank" class="story-title">{{ story.title }}</a>
                         </div>
-                        <button class="share-btn" onclick="shareStory('{{ story.title|escapejs }}', '{{ story.source|escapejs }}', '{{ story|sign_share_data|escapejs }}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-primary);"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button>
-                    </div>
-                </article>
-                {% endfor %}
+                        <div class="story-meta">
+                            <span class="source-tag">{{ story.source }}</span>
+                            <span class="covered-badge">{{ story.covered_by_count }} sources</span>
+                            <span class="bias-badge {{ story.bias_class|default:'center' }}">{{ story.bias_label }}</span>
+                            <span class="time-badge">{{ story.published|timesince }} {{ t.ago }}</span>
+                        </div>
+                        <div class="story-actions" style="margin-top: 12px;">
+                            <div class="story-links">
+                                <a href="{{ story.url }}" target="_blank">{{ t.read_full }} &rarr;</a>
+                                <button class="different-angle-btn" onclick="showDifferentAngle({{ story.id }}, '{{ story.title|escapejs }}', '{{ story.source }}', '{{ story.bias_label }}')">{{ t.different_angle_btn }}</button>
+                            </div>
+                            <button class="share-btn" onclick="shareStory('{{ story.title|escapejs }}', '{{ story.source|escapejs }}', '{{ story|sign_share_data|escapejs }}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-primary);"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
             </div>
         </section>
         {% endif %}
