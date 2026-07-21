@@ -8,87 +8,32 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         topics = [
             {
-                'slug': 'world-cup-2026',
-                'title': 'World Cup 2026',
-                'headline': 'Live coverage of the FIFA World Cup from every angle',
-                'description': 'The 2026 FIFA World Cup is being hosted across the United States, Canada, and Mexico. Get the latest news, match coverage, squad announcements, and analysis from sources around the world.',
-                'keywords': ['world cup', 'copa mundial', 'coupe du monde', 'weltmeisterschaft', 'fifa', 'mundial', 'football', 'soccer', 'world cup 2026'],
-                'categories': ['sports', 'world'],
-                'languages': ['en', 'es', 'fr', 'de', 'pt', 'it', 'ar', 'ja', 'zh', 'ko'],
+                'slug': 'us-iran-war',
+                'title': 'US-Iran War & Strait of Hormuz Crisis',
+                'headline': 'Strikes, shipping disruptions, and the oil price shock',
+                'description': 'Ongoing coverage of the US-Iran military conflict, including air strikes, the Strait of Hormuz blockade, regional escalation, oil market disruption, and diplomatic efforts.',
+                'keywords': ['iran', 'strait of hormuz', 'us strikes', 'oil price', 'hormuz', 'irgc', 'central command', 'centcom', 'blockade', 'naval', 'missile', 'nuclear', 'rubio', 'pezeushkian', 'khamenei', 'houthis', 'saudi arabia', 'kuwait', 'bahrain', 'jordan'],
+                'categories': ['world', 'politics', 'business'],
+                'languages': ['en', 'ar', 'fa', 'tr', 'fr', 'de', 'es'],
                 'priority': 10,
-                'meta_title': 'World Cup 2026 News & Coverage | 24HourWire',
-                'meta_description': 'Live World Cup 2026 coverage from diverse global sources. Match previews, squad news, and analysis from every angle.',
-                'merchandise': {
-                    'title': 'World Cup 2026 Gear',
-                    'items': [
-                        {
-                            'name': 'adidas FIFA World Cup 2026 Official Match Ball',
-                            'url': 'https://www.amazon.com/s?k=adidas+world+cup+2026+official+match+ball&tag=24hourwire-20',
-                        },
-                        {
-                            'name': 'Nike Pitch Training Soccer Ball',
-                            'url': 'https://www.amazon.com/s?k=nike+pitch+training+soccer+ball&tag=24hourwire-20',
-                        },
-                        {
-                            'name': 'Brazil National Team Jersey 2026',
-                            'url': 'https://www.amazon.com/s?k=brazil+soccer+jersey+2026&tag=24hourwire-20',
-                        },
-                        {
-                            'name': 'Argentina National Team Jersey 2026',
-                            'url': 'https://www.amazon.com/s?k=argentina+soccer+jersey+2026&tag=24hourwire-20',
-                        },
-                        {
-                            'name': 'France National Team Jersey 2026',
-                            'url': 'https://www.amazon.com/s?k=france+soccer+jersey+2026&tag=24hourwire-20',
-                        },
-                        {
-                            'name': 'Germany National Team Jersey 2026',
-                            'url': 'https://www.amazon.com/s?k=germany+soccer+jersey+2026&tag=24hourwire-20',
-                        },
-                        {
-                            'name': 'USA National Team Jersey 2026',
-                            'url': 'https://www.amazon.com/s?k=usa+soccer+jersey+2026&tag=24hourwire-20',
-                        },
-                        {
-                            'name': 'Mexico National Team Jersey 2026',
-                            'url': 'https://www.amazon.com/s?k=mexico+soccer+jersey+2026&tag=24hourwire-20',
-                        },
-                    ]
-                },
+                'meta_title': 'US-Iran War & Strait of Hormuz News | 24HourWire',
+                'meta_description': 'Live coverage of the US-Iran conflict, Strait of Hormuz disruptions, oil market impacts, and regional escalation from diverse global sources.',
                 'translations': {
                     'es': {
-                        'headline': 'Cobertura en vivo de la Copa Mundial de la FIFA desde todos los angulos',
-                        'description': 'La Copa Mundial de la FIFA 2026 se organiza en Estados Unidos, Canada y Mexico. Obtenga las ultimas noticias, cobertura de partidos, convocatorias de equipos y analisis de fuentes de todo el mundo.',
+                        'headline': 'Guerra EE.UU.-Iran y crisis del Estrecho de Ormuz',
+                        'description': 'Cobertura en curso del conflicto militar entre Estados Unidos e Iran, incluyendo ataques aereos, el bloqueo del Estrecho de Ormuz, la escalada regional y los esfuerzos diplomaticos.',
+                    },
+                    'ar': {
+                        'headline': 'الحرب الأمريكية-الإيرانية وأزمة مضيق هرمز',
+                        'description': 'تغطية مستمرة للصراع العسكري الأمريكي-الإيراني، بما في ذلك الضربات الجوية وحصار مضيق هرمز والتصعيد الإقليمي وجهود الدبلوماسية.',
                     },
                     'fr': {
-                        'headline': 'Couverture en direct de la Coupe du monde FIFA sous tous les angles',
-                        'description': 'La Coupe du monde de la FIFA 2026 est organisee aux Etats-Unis, au Canada et au Mexique. Obtenez les dernieres nouvelles, la couverture des matchs, les convocations et les analyses de sources du monde entier.',
+                        'headline': 'Guerre Etats-Unis-Iran et crise du detroit d\'Ormuz',
+                        'description': 'Couverture en cours du conflit militaire entre les Etats-Unis et l\'Iran, incluant les frappes aeriennes, le blocus du detroit d\'Ormuz, l\'escalade regionale et les efforts diplomatiques.',
                     },
                     'de': {
-                        'headline': 'Live-Berichterstattung uber die FIFA Weltmeisterschaft aus allen Blickwinkeln',
-                        'description': 'Die FIFA Weltmeisterschaft 2026 wird in den USA, Kanada und Mexiko ausgetragen. Erhalten Sie die neuesten Nachrichten, Spielberichte, Kaderbekanntgaben und Analysen aus Quellen auf der ganzen Welt.',
-                    },
-                },
-            },
-            {
-                'slug': 'us-china-relations',
-                'title': 'US-China Relations',
-                'headline': 'Trade, diplomacy, and geopolitical developments',
-                'description': 'Track the evolving relationship between the United States and China, from trade negotiations and tariffs to diplomatic summits and military posturing in the Indo-Pacific.',
-                'keywords': ['china', 'xi jinping', 'trade war', 'tariff', 'beijing', 'us-china', 'bilateral', 'taiwan', 'indo-pacific', 'sanctions'],
-                'categories': ['world', 'business', 'politics'],
-                'languages': ['en', 'zh', 'ja', 'ko', 'ar'],
-                'priority': 9,
-                'meta_title': 'US-China Relations: Trade & Diplomacy News | 24HourWire',
-                'meta_description': 'Latest news on US-China relations, trade talks, tariffs, and diplomatic developments from sources across the political spectrum.',
-                'translations': {
-                    'es': {
-                        'headline': 'Comercio, diplomacia y desarrollos geopoliticos',
-                        'description': 'Siga la evolucion de la relacion entre Estados Unidos y China, desde las negociaciones comerciales y aranceles hasta las cumbres diplomaticas y el posicionamiento militar en el Indo-Pacifico.',
-                    },
-                    'zh': {
-                        'headline': '贸易、外交与地缘政治动态',
-                        'description': '追踪中美关系的发展动态，从贸易谈判和关税到外交峰会及印太地区的军事姿态。',
+                        'headline': 'USA-Iran-Krieg und Strae-von-Hormus-Krise',
+                        'description': 'Laufende Berichterstattung uber den USA-iranischen Militaerkonflikt, einschliesslich Luftangriffen, der Strasse von Hormus-Blockade, regionaler Eskalation und diplomatischen Bemuhungen.',
                     },
                 },
             },
@@ -97,10 +42,10 @@ class Command(BaseCommand):
                 'title': 'AI & Tech Regulation',
                 'headline': 'Policy, ethics, and the future of artificial intelligence',
                 'description': 'Stay informed on global AI regulation efforts, from the EU AI Act to US executive orders and emerging frameworks worldwide. Coverage of big tech, antitrust, data privacy, and innovation policy.',
-                'keywords': ['artificial intelligence', 'ai', 'regulation', 'ai act', 'chatgpt', 'openai', 'antitrust', 'big tech', 'data privacy', 'gdpr', 'tech policy', 'machine learning', 'llm'],
+                'keywords': ['artificial intelligence', 'ai', 'regulation', 'ai act', 'chatgpt', 'openai', 'antitrust', 'big tech', 'data privacy', 'gdpr', 'tech policy', 'machine learning', 'llm', 'anthropic', 'gold eagle', 'deepseek', 'kimi'],
                 'categories': ['technology', 'business', 'world'],
                 'languages': ['en', 'de', 'fr', 'es', 'it', 'pt', 'ja', 'zh'],
-                'priority': 8,
+                'priority': 9,
                 'meta_title': 'AI Regulation & Tech Policy News | 24HourWire',
                 'meta_description': 'Global AI regulation news: EU AI Act, US tech policy, antitrust actions, and data privacy developments from diverse sources.',
                 'translations': {
@@ -111,6 +56,28 @@ class Command(BaseCommand):
                     'de': {
                         'headline': 'Politik, Ethik und die Zukunft der kunstlichen Intelligenz',
                         'description': 'Bleiben Sie uber globale KI-Regulierungsbemuhungen informiert, von der EU-KI-Verordnung bis zu US-Executive Orders und neuen Rahmenwerken weltweit. Berichterstattung zu Big Tech, Kartellrecht, Datenschutz und Innovationspolitik.',
+                    },
+                },
+            },
+            {
+                'slug': 'global-economy',
+                'title': 'Global Economy',
+                'headline': 'War-driven inflation, oil shocks, and recession fears',
+                'description': 'Track the global economy under pressure from the Middle East conflict: energy price spikes, supply chain disruptions, central bank responses, inflation data, and recession indicators from diverse financial sources.',
+                'keywords': ['inflation', 'recession', 'interest rate', 'fed', 'ecb', 'trade', 'tariff', 'gdp', 'unemployment', 'market', 'economy', 'fiscal', 'monetary', 'oil price', 'energy', 'opec', 'supply chain'],
+                'categories': ['business', 'world'],
+                'languages': ['en', 'de', 'fr', 'es', 'it', 'pt', 'ja', 'zh', 'ar', 'ru'],
+                'priority': 8,
+                'meta_title': 'Global Economy: War-Driven Inflation & Markets | 24HourWire',
+                'meta_description': 'Global economic news: war-driven inflation, energy price shocks, supply chain disruptions, and market movements from diverse international sources.',
+                'translations': {
+                    'es': {
+                        'headline': 'Inflacion impulsada por la guerra, choques de petroleo y temores de recesion',
+                        'description': 'Siga la economia global bajo presion del conflicto en Medio Oriente: aumentos de precios energeticos, interrupciones de la cadena de suministro, respuestas de bancos centrales y datos de inflacion.',
+                    },
+                    'de': {
+                        'headline': 'Kriegsbedingte Inflation, Oelschocks und Rezessionsangste',
+                        'description': 'Verfolgen Sie die globale Wirtschaft unter Druck durch den Nahostkonflikt: Energiepreisanstiege, Lieferkettenstoerungen, Zentralbankreaktionen und Inflationsdaten.',
                     },
                 },
             },
@@ -137,24 +104,46 @@ class Command(BaseCommand):
                 },
             },
             {
-                'slug': 'middle-east-crisis',
-                'title': 'Middle East Crisis',
-                'headline': 'Israel, Gaza, Lebanon, and regional developments',
-                'description': 'Track the fast-moving developments across the Middle East, from the Israel-Gaza conflict to regional diplomacy, humanitarian concerns, and wider geopolitical shifts.',
-                'keywords': ['israel', 'gaza', 'palestine', 'hamas', 'lebanon', 'hezbollah', 'iran', 'middle east', 'ceasefire', 'hostage', 'rafah', 'west bank'],
-                'categories': ['world', 'politics'],
-                'languages': ['en', 'ar', 'tr', 'fr', 'de', 'es'],
+                'slug': 'us-china-relations',
+                'title': 'US-China Relations',
+                'headline': 'Trade war, tech rivalry, and geopolitical competition',
+                'description': 'Track the evolving rivalry between the United States and China, from trade negotiations and tariffs to the AI race, semiconductor restrictions, and military posturing in the Indo-Pacific.',
+                'keywords': ['china', 'xi jinping', 'trade war', 'tariff', 'beijing', 'us-china', 'bilateral', 'taiwan', 'indo-pacific', 'sanctions', 'semiconductor', 'chip', 'ai race'],
+                'categories': ['world', 'business', 'politics', 'technology'],
+                'languages': ['en', 'zh', 'ja', 'ko', 'ar'],
                 'priority': 6,
-                'meta_title': 'Middle East Crisis: Israel-Gaza & Regional News | 24HourWire',
-                'meta_description': 'Latest Middle East crisis coverage: Israel-Gaza conflict, regional diplomacy, and humanitarian developments from diverse global sources.',
+                'meta_title': 'US-China Relations: Trade & Tech Rivalry News | 24HourWire',
+                'meta_description': 'Latest news on US-China relations, trade talks, the AI race, semiconductor restrictions, and diplomatic developments from sources across the political spectrum.',
                 'translations': {
                     'es': {
-                        'headline': 'Israel, Gaza, Libano y desarrollos regionales',
-                        'description': 'Siga los rapidos desarrollos en Medio Oriente, desde el conflicto Israel-Gaza hasta la diplomacia regional, las preocupaciones humanitarias y los cambios geopoliticos mas amplios.',
+                        'headline': 'Guerra comercial, rivalidad tecnologica y competencia geopolitica',
+                        'description': 'Siga la evolucion de la rivalidad entre Estados Unidos y China, desde las negociaciones comerciales y aranceles hasta la carrera de IA, las restricciones de semiconductores y el posicionamiento militar en el Indo-Pacifico.',
+                    },
+                    'zh': {
+                        'headline': '贸易战、科技竞争与地缘政治博弈',
+                        'description': '追踪中美之间不断演变的竞争关系，从贸易谈判和关税到人工智能竞赛、半导体限制以及印太地区的军事态势。',
+                    },
+                },
+            },
+            {
+                'slug': 'middle-east-crisis',
+                'title': 'Israel-Palestine Conflict',
+                'headline': 'Gaza, West Bank, Lebanon, and humanitarian crisis',
+                'description': 'Coverage of the Israel-Palestine conflict, including Gaza operations, West Bank developments, Lebanon border tensions, humanitarian conditions, and regional diplomatic efforts.',
+                'keywords': ['israel', 'gaza', 'palestine', 'hamas', 'lebanon', 'hezbollah', 'west bank', 'ceasefire', 'hostage', 'rafah', 'humanitarian', 'unrwa'],
+                'categories': ['world', 'politics'],
+                'languages': ['en', 'ar', 'tr', 'fr', 'de', 'es'],
+                'priority': 5,
+                'meta_title': 'Israel-Palestine Conflict News | 24HourWire',
+                'meta_description': 'Latest Israel-Palestine conflict coverage: Gaza, West Bank, Lebanon, humanitarian developments, and diplomatic efforts from diverse global sources.',
+                'translations': {
+                    'es': {
+                        'headline': 'Conflicto israeli-palestino: Gaza, Cisjordania y crisis humanitaria',
+                        'description': 'Cobertura del conflicto israeli-palestino, incluyendo operaciones en Gaza, desarrollos en Cisjordania, tensiones en la frontera con Libano, condiciones humanitarias y esfuerzos diplomaticos regionales.',
                     },
                     'ar': {
-                        'headline': 'تطورات اسرائيل وغزة ولبنان والمنطقة',
-                        'description': 'تابع التطورات السريعة في الشرق الأوسط، من النزاع الاسرائيلي الفلسطيني الى الدبلوماسية الاقليمية والمخاوف الانسانية والتحولات الجيوسياسية الاقليمية.',
+                        'headline': 'الصراع الإسرائيلي-الفلسطيني: غزة والضفة الغربية والأزمة الإنسانية',
+                        'description': 'تغطية الصراع الإسرائيلي-الفلسطيني، بما في ذلك العمليات في غزة والتطورات في الضفة الغربية والتوترات على الحدود اللبنانية والوضع الإنساني وجهود الدبلوماسية الإقليمية.',
                     },
                 },
             },
@@ -169,50 +158,6 @@ class Command(BaseCommand):
                 'priority': 4,
                 'meta_title': 'US Elections 2026: Midterms & State Races | 24HourWire',
                 'meta_description': '2026 US midterm election coverage: Senate, House, and governor races from left, center, and right sources.',
-            },
-            {
-                'slug': 'global-economy',
-                'title': 'Global Economy',
-                'headline': 'Inflation, interest rates, trade, and recession fears',
-                'description': 'Track the pulse of the global economy: central bank decisions, inflation data, trade disputes, market movements, and recession indicators from diverse financial sources.',
-                'keywords': ['inflation', 'recession', 'interest rate', 'fed', 'ecb', 'trade', 'tariff', 'gdp', 'unemployment', 'market', 'economy', 'fiscal', 'monetary'],
-                'categories': ['business', 'world'],
-                'languages': ['en', 'de', 'fr', 'es', 'it', 'pt', 'ja', 'zh', 'ar', 'ru'],
-                'priority': 3,
-                'meta_title': 'Global Economy: Inflation, Trade & Markets | 24HourWire',
-                'meta_description': 'Global economic news: inflation, interest rates, trade disputes, and market movements from diverse international sources.',
-                'translations': {
-                    'es': {
-                        'headline': 'Inflacion, tasas de interes, comercio y temores de recesion',
-                        'description': 'Siga el pulso de la economia global: decisiones de bancos centrales, datos de inflacion, disputas comerciales, movimientos del mercado e indicadores de recesion de diversas fuentes financieras.',
-                    },
-                    'de': {
-                        'headline': 'Inflation, Zinsen, Handel und Rezessionsangste',
-                        'description': 'Verfolgen Sie den Puls der globalen Wirtschaft: Zentralbankentscheidungen, Inflationsdaten, Handelsstreitigkeiten, Marktbewegungen und Rezessionsindikatoren aus verschiedenen Finanzquellen.',
-                    },
-                },
-            },
-            {
-                'slug': 'european-politics',
-                'title': 'European Politics',
-                'headline': 'EU elections, far-right surge, and migration debates',
-                'description': 'Follow European political developments: EU policy, national elections, the rise of far-right parties, migration debates, and the future of the European project.',
-                'keywords': ['eu', 'european union', 'brussels', 'migration', 'far right', 'populist', 'euro', 'schengen', 'von der leyen', 'european parliament', 'brexit'],
-                'categories': ['world', 'politics', 'europe'],
-                'languages': ['en', 'de', 'fr', 'es', 'it', 'pt', 'pl'],
-                'priority': 2,
-                'meta_title': 'European Politics & EU News | 24HourWire',
-                'meta_description': 'European political news: EU policy, elections, migration debates, and the far-right surge from diverse continental sources.',
-                'translations': {
-                    'es': {
-                        'headline': 'Elecciones de la UE, ascenso de la extrema derecha y debates sobre migracion',
-                        'description': 'Sigua los desarrollos politicos europeos: politica de la UE, elecciones nacionales, el ascenso de partidos de extrema derecha, debates sobre migracion y el futuro del proyecto europeo.',
-                    },
-                    'de': {
-                        'headline': 'EU-Wahlen, Rechtsruck und Migrationsdebatten',
-                        'description': 'Verfolgen Sie europaische politische Entwicklungen: EU-Politik, nationale Wahlen, der Aufstieg rechtspopulistischer Parteien, Migrationsdebatten und die Zukunft des europaischen Projekts.',
-                    },
-                },
             },
         ]
 

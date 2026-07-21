@@ -96,18 +96,24 @@ echo "5b. Running categorization tests..."
 CAT_TEST_OUTPUT=$($PYTHON_CMD manage.py test_categories 2>&1)
 CAT_TEST_EXIT=$?
 
-# Extract pass/fail counts
-if echo "$CAT_TEST_OUTPUT" | grep -q "passed"; then
-    PASSED=$(echo "$CAT_TEST_OUTPUT" | grep -oP '\d+(?= passed)' | tail -1)
-    FAILED=$(echo "$CAT_TEST_OUTPUT" | grep -oP '\d+(?= failed)' | tail -1)
+# Extract pass/fail counts (format: "Passed: 25" / "Failed: 0")
+if echo "$CAT_TEST_OUTPUT" | grep -qi "passed"; then
+    PASSED=$(echo "$CAT_TEST_OUTPUT" | grep -oiP '(?<=Passed: )\d+' | tail -1)
+    FAILED=$(echo "$CAT_TEST_OUTPUT" | grep -oiP '(?<=Failed: )\d+' | tail -1)
+    PASSED=${PASSED:-0}
+    FAILED=${FAILED:-0}
     TOTAL=$((PASSED + FAILED))
-    
-    if [ "$FAILED" -eq 0 ]; then
+
+    if [ "$FAILED" -eq 0 ] && [ "$TOTAL" -gt 0 ]; then
         echo -e "${GREEN}✓ All $TOTAL categorization tests passed${NC}"
-    else
+    elif [ "$TOTAL" -gt 0 ]; then
         echo -e "${RED}✗ Categorization tests failed: $PASSED/$TOTAL passed${NC}"
         echo "$CAT_TEST_OUTPUT" | grep -A2 "Failing"
         ERRORS=$((ERRORS + 1))
+    else
+        echo -e "${YELLOW}⚠ Could not parse categorization test results${NC}"
+        echo "$CAT_TEST_OUTPUT" | tail -20
+        WARNINGS=$((WARNINGS + 1))
     fi
 else
     echo -e "${YELLOW}⚠ Could not parse categorization test results${NC}"
