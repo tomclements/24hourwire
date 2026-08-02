@@ -16,7 +16,8 @@ services:
       python manage.py seed_books --update &&
       python manage.py seed_topics &&
       python manage.py collectstatic --no-input
-    startCommand: gunicorn core.wsgi:application
+    startCommand: gunicorn core.wsgi:application --timeout 120 --workers 1 --max-requests 1000 --max-requests-jitter 100
+    healthCheckPath: /healthz
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -31,7 +32,7 @@ services:
       - key: CSRF_TRUSTED_ORIGINS
         value: https://24hourwire.news,https://www.24hourwire.news,https://two4hourwire.onrender.com
       - key: WEB_CONCURRENCY
-        value: 2
+        value: 1
 
   # Cron job for fetching news
   - type: cron

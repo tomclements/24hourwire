@@ -261,6 +261,17 @@ Sitemap: https://24hourwire.news/news-sitemap.xml
     return HttpResponse(content, content_type='text/plain')
 
 
+def healthz(request):
+    """Lightweight health check for Render. Verifies DB connectivity so a
+    hung/unhealthy worker is detected, not just an open port."""
+    from django.db import connection
+    try:
+        connection.ensure_connection()
+    except Exception:
+        return HttpResponse('db-error', status=503)
+    return HttpResponse('ok', status=200)
+
+
 @cache_page(3600)  # Cache static pages for 1 hour
 def about_view(request):
     language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))
