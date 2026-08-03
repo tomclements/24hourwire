@@ -24,6 +24,7 @@ class AnalyticsMiddleware:
         '/favicon',
         '/robots.txt',
         '/sitemap',
+        '/healthz',
     ]
     
     # Bot user agent patterns (lowercase)
