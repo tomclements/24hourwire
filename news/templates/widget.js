@@ -71,7 +71,7 @@
         }
         
         var html = '<div class="hourwire-widget">';
-        html += '<div class="hourwire-header"><a href="https://24hourwire.news/?lang=' + config.language + '" target="_blank">24HourWire</a></div>';
+        html += '<div class="hourwire-header"><a href="https://24hourwire.news/?lang=' + config.language + '" target="_blank" rel="noopener">24HourWire</a></div>';
         
         if (stories.length === 0) {
             html += '<div class="hourwire-story" style="text-align:center;color:#94a3b8;padding:20px;">No recent stories</div>';
@@ -79,9 +79,9 @@
             stories.forEach(function(story) {
                 html += '<div class="hourwire-story">';
                 if (story.image_url) {
-                    html += '<a href="' + story.url + '" target="_blank"><img src="' + story.image_url + '" alt="" class="hourwire-story-image" loading="lazy" onerror="this.style.display=\'none\'"></a>';
+                    html += '<a href="' + story.url + '" target="_blank" rel="noopener"><img src="' + story.image_url + '" alt="" class="hourwire-story-image" loading="lazy" onerror="this.style.display=\'none\'"></a>';
                 }
-                html += '<h3 class="hourwire-story-title"><a href="' + story.url + '" target="_blank">' + story.title + '</a></h3>';
+                html += '<h3 class="hourwire-story-title"><a href="' + story.url + '" target="_blank" rel="noopener">' + story.title + '</a></h3>';
                 html += '<div class="hourwire-story-meta">';
                 html += '<span>' + story.source + '</span>';
                 if (story.bias_label && story.bias_label !== 'Unknown') {
@@ -92,7 +92,7 @@
             });
         }
         
-        html += '<div class="hourwire-footer">News from all angles via <a href="https://24hourwire.news/?lang=' + config.language + '" target="_blank">24HourWire</a></div>';
+        html += '<div class="hourwire-footer">News from all angles via <a href="https://24hourwire.news/?lang=' + config.language + '" target="_blank" rel="noopener">24HourWire</a></div>';
         html += '</div>';
         
         container.innerHTML = html;

@@ -171,6 +171,8 @@ class HomeViewTests(TestCase):
     
     def test_home_view_uses_correct_template(self):
         """Test that home view uses home.html template."""
+        from django.core.cache import cache
+        cache.clear()  # avoid cache_page returning a cached response without template info
         response = self.client.get('/')
         self.assertTemplateUsed(response, 'home.html')
 
@@ -858,6 +860,8 @@ class SitemapTests(TestCase):
 
     def test_news_sitemap_returns_xml(self):
         """Test that news sitemap returns valid Google News XML."""
+        from django.core.cache import cache
+        cache.clear()  # avoid cached empty sitemap from sibling test methods
         # Create a recent story
         story = Story.objects.create(
             source='BBC',
@@ -1511,17 +1515,19 @@ class TopicThemeToggleTests(TestCase):
         )
     
     def test_topic_page_has_theme_toggle(self):
-        """Topic detail page should include theme toggle button."""
+        """Topic detail page should include theme toggle button and shared JS."""
         response = self.client.get('/topic/theme-test/')
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'theme-toggle')
-        self.assertContains(response, 'toggleTheme')
+        self.assertContains(response, 'data-action="theme-toggle"')
+        self.assertContains(response, 'static/news/js/app')
     
     def test_topic_page_has_dark_mode_css(self):
-        """Topic detail page should include dark mode CSS variables."""
+        """Topic detail page should include dark mode FOUC guard and app.css."""
         response = self.client.get('/topic/theme-test/')
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, '[data-theme="dark"]')
+        self.assertContains(response, "localStorage.getItem('theme')")
+        self.assertContains(response, 'static/news/css/app')
 
 
 class HomepageTopicCardsTests(TestCase):
@@ -1529,6 +1535,8 @@ class HomepageTopicCardsTests(TestCase):
     
     def setUp(self):
         self.client = Client()
+        from django.core.cache import cache
+        cache.clear()  # @cache_page on home leaks across tests; ensure fresh render
         # Create active topic
         self.active_topic = Topic.objects.create(
             slug='ongoing-test',
@@ -1692,6 +1700,8 @@ class PollDetailViewTests(TestCase):
     
     def setUp(self):
         self.client = Client()
+        from django.core.cache import cache
+        cache.clear()  # @cache_page on poll_detail leaks across tests; ensure fresh render
         self.active_poll = Poll.objects.create(
             language='en',
             question='Is AI regulation necessary?',

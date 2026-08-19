@@ -101,7 +101,7 @@
             {% for story in results %}
             <article class="story-card">
                 <div class="story-header">
-                    <a href="{{ story.url }}" target="_blank" class="story-title">{{ story.title }}</a>
+                    <a href="{{ story.url }}" target="_blank" rel="noopener" class="story-title">{{ story.title }}</a>
                 </div>
                 <div class="story-meta">
                     <span class="source-tag">{{ story.source }}</span>
@@ -114,7 +114,7 @@
                 {% endif %}
                 {% endwith %}
                 <div class="story-actions">
-                    <a href="{{ story.url }}" target="_blank">Read full story &rarr;</a>
+                    <a href="{{ story.url }}" target="_blank" rel="noopener">Read full story &rarr;</a>
                 </div>
             </article>
             {% endfor %}

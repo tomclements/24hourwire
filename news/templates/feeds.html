@@ -202,11 +202,11 @@
     <div class="feed-card">
         <h3>{{ language_name }}</h3>
         <div class="feed-links">
-            <a href="{{ language_rss }}" class="feed-link" target="_blank">
+            <a href="{{ language_rss }}" class="feed-link" target="_blank" rel="noopener">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6.503 20.752c0 2.07-1.678 3.748-3.75 3.748S-.997 22.82-.997 20.75c0-2.07 1.68-3.748 3.75-3.748s3.75 1.678 3.75 3.75zm8.024-7.738c0 2.07-1.678 3.748-3.75 3.748s-3.75-1.679-3.75-3.748c0-2.07 1.678-3.748 3.75-3.748s3.75 1.679 3.75 3.75zm8.023-7.74c0 2.07-1.678 3.748-3.75 3.748s-3.75-1.678-3.75-3.748 1.678-3.748 3.75-3.748 3.75 1.678 3.75 3.75z"/></svg>
                 RSS
             </a>
-            <a href="{{ language_json }}" class="feed-link json" target="_blank">
+            <a href="{{ language_json }}" class="feed-link json" target="_blank" rel="noopener">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM6 20V4h5v7h7v9H6z"/></svg>
                 JSON
             </a>
@@ -220,8 +220,8 @@
         <div class="category-card">
             <span>{{ cat.name }}</span>
             <div class="category-links">
-                <a href="{{ cat.rss_url }}" class="feed-link" target="_blank">RSS</a>
-                <a href="{{ cat.json_url }}" class="feed-link json" target="_blank">JSON</a>
+                <a href="{{ cat.rss_url }}" class="feed-link" target="_blank" rel="noopener">RSS</a>
+                <a href="{{ cat.json_url }}" class="feed-link json" target="_blank" rel="noopener">JSON</a>
             </div>
         </div>
         {% endfor %}

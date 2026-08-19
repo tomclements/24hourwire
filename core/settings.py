@@ -52,6 +52,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'core.middleware.DetectLanguageMiddleware',
+    'core.middleware.ContentSecurityPolicyMiddleware',
     'news.middleware.AnalyticsMiddleware',
 ]
 
@@ -73,6 +74,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'news.context_processors.site_globals',
             ],
         },
     },
@@ -187,8 +189,13 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # WhiteNoise: serve compressed static files with far-future cache headers
-# Enable Brotli and Gzip compression; add immutable file cache headers
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Enable Brotli and Gzip compression; add immutable file cache headers.
+# Use the STORAGES setting — STATICFILES_STORAGE was removed in Django 6.0.
+STORAGES = {
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+}
 WHITENOISE_MAX_AGE = 31536000  # 1 year for immutable files (hashed filenames)
 
 # Default primary key field type

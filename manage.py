@@ -7,6 +7,9 @@ import sys
 def main():
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
+    # Operate from the project root regardless of where manage.py is invoked,
+    # so management commands and test discovery always work from any CWD.
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

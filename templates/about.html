@@ -4,6 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        (function () {
+            try {
+                var theme = localStorage.getItem('theme');
+                if (theme) document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {}
+        })();
+    </script>
     <title>About - 24HourWire | The Latest News from All Angles</title>
     <meta name="description" content="Learn how 24HourWire aggregates news from multiple perspectives. Unbiased news aggregator showing current events from diverse sources.">
     <meta property="og:title" content="About - 24HourWire | The Latest News from All Angles">

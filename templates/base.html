@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="{{ language }}" data-lang="{{ language }}">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}24HourWire | The Latest News from All Angles{% endblock %}</title>
+    <meta name="description" content="{% block description %}Get the latest news from all angles with 24HourWire. Unbiased news aggregator showing current events from multiple perspectives. 24 hour news coverage from diverse sources.{% endblock %}">
+
+    <script>
+        (function () {
+            try {
+                var theme = localStorage.getItem('theme');
+                if (theme) document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {}
+        })();
+    </script>
+
+    {% block head_meta %}
+    <meta property="og:title" content="24HourWire | The Latest News from All Angles">
+    <meta property="og:description" content="Unbiased news aggregator showing current events from multiple perspectives. 24 hour news coverage from diverse sources.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://24hourwire.news">
+    <meta property="og:site_name" content="24HourWire">
+    <meta property="og:image" content="https://24hourwire.news{% static 'news/images/logo.jpg' %}">
+    <meta property="og:image:alt" content="24HourWire - {{ t.logo_tagline }}">
+    <meta property="og:locale" content="{{ language }}_{{ language|upper }}">
+
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@24HourWire">
+    <meta name="twitter:creator" content="@24HourWire">
+    <meta name="twitter:title" content="24HourWire | The Latest News from All Angles">
+    <meta name="twitter:description" content="Unbiased news aggregator showing current events from multiple perspectives.">
+    <meta name="twitter:image" content="https://24hourwire.news{% static 'news/images/logo.jpg' %}">
+    <meta name="twitter:image:alt" content="24HourWire - {{ t.logo_tagline }}">
+
+    <link rel="canonical" href="https://24hourwire.news">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "NewsMediaOrganization",
+        "name": "24HourWire",
+        "url": "https://24hourwire.news",
+        "logo": {
+            "@type": "ImageObject",
+            "url": "https://24hourwire.news{% static 'news/images/logo.jpg' %}"
+        },
+        "sameAs": [
+            "https://twitter.com/24HourWire"
+        ],
+        "description": "Unbiased news aggregator showing current events from multiple perspectives."
+    }
+    </script>
+    {% endblock %}
+
+    <link rel="icon" type="image/jpeg" href="{% static 'news/images/logo.jpg' %}">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+
+    <link rel="stylesheet" href="{% static 'news/css/app.css' %}">
+    {% block extra_css %}{% endblock %}
+
+    {% block extra_head %}{% endblock %}
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-FLFN6ZYCPX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-FLFN6ZYCPX');
+    </script>
+</head>
+<body>
+    <div class="header-container">
+        <header>
+            <div class="header-top">
+                <a href="/" class="header-logo">
+                    <img src="{% static 'news/images/logo.jpg' %}?v=2" alt="24HourWire" title="24HourWire">
+                    <div class="header-logo-text">
+                        <span class="logo-title">24HourWire</span>
+                        <span class="logo-tagline">{{ t.logo_tagline }}</span>
+                    </div>
+                </a>
+
+                <div class="header-actions">
+                    <div class="search-container">
+                        <span class="search-icon">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                            </svg>
+                        </span>
+                        <label for="search-input" class="visually-hidden">{{ t.search_placeholder }}</label>
+                        <input type="search" class="search-input" placeholder="{{ t.search_placeholder }}" id="search-input" aria-label="{{ t.search_placeholder }}" autocomplete="off">
+                    </div>
+
+                    <div class="header-controls">
+                        <label for="lang-select" class="visually-hidden">Language</label>
+                        <select id="lang-select" aria-label="Language">
+                            {% for code, name in language_names.items %}
+                                <option value="{{ code }}" {% if code == language %}selected{% endif %}>{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button class="theme-toggle" data-action="theme-toggle" aria-label="{{ t.toggle_theme }}" title="{{ t.toggle_theme }}">🌙</button>
+                    </div>
+                </div>
+            </div>
+
+            {% block header_extra %}{% endblock %}
+        </header>
+    </div>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>About 24HourWire</h4>
+                <p>Aggregating news from across the political spectrum to give you the full picture. Updated every 15 minutes.</p>
+                <p style="margin-top: 12px;"><a href="/about/?lang={{ language }}">Learn how it works</a></p>
+            </div>
+
+            <div class="footer-section">
+                <h4>Sources</h4>
+                <p>{{ selected_sources|join:", " }}</p>
+            </div>
+
+            <div class="footer-section">
+                <h4>Contact</h4>
+                <p><a href="mailto:admin@24hourwire.news">admin@24hourwire.news</a></p>
+                <p><a href="https://x.com/24HourWire" target="_blank" rel="noopener">@24HourWire on X</a></p>
+            </div>
+
+            <div class="footer-section">
+                <h4>Community</h4>
+                <p><a href="/polls/?lang={{ language }}">Polls</a></p>
+            </div>
+
+            <div class="footer-section">
+                <h4>Legal</h4>
+                <p><a href="/terms/?lang={{ language }}">Terms of Service</a></p>
+                <p><a href="/privacy/?lang={{ language }}">Privacy Policy</a></p>
+                <p><a href="/copyright/?lang={{ language }}">Copyright Policy</a></p>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>&copy; 2026 24HourWire. News content &copy; respective publishers. | <a href="{% url 'feeds' %}?lang={{ language }}">RSS Feeds</a></p>
+            <p class="admin-link">
+                {% if user.is_authenticated %}
+                    {{ user.username }} | <a href="/logout/">Logout</a>
+                {% else %}
+                    <a href="/login/">Admin Login</a>
+                {% endif %}
+            </p>
+        </div>
+    </footer>
+
+    <div id="cookie-banner">
+        <div>
+            <span>{{ t.privacy_text }} <a href="{% url 'privacy' %}?lang={{ language }}" style="color: var(--accent);">{{ t.privacy_link }}</a></span>
+            <button data-action="accept-cookies" style="background: var(--primary); color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: var(--radius); font-weight: 500;">
+                {{ t.got_it }}
+            </button>
+        </div>
+    </div>
+
+    <!-- Different Angle Modal -->
+    <div class="different-angle-modal" id="different-angle-modal">
+        <div class="different-angle-content" id="different-angle-content">
+            <div class="different-angle-header">
+                <div>
+                    <h3>{{ t.different_angle_title|default:"Different Angle" }}</h3>
+                    <div class="original-story">Original: <strong id="different-angle-original-title"></strong> <span id="different-angle-original-source" style="color: var(--text-muted);"></span></div>
+                </div>
+                <button class="close-modal" data-action="close-different-angle" aria-label="Close">&times;</button>
+            </div>
+            <div id="different-angle-loading" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                {{ t.loading_related }}
+            </div>
+            <div class="different-angle-list" id="different-angle-list">
+            </div>
+        </div>
+    </div>
+
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1306415581374425" crossorigin="anonymous"></script>
+
+    <script id="ui-config" type="application/json">{{ ui_json }}</script>
+    <script src="{% static 'news/js/app.js' %}" defer></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

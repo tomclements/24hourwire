@@ -4,6 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        (function () {
+            try {
+                var theme = localStorage.getItem('theme');
+                if (theme) document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {}
+        })();
+    </script>
     <title>Poll Archive | 24HourWire</title>
     <meta name="description" content="Browse past community polls and see how the 24HourWire community voted.">
     <meta name="robots" content="index, follow">
