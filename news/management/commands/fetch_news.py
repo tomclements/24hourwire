@@ -15,7 +15,7 @@ from difflib import SequenceMatcher
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from django.db import OperationalError, connection
-from news.models import Story, normalize_url, title_fingerprint
+from news.models import Story, normalize_url, title_fingerprint, clean_title
 from news.sources_config import LANGUAGE_FEEDS, SUPPORTED_LANGUAGES
 from news.categorization import categorize_story
 
@@ -257,9 +257,9 @@ class Command(BaseCommand):
                 if pub_time < cutoff:
                     continue
 
-                # Handle title encoding
+                # Handle title encoding (strip HTML tags like some feeds include)
                 try:
-                    title = entry.title[:500].encode('utf-8', 'ignore').decode('utf-8')
+                    title = clean_title(entry.title)[:500].encode('utf-8', 'ignore').decode('utf-8')
                 except Exception:
                     title = str(entry.title[:500])
 
@@ -407,6 +407,23 @@ class Command(BaseCommand):
         except Exception as e:
             logger.error(f'Failed to clean old stories: {e}')
             self.safe_write(self.style.WARNING(f"Warning: Could not clean old stories: {e}"))
+
+        # Scrub any titles that still contain HTML tags (e.g. <span>LIVE</span>)
+        try:
+            dirty_count = 0
+            for story in Story.objects.filter(title__icontains='<').iterator():
+                new_title = clean_title(story.title)
+                if new_title and new_title != story.title:
+                    story.title = new_title
+                    story.title_fingerprint = title_fingerprint(new_title)
+                    story.save(update_fields=['title', 'title_fingerprint'])
+                    dirty_count += 1
+            if dirty_count:
+                logger.info(f'Cleaned HTML from {dirty_count} story titles')
+                self.safe_write(f"Cleaned HTML from {dirty_count} story titles")
+        except Exception as e:
+            logger.error(f'Failed to clean existing story titles: {e}')
+            self.safe_write(self.style.WARNING(f"Warning: Could not clean existing titles: {e}"))
 
         total_new = 0
         total_dupes = 0

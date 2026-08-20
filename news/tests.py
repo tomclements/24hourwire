@@ -14,7 +14,7 @@ from django.urls import reverse
 from django.http import JsonResponse
 
 from django.contrib.auth.models import User
-from news.models import Story, StoryCluster, Topic, Poll, PollVote, AnalyticsEvent, title_fingerprint, normalize_url, build_clusters
+from news.models import Story, StoryCluster, Topic, Poll, PollVote, AnalyticsEvent, title_fingerprint, normalize_url, build_clusters, clean_title
 from news.views import story_share, different_angle, branded_redirect
 from django.core import signing
 from news.templatetags.news_extras import sign_share_data
@@ -41,6 +41,14 @@ class StoryModelTests(TestCase):
         fp1 = title_fingerprint("Breaking News: Market Update")
         fp2 = title_fingerprint("Market Update: Breaking News")
         self.assertEqual(fp1, fp2, "Same words in different order should have same fingerprint")
+
+    def test_clean_title_strips_html_tags(self):
+        """Titles with inline HTML (e.g. <span>LIVE</span>) get stripped."""
+        dirty = '<span style="color: rgb(201, 1, 16);">LIVE</span>: Newsom Taxpayers&#39; Plan'
+        self.assertEqual(clean_title(dirty), "LIVE: Newsom Taxpayers' Plan")
+
+    def test_clean_title_handles_entities_and_whitespace(self):
+        self.assertEqual(clean_title('A &amp; B  <b>bold</b>\n\ttitle'), 'A & B bold title')
     
     def test_normalize_url_function(self):
         """Test URL normalization."""

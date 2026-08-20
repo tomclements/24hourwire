@@ -1,4 +1,5 @@
 import hashlib
+import html
 import re
 from urllib.parse import urlparse, parse_qs, urlencode
 
@@ -34,6 +35,16 @@ def title_fingerprint(title):
     normalized = re.sub(r'\s+', ' ', normalized).strip()
     words = sorted(normalized.split())
     return hashlib.md5(' '.join(words).encode()).hexdigest()
+
+
+def clean_title(raw_title):
+    """Strip HTML tags and decode entities from feed titles."""
+    title = HTML_TAG_PATTERN.sub(' ', raw_title)
+    title = html.unescape(title)
+    title = WHITESPACE_PATTERN.sub(' ', title).strip()
+    # Remove stray spaces before punctuation left by tag stripping (e.g. "LIVE :")
+    title = re.sub(r'\s+([,.:;!?%])', r'\1', title)
+    return title
 
 
 class Story(models.Model):
