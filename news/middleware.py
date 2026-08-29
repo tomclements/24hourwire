@@ -10,7 +10,43 @@ Captures:
 No IP addresses, cookies, or session data stored.
 """
 
+import threading
+
+from django.db import close_old_connections
+
 from .models import AnalyticsEvent
+
+
+def _write_analytics_event(payload, close_connections=False):
+    """INSERT analytics row. close_connections=True when running in a worker thread."""
+    if close_connections:
+        close_old_connections()
+    try:
+        AnalyticsEvent.objects.create(**payload)
+    except Exception:
+        pass
+    finally:
+        if close_connections:
+            close_old_connections()
+
+
+def _schedule_analytics_write(payload):
+    """Off-request-path INSERT on Postgres/gunicorn; same-connection in tests.
+
+    Django TestCase wraps each test in a transaction. A daemon thread using a
+    second SQLite connection causes "database table is locked". Production
+    (PostgreSQL, ATOMIC_REQUESTS off) is not in an atomic block, so the write
+    runs on a daemon thread and does not block the client.
+    """
+    from django.db import transaction
+    if transaction.get_connection().in_atomic_block:
+        _write_analytics_event(payload)
+        return
+    threading.Thread(
+        target=_write_analytics_event,
+        args=(payload, True),
+        daemon=True,
+    ).start()
 
 
 class AnalyticsMiddleware:
@@ -68,23 +104,20 @@ class AnalyticsMiddleware:
         # Get user agent (truncated)
         user_agent = request.META.get('HTTP_USER_AGENT', '')[:200]
         
-        # Detect if request is from a bot/crawler
-        is_bot = self._is_bot(user_agent)
-        
-        # Log the event asynchronously to avoid slowing down response
-        try:
-            AnalyticsEvent.objects.create(
-                event_type=event_type,
-                path=path[:500],
-                language=language[:5],
-                country_code=country_code[:5],
-                user_agent=user_agent,
-                is_bot=is_bot,
-            )
-        except Exception:
-            # Silently fail if analytics logging breaks
-            pass
-        
+        # Skip INSERT for obvious bots/crawlers (do not store a row at all)
+        if self._is_bot(user_agent):
+            return response
+
+        payload = {
+            "event_type": event_type,
+            "path": path[:500],
+            "language": language[:5] if language else "",
+            "country_code": country_code[:5] if country_code else "",
+            "user_agent": user_agent,
+            "is_bot": False,
+        }
+        _schedule_analytics_write(payload)
+
         return response
     
     def _is_bot(self, user_agent):

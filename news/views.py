@@ -1223,7 +1223,7 @@ def poll_detail(request, poll_id):
     return render(request, 'poll_detail.html', context)
 
 
-@cache_page(60)  # 1 minute — poll list changes when new polls activate
+# Not cache_page: stamps poll.user_has_voted via has_voted(request) (personalized).
 def polls_list(request):
     """Public polls listing page — current active polls only."""
     now = timezone.now()

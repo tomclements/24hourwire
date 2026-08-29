@@ -112,6 +112,32 @@ services:
       - key: OPENAI_API_KEY
         sync: false
 
+
+  # Cron job for purging old analytics events (7-day retention)
+  - type: cron
+    name: 24hourwire-purge-analytics
+    runtime: python
+    plan: starter
+    region: ohio
+    buildCommand: pip install -r requirements.txt
+    startCommand: python manage.py purge_analytics
+    schedule: "0 5 * * *"  # Daily at 5 AM UTC
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: 24hourwire-db
+          property: connectionString
+      - key: SECRET_KEY
+        fromService:
+          type: web
+          name: 24hourwire
+          envVarKey: SECRET_KEY
+      - key: ALLOWED_HOSTS
+        fromService:
+          type: web
+          name: 24hourwire
+          envVarKey: ALLOWED_HOSTS
+
 databases:
   - name: 24hourwire-db
     plan: basic-256mb

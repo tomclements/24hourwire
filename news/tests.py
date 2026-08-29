@@ -2178,3 +2178,136 @@ class LanguageCacheKeyTests(TestCase):
         self.assertNotContains(voter_page, 'onclick="submitVote')
         self.assertContains(other_page, 'onclick="submitVote')
         self.assertNotContains(other_page, 'You have already voted.')
+
+class PollsListCacheTests(TestCase):
+    """polls_list must not cache personalized vote UI (same class of bug as poll_detail)."""
+
+    def test_polls_list_is_not_cache_page_wrapped(self):
+        import inspect
+        from news import views
+        path = inspect.getfile(views.polls_list).replace("\\", "/")
+        self.assertTrue(path.endswith("news/views.py"), path)
+        source = inspect.getsource(views.polls_list)
+        self.assertNotIn("@cache_page", source)
+        self.assertNotIn("vary_on_cookie", source)
+
+    def test_polls_list_vote_ui_is_not_shared_across_visitors(self):
+        from django.core.cache import cache
+
+        cache.clear()
+        poll = Poll.objects.create(
+            language="en",
+            question="Polls list vote UI isolation?",
+            options=["Yes", "No"],
+            poll_type="topical",
+            status="active",
+            is_active=True,
+            ends_at=timezone.now() + timedelta(days=7),
+        )
+        voter = Client()
+        other = Client()
+        vote = voter.post(
+            f"/poll/{poll.id}/vote/",
+            {"option": "0"},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+            REMOTE_ADDR="10.0.0.1",
+        )
+        self.assertEqual(vote.status_code, 200)
+        voter_page = voter.get("/polls/", REMOTE_ADDR="10.0.0.1")
+        other_page = other.get("/polls/", REMOTE_ADDR="10.0.0.2")
+        self.assertEqual(voter_page.status_code, 200)
+        self.assertEqual(other_page.status_code, 200)
+        self.assertContains(voter_page, "result-mini")
+        self.assertNotContains(voter_page, "Cast your vote")
+        self.assertContains(other_page, "Cast your vote")
+        self.assertNotContains(other_page, 'class="result-mini"')
+
+
+class AnalyticsMiddlewareSkipAndWriteTests(TestCase):
+    """Bots must not INSERT; human writes must not call objects.create inline in __call__."""
+
+    def test_call_does_not_create_inline(self):
+        import inspect
+        from news import middleware as mw
+        call_src = inspect.getsource(mw.AnalyticsMiddleware.__call__)
+        self.assertNotIn("objects.create", call_src)
+        sched_src = inspect.getsource(mw._schedule_analytics_write)
+        self.assertIn("Thread", sched_src)
+        self.assertIn("objects.create", inspect.getsource(mw._write_analytics_event))
+
+    def test_bot_user_agent_does_not_insert(self):
+        before = AnalyticsEvent.objects.count()
+        response = self.client.get(
+            "/terms/",
+            HTTP_USER_AGENT="Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(AnalyticsEvent.objects.count(), before)
+
+    def test_curl_user_agent_does_not_insert(self):
+        before = AnalyticsEvent.objects.count()
+        response = self.client.get("/terms/", HTTP_USER_AGENT="curl/8.0.1")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(AnalyticsEvent.objects.count(), before)
+
+    def test_human_request_creates_event(self):
+        before = AnalyticsEvent.objects.count()
+        response = self.client.get(
+            "/terms/",
+            HTTP_USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(AnalyticsEvent.objects.count(), before + 1)
+        event = AnalyticsEvent.objects.latest("id")
+        self.assertEqual(event.path, "/terms/")
+        self.assertFalse(event.is_bot)
+
+
+class PurgeAnalyticsCommandTests(TestCase):
+    """Analytics rows must not grow forever."""
+
+    def test_purge_deletes_old_keeps_recent(self):
+        from io import StringIO
+        from django.core.management import call_command
+
+        old = AnalyticsEvent.objects.create(event_type="page_view", path="/old/")
+        recent = AnalyticsEvent.objects.create(event_type="page_view", path="/new/")
+        AnalyticsEvent.objects.filter(pk=old.pk).update(
+            timestamp=timezone.now() - timedelta(days=8)
+        )
+        out = StringIO()
+        call_command("purge_analytics", stdout=out)
+        self.assertFalse(AnalyticsEvent.objects.filter(pk=old.pk).exists())
+        self.assertTrue(AnalyticsEvent.objects.filter(pk=recent.pk).exists())
+        self.assertIn("Purged", out.getvalue())
+
+    def test_purge_help_documents_seven_day_retention(self):
+        from news.management.commands.purge_analytics import Command
+        self.assertIn("7 days", Command.help)
+
+
+class DifferentAngleTemplateTests(TestCase):
+    """Missing different_angle.html used to 500; the page must render."""
+
+    def setUp(self):
+        self.story = Story.objects.create(
+            source="BBC",
+            title="Different Angle Template Story",
+            excerpt="This is a long enough excerpt so it is not filtered out as too short.",
+            url="https://example.com/da-template",
+            language="en",
+            category="world",
+            published=timezone.now() - timedelta(hours=1),
+            url_hash="datmpl123",
+            title_fingerprint="datmpl456",
+        )
+
+    def test_different_angle_returns_200_and_uses_template(self):
+        response = self.client.get(f"/different-angle/{self.story.id}/")
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "different_angle.html")
+        self.assertContains(response, self.story.title)
+
+    def test_different_angle_missing_story_is_404(self):
+        response = self.client.get("/different-angle/99999/")
+        self.assertEqual(response.status_code, 404)

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ t.different_angle_title|default:"Different Angle" }} | {{ original_story.title }} | 24HourWire{% endblock %}
+{% block description %}See this story from other perspectives on 24HourWire.{% endblock %}
+
+{% block extra_head %}
+    <meta name="robots" content="noindex, nofollow">
+{% endblock %}
+
+{% block content %}
+    <nav class="breadcrumb" style="padding: 16px 0;">
+        <a href="/?lang={{ language }}">Home</a> &rsaquo; {{ t.different_angle_title|default:"Different Angle" }}
+    </nav>
+
+    <h1>{{ t.different_angle_title|default:"Different Angle" }}</h1>
+    <p style="color: var(--text-muted); margin-bottom: 24px;">{{ t.different_perspectives|default:"Coverage of the same story from other outlets." }}</p>
+
+    <section style="margin-bottom: 32px;">
+        <h2 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin-bottom: 12px;">Original</h2>
+        <article class="story-card">
+            <div class="story-header">
+                <a href="{{ original_story.url }}" target="_blank" rel="noopener" class="story-title">{{ original_story.title }}</a>
+            </div>
+            <div class="story-meta">
+                <span class="source-tag">{{ original_story.source }}</span>
+                <span class="bias-badge {{ original_bias|lower }}">{{ original_bias }}</span>
+                <span class="time-badge">{{ original_story.published|timesince }} {{ t.ago }}</span>
+            </div>
+            {% with original_story.get_clean_excerpt as clean_excerpt %}
+            {% if clean_excerpt %}
+            <p class="story-excerpt">{{ clean_excerpt|truncatechars:200 }}</p>
+            {% endif %}
+            {% endwith %}
+            <div class="story-actions">
+                <div class="story-links">
+                    <a href="{{ original_story.url }}" target="_blank" rel="noopener">{{ t.read_full|default:"Read full story" }} &rarr;</a>
+                </div>
+            </div>
+        </article>
+    </section>
+
+    <section>
+        <h2 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin-bottom: 12px;">{{ t.different_angle_title|default:"Different Angle" }}</h2>
+        {% if related_stories %}
+            {% for story in related_stories %}
+            <article class="story-card different-angle-item">
+                <div class="story-header">
+                    <a href="{{ story.url }}" target="_blank" rel="noopener" class="story-title">{{ story.title }}</a>
+                </div>
+                <div class="story-meta different-angle-meta">
+                    <span class="source-tag">{{ story.source }}{% if story.is_paywalled %}<span class="paywall-badge" title="{{ t.paywall_title }}">$</span>{% endif %}</span>
+                    <span class="bias-badge {{ story.bias_label|lower }}">{{ story.bias_label }}</span>
+                    <span class="time-badge">{{ story.published|timesince }} {{ t.ago }}</span>
+                </div>
+                {% with story.get_clean_excerpt as clean_excerpt %}
+                {% if clean_excerpt %}
+                <p class="story-excerpt">{{ clean_excerpt|truncatechars:200 }}</p>
+                {% endif %}
+                {% endwith %}
+                <div class="story-actions">
+                    <div class="story-links">
+                        <a href="{{ story.url }}" target="_blank" rel="noopener">{{ t.read_full|default:"Read full story" }} &rarr;</a>
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p>{{ t.no_related_stories|default:"No related stories from other perspectives right now." }}</p>
+            </div>
+        {% endif %}
+    </section>
+
+    <p style="margin: 24px 0;"><a href="/?lang={{ language }}">&larr; Back to news</a></p>
+{% endblock %}
