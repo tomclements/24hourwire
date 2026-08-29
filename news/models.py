@@ -90,6 +90,15 @@ class Story(models.Model):
     def __str__(self):
         return f"{self.source}: {self.title[:50]}"
 
+    def get_persisted_categories(self):
+        """Stored multi-categories; fall back to legacy single category."""
+        slugs = [link.slug for link in self.category_links.all()]
+        if slugs:
+            return slugs
+        if self.category:
+            return [self.category]
+        return ['world']
+
     def get_search_terms(self):
         from news.sources_config import LANGUAGE_STOP_WORDS
         stop_words = LANGUAGE_STOP_WORDS.get(self.language, LANGUAGE_STOP_WORDS['en'])
@@ -154,6 +163,20 @@ class Story(models.Model):
         if len(text) > 30:
             return text
         return ''
+
+
+class StoryCategory(models.Model):
+    """Persisted multi-category slugs for a story (homepage SQL filter)."""
+    story = models.ForeignKey(Story, on_delete=models.CASCADE, related_name='category_links')
+    slug = models.CharField(max_length=32, db_index=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['story', 'slug'], name='news_storycategory_story_slug_uniq'),
+        ]
+
+    def __str__(self):
+        return f"{self.story_id}:{self.slug}"
 
 
 class StoryCluster(models.Model):

@@ -7,6 +7,7 @@ import json
 import os
 import re
 from datetime import datetime, timedelta
+import inspect
 from unittest.mock import patch, MagicMock
 from django.test import TestCase, Client, RequestFactory
 from django.utils import timezone
@@ -14,7 +15,7 @@ from django.urls import reverse
 from django.http import JsonResponse
 
 from django.contrib.auth.models import User
-from news.models import Story, StoryCluster, Topic, Poll, PollVote, AnalyticsEvent, title_fingerprint, normalize_url, build_clusters, clean_title
+from news.models import Story, StoryCategory, StoryCluster, Topic, Poll, PollVote, AnalyticsEvent, title_fingerprint, normalize_url, build_clusters, clean_title
 from news.views import story_share, different_angle, branded_redirect
 from django.core import signing
 from news.templatetags.news_extras import sign_share_data
@@ -776,7 +777,9 @@ class BiasFilterRegressionTests(TestCase):
     
     def test_load_more_includes_bias_class(self):
         """AJAX load_more should include bias_class in JSON response."""
-        Story.objects.create(
+        from django.core.cache import cache
+        cache.clear()
+        story = Story.objects.create(
             source='BBC',
             title='Tech Giants Announce New AI Chips',
             excerpt='Test',
@@ -787,6 +790,7 @@ class BiasFilterRegressionTests(TestCase):
             url_hash='bbc456',
             title_fingerprint='bbcfp456',
         )
+        StoryCategory.objects.create(story=story, slug='technology')
         
         response = self.client.get('/api/stories/?lang=en&category=technology&offset=0')
         import json
@@ -2311,3 +2315,195 @@ class DifferentAngleTemplateTests(TestCase):
     def test_different_angle_missing_story_is_404(self):
         response = self.client.get("/different-angle/99999/")
         self.assertEqual(response.status_code, 404)
+
+
+
+class StoredMultiCategoryTests(TestCase):
+    """Persist multi-categories at fetch; filter home/load_more in SQL."""
+
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+        self.now = timezone.now()
+
+    def _story(self, **kwargs):
+        slugs = kwargs.pop('categories', None)
+        n = Story.objects.count() + 1
+        defaults = {
+            'source': 'BBC',
+            'excerpt': 'Test excerpt content that is long enough to keep.',
+            'language': 'en',
+            'category': 'world',
+            'published': self.now - timedelta(minutes=n),
+            'url': f'https://example.com/stored-cats-{n}',
+            'url_hash': f'stored{n}',
+            'title_fingerprint': f'storedfp{n}',
+        }
+        defaults.update(kwargs)
+        story = Story.objects.create(**defaults)
+        if slugs is None:
+            slugs = [story.category] if story.category else []
+        StoryCategory.objects.bulk_create(
+            [StoryCategory(story=story, slug=slug) for slug in slugs]
+        )
+        return story
+
+    def test_home_does_not_call_get_story_categories(self):
+        self._story(
+            title='Congress Passes Budget UniqueHomePolXYZ',
+            category='politics',
+            categories=['politics', 'united-states'],
+        )
+        self._story(
+            title='NBA Finals Game UniqueHomeSportsXYZ',
+            category='sports',
+            categories=['sports'],
+        )
+        with patch('news.views.get_story_categories') as mocked:
+            mocked.side_effect = AssertionError('get_story_categories must not run on home')
+            response = self.client.get('/')
+        mocked.assert_not_called()
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Congress Passes Budget UniqueHomePolXYZ')
+        self.assertContains(response, 'NBA Finals Game UniqueHomeSportsXYZ')
+
+    def test_home_filters_by_stored_categories_not_title(self):
+        """A sports-titled story stored as technology must only appear in technology."""
+        title = 'NBA playoffs Lakers advance UniqueMismatchXYZ'
+        self._story(
+            title=title,
+            category='technology',
+            categories=['technology'],
+        )
+        response = self.client.get('/')
+        content = response.content.decode()
+        tech = re.search(r'<section id="technology".*?</section>', content, re.DOTALL)
+        sports = re.search(r'<section id="sports".*?</section>', content, re.DOTALL)
+        all_tab = re.search(r'<section id="all".*?</section>', content, re.DOTALL)
+        self.assertIsNotNone(tech)
+        self.assertIn(title, tech.group(0))
+        self.assertIn(title, all_tab.group(0) if all_tab else '')
+        if sports:
+            self.assertNotIn(title, sports.group(0))
+
+    def test_load_more_does_not_call_get_story_categories(self):
+        self._story(
+            title='Tech Giants Announce UniqueLoadMoreXYZ',
+            category='technology',
+            categories=['technology'],
+        )
+        with patch('news.views.get_story_categories') as mocked:
+            mocked.side_effect = AssertionError('get_story_categories must not run on load_more')
+            response = self.client.get('/api/stories/?lang=en&category=technology&offset=0')
+        mocked.assert_not_called()
+        data = json.loads(response.content)
+        titles = [s['title'] for s in data['stories']]
+        self.assertIn('Tech Giants Announce UniqueLoadMoreXYZ', titles)
+
+    def test_load_more_category_uses_stored_categories(self):
+        political_title = 'Congress Passes New Budget UniqueStoredPolXYZ'
+        self._story(
+            title=political_title,
+            category='sports',
+            categories=['sports'],
+        )
+        self._story(
+            title='Chipmakers Report Earnings UniqueStoredTechXYZ',
+            category='technology',
+            categories=['technology'],
+        )
+        response = self.client.get('/api/stories/?lang=en&category=technology&offset=0')
+        data = json.loads(response.content)
+        titles = [s['title'] for s in data['stories']]
+        self.assertIn('Chipmakers Report Earnings UniqueStoredTechXYZ', titles)
+        self.assertNotIn(political_title, titles)
+        sports = json.loads(self.client.get('/api/stories/?lang=en&category=sports&offset=0').content)
+        sports_titles = [s['title'] for s in sports['stories']]
+        self.assertIn(political_title, sports_titles)
+
+    def test_load_more_pagination_is_next_page_not_full_set(self):
+        titles = []
+        for i in range(25):
+            t = f'Politics Pagination {i:02d} UniquePageXYZ'
+            titles.append(t)
+            self._story(
+                title=t,
+                category='politics',
+                categories=['politics'],
+                published=self.now - timedelta(minutes=i),
+                url=f'https://example.com/page-pol-{i}',
+                url_hash=f'pagepol{i}',
+                title_fingerprint=f'pagepolfp{i}',
+            )
+        response = self.client.get('/api/stories/?lang=en&category=politics&offset=20')
+        data = json.loads(response.content)
+        returned = [s['title'] for s in data['stories']]
+        self.assertEqual(data['total'], 25)
+        self.assertEqual(returned, titles[20:25])
+        self.assertFalse(data['has_more'])
+        for t in titles[:20]:
+            self.assertNotIn(t, returned)
+
+    def test_load_more_uses_sql_limit_offset(self):
+        for i in range(3):
+            self._story(
+                title=f'Politics SQL {i} UniqueSqlXYZ',
+                category='politics',
+                categories=['politics'],
+                url=f'https://example.com/sql-pol-{i}',
+                url_hash=f'sqlpol{i}',
+                title_fingerprint=f'sqlpolfp{i}',
+            )
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+        with CaptureQueriesContext(connection) as ctx:
+            self.client.get('/api/stories/?lang=en&category=politics&offset=20')
+        sqls = ' '.join(q['sql'] for q in ctx.captured_queries).upper()
+        self.assertIn('LIMIT', sqls)
+        self.assertIn('OFFSET', sqls)
+        self.assertIn('NEWS_STORYCATEGORY', sqls)
+
+    def test_sql_filter_matches_any_stored_category(self):
+        title = 'Trade Deal UniqueMultiCatXYZ'
+        self._story(
+            title=title,
+            category='politics',
+            categories=['politics', 'united-states'],
+        )
+        pol = json.loads(self.client.get('/api/stories/?lang=en&category=politics&offset=0').content)
+        us = json.loads(self.client.get('/api/stories/?lang=en&category=united-states&offset=0').content)
+        tech = json.loads(self.client.get('/api/stories/?lang=en&category=technology&offset=0').content)
+        self.assertIn(title, [s['title'] for s in pol['stories']])
+        self.assertIn(title, [s['title'] for s in us['stories']])
+        self.assertNotIn(title, [s['title'] for s in tech['stories']])
+
+    def test_fetch_persists_multiple_categories(self):
+        from news.categorization import get_story_categories
+        from news.management.commands.fetch_news import Command, persist_story_category_links
+
+        title = 'Congress Passes New Budget Bill'
+        cats = get_story_categories(title, 'en', 'BBC')
+        self.assertIn('politics', cats)
+        self.assertGreaterEqual(len(cats), 1)
+        story = Story.objects.create(
+            source='BBC',
+            title=title,
+            excerpt='Test excerpt content that is long enough to keep.',
+            url='https://example.com/fetch-persist-cats',
+            language='en',
+            category=cats[0],
+            published=self.now,
+            url_hash='fetchpersist1',
+            title_fingerprint='fetchpersistfp1',
+        )
+        story._category_slugs = cats
+        persist_story_category_links([story])
+        self.assertEqual(set(story.category_links.values_list('slug', flat=True)), set(cats))
+        self.assertEqual(story.category, cats[0])
+        self.assertTrue(
+            Story.objects.filter(category_links__slug='politics', pk=story.id).exists()
+        )
+        src = inspect.getsource(Command)
+        self.assertIn('get_story_categories', src)
+        self.assertIn('persist_story_category_links', src)
+

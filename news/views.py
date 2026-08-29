@@ -50,6 +50,36 @@ def get_related_topics(story, active_topics=None):
     return related
 
 
+STORY_LIST_FIELDS = (
+    'id', 'title', 'excerpt', 'url', 'source', 'published',
+    'language', 'category', 'image_url', 'url_hash', 'title_fingerprint',
+)
+
+
+def _homepage_story_qs(cutoff, language, selected_sources, category_id='all'):
+    """24h stories for language/sources, filtered by stored categories in SQL."""
+    qs = Story.objects.filter(
+        published__gte=cutoff,
+        language=language,
+        source__in=selected_sources,
+    )
+    if category_id not in ('all', 'most_covered', None, ''):
+        qs = qs.filter(category_links__slug=category_id).distinct()
+    return qs.order_by('-published')
+
+
+def _annotate_homepage_story(story, lang_source_info, active_topics=None):
+    story.story_categories = story.get_persisted_categories()
+    bias_info = lang_source_info.get(story.source, ('Unknown', '#999', 'https://mediabiasfactcheck.com/'))
+    story.bias_label = bias_info[0]
+    story.bias_color = bias_info[1]
+    story.bias_link = bias_info[2]
+    story.bias_class = bias_info[0].lower().replace(' ', '-').replace('/', '-') if bias_info[0] else 'unknown'
+    story.is_paywalled = story.source in PAYWALLED_SOURCES
+    if active_topics is not None:
+        story.related_topics = get_related_topics(story, active_topics=active_topics)
+
+
 def is_staff_or_superuser(user):
     """Check if user is staff or superuser."""
     return user.is_staff or user.is_superuser
@@ -111,30 +141,8 @@ def home(request):
         # Default to ALL sources (same as sources=all) so "All" bias filter shows everything
         selected_sources = [s[0] for s in lang_sources]
     
-    # PERFORMANCE: Filter by source in DB, use only() to reduce data transfer,
-    # then process in Python. Index: language + published + source covers this.
-    stories = list(Story.objects.filter(
-        published__gte=cutoff,
-        language=language,
-        source__in=selected_sources
-    ).only(
-        'id', 'title', 'excerpt', 'url', 'source', 'published',
-        'language', 'category', 'image_url', 'url_hash', 'title_fingerprint'
-    ).order_by('-published'))
-    
     # Pre-fetch active topics once to avoid N+1 queries in get_related_topics
     active_topics = list(Topic.objects.filter(is_active=True))
-    
-    # Apply metadata to displayed stories only
-    for story in stories:
-        story.story_categories = get_story_categories(story.title, language, story.source)
-        bias_info = lang_source_info.get(story.source, ('Unknown', '#999', 'https://mediabiasfactcheck.com/'))
-        story.bias_label = bias_info[0]
-        story.bias_color = bias_info[1]
-        story.related_topics = get_related_topics(story, active_topics=active_topics)
-        story.bias_link = bias_info[2]
-        story.bias_class = bias_info[0].lower().replace(' ', '-').replace('/', '-') if bias_info[0] else 'unknown'
-        story.is_paywalled = story.source in PAYWALLED_SOURCES
 
     # Load pre-computed clusters for "Most Covered" tab
     most_covered_stories = []
@@ -150,7 +158,7 @@ def home(request):
         rep.bias_color = bias_info[1]
         rep.bias_link = bias_info[2]
         rep.is_paywalled = rep.source in PAYWALLED_SOURCES
-        rep.story_categories = get_story_categories(rep.title, language, rep.source)
+        rep.story_categories = rep.get_persisted_categories()
         rep.covered_by_count = cluster.source_count
         rep.covered_by_sources = cluster.sources
         most_covered_stories.append(rep)
@@ -178,12 +186,17 @@ def home(request):
     
     grouped = {}
     for cat_id, cat_name in category_names.items():
-        if cat_id == 'all':
-            cat_stories = list(stories)
-        elif cat_id == 'most_covered':
+        if cat_id == 'most_covered':
             cat_stories = most_covered_stories
+            total_stories = len(cat_stories)
         else:
-            cat_stories = [s for s in stories if cat_id in s.story_categories]
+            cat_qs = _homepage_story_qs(cutoff, language, selected_sources, cat_id)
+            total_stories = cat_qs.count()
+            cat_stories = list(
+                cat_qs.only(*STORY_LIST_FIELDS).prefetch_related('category_links')[:20]
+            )
+            for story in cat_stories:
+                _annotate_homepage_story(story, lang_source_info, active_topics)
         
         import random
         if cat_id == 'all' and all_books:
@@ -200,9 +213,9 @@ def home(request):
         grouped[cat_id] = {
             'name': cat_name,
             'stories': cat_stories[:20],
-            'total_stories': len(cat_stories),
-            'loaded': min(20, len(cat_stories)),
-            'has_more': len(cat_stories) > 20,
+            'total_stories': total_stories,
+            'loaded': min(20, total_stories),
+            'has_more': total_stories > 20,
             'books': cat_books,
             'poll': active_poll if cat_id == 'all' else None,
         }
@@ -740,21 +753,9 @@ def load_more_stories(request):
         selected_sources = [s[0] for s in lang_sources]
     
     cutoff = timezone.now() - timedelta(hours=24)
-    stories = list(Story.objects.filter(
-        published__gte=cutoff,
-        language=language,
-        source__in=selected_sources
-    ).only(
-        'id', 'title', 'excerpt', 'url', 'source', 'published',
-        'language', 'category', 'image_url', 'url_hash', 'title_fingerprint'
-    ).order_by('-published'))
-    
-    # Filter by category
-    if category_id != 'all' and category_id != 'most_covered':
-        stories = [s for s in stories if category_id in get_story_categories(s.title, language, s.source)]
-    
-    total = len(stories)
-    batch = stories[offset:offset + 50]
+    qs = _homepage_story_qs(cutoff, language, selected_sources, category_id)
+    total = qs.count()
+    batch = list(qs.only(*STORY_LIST_FIELDS)[offset:offset + 50])
     
     story_data = []
     for story in batch:

@@ -15,12 +15,30 @@ from difflib import SequenceMatcher
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from django.db import OperationalError, connection
-from news.models import Story, normalize_url, title_fingerprint, clean_title
+from news.models import Story, StoryCategory, normalize_url, title_fingerprint, clean_title
 from news.sources_config import LANGUAGE_FEEDS, SUPPORTED_LANGUAGES
-from news.categorization import categorize_story
+from news.categorization import get_story_categories
 
 
 STATUS_FILE = 'feed_status.json'
+
+
+def persist_story_category_links(stories):
+    """Write StoryCategory rows for newly bulk_created Story objects."""
+    if not stories:
+        return
+    urls = [s.url for s in stories]
+    url_to_id = dict(Story.objects.filter(url__in=urls).values_list('url', 'id'))
+    links = []
+    for s in stories:
+        pk = url_to_id.get(s.url)
+        if not pk:
+            continue
+        for slug in getattr(s, '_category_slugs', None) or []:
+            if slug:
+                links.append(StoryCategory(story_id=pk, slug=slug))
+    if links:
+        StoryCategory.objects.bulk_create(links, ignore_conflicts=True)
 
 
 def load_disabled_feeds():
@@ -310,7 +328,8 @@ class Command(BaseCommand):
                 # Extract image URL from RSS entry
                 image_url = extract_image_url(entry)
 
-                to_create.append(Story(
+                cats = get_story_categories(title, language, source_name) or ['world']
+                story = Story(
                     source=source_name,
                     title=title,
                     excerpt=excerpt,
@@ -318,10 +337,12 @@ class Command(BaseCommand):
                     url_hash=url_hash,
                     title_fingerprint=fp,
                     language=language,
-                    category=categorize_story(title, language),
+                    category=cats[0],
                     published=pub_time,
                     image_url=image_url,
-                ))
+                )
+                story._category_slugs = cats
+                to_create.append(story)
                 
                 # Track for fuzzy deduplication
                 if source_name not in recent_source_stories:
@@ -339,11 +360,13 @@ class Command(BaseCommand):
                 # Insert in batches
                 if len(to_create) >= 25:
                     Story.objects.bulk_create(to_create, ignore_conflicts=True)
+                    persist_story_category_links(to_create)
                     to_create = []
 
             # Insert remaining stories for this source
             if to_create:
                 Story.objects.bulk_create(to_create, ignore_conflicts=True)
+                persist_story_category_links(to_create)
 
             # Safe logging for Unicode source names
             try:
