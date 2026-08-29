@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -20,13 +22,40 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-a@txyig+q7wr7)ttw_wq-_#yu4_hkne&f-l_)yvvstogdl+r=k')
-
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 'yes')
+DEBUG = os.environ.get('DEBUG', '').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.environ.get('SECRET_KEY', '')
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = 'django-insecure-a@txyig+q7wr7)ttw_wq-_#yu4_hkne&f-l_)yvvstogdl+r=k'
+    else:
+        raise ImproperlyConfigured(
+            "SECRET_KEY must be set when DEBUG is False"
+        )
+
+_allowed_hosts_env = os.environ.get('ALLOWED_HOSTS', '')
+if DEBUG:
+    ALLOWED_HOSTS = [
+        host.strip()
+        for host in _allowed_hosts_env.split(',')
+        if host.strip()
+    ] if _allowed_hosts_env else ['localhost', '127.0.0.1']
+else:
+    if not _allowed_hosts_env:
+        raise ImproperlyConfigured(
+            "ALLOWED_HOSTS must be set when DEBUG is False"
+        )
+    ALLOWED_HOSTS = [
+        host.strip()
+        for host in _allowed_hosts_env.split(',')
+        if host.strip()
+    ]
+    if not ALLOWED_HOSTS:
+        raise ImproperlyConfigured(
+            "ALLOWED_HOSTS must not be empty when DEBUG is False"
+        )
 
 
 # Application definition
@@ -94,9 +123,6 @@ if DATABASE_URL:
     from urllib.parse import urlparse
     _parsed = urlparse(DATABASE_URL)
     
-    # Detect if running on Render ( Render hosts have 'render.com' in the hostname)
-    is_render = 'render.com' in (_parsed.hostname or '')
-    
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -109,9 +135,8 @@ if DATABASE_URL:
             # Reduces connection overhead and prevents SSL handshake issues
             'CONN_MAX_AGE': 600,
             # SSL configuration for Render
-            # Try 'disable' as a last resort workaround for Render's SSL issues
             'OPTIONS': {
-                'sslmode': 'disable' if is_render else 'require',
+                'sslmode': 'require',
             },
         }
     }

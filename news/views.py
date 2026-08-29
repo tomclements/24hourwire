@@ -3,7 +3,7 @@ from django.core import signing
 from django.http import Http404, HttpResponse
 from django.utils import timezone
 from django.views.decorators.cache import cache_page
-from django.views.decorators.vary import vary_on_cookie, vary_on_headers
+from django.views.decorators.vary import vary_on_headers
 from django.views.decorators.http import condition
 from datetime import timedelta
 from django.contrib.auth import login, logout, authenticate
@@ -56,6 +56,7 @@ def is_staff_or_superuser(user):
 
 
 @cache_page(60)  # Cache home page for 1 minute
+@vary_on_headers('Accept-Language')
 def home(request):
     cutoff = timezone.now() - timedelta(hours=24)
     
@@ -273,6 +274,7 @@ def healthz(request):
 
 
 @cache_page(3600)  # Cache static pages for 1 hour
+@vary_on_headers('Accept-Language')
 def about_view(request):
     language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))
     if language not in SOURCES:
@@ -660,6 +662,7 @@ def search_stories(request):
 
 
 @cache_page(300)  # Cache feeds page for 5 minutes
+@vary_on_headers('Accept-Language')
 def feeds_view(request):
     """Display available RSS and JSON feeds for the selected language."""
     language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))
@@ -699,6 +702,7 @@ def feeds_view(request):
 
 @condition(last_modified_func=_latest_story_timestamp)
 @cache_page(60)  # Cache AJAX endpoint for 1 minute
+@vary_on_headers('Accept-Language')
 def load_more_stories(request):
     """API endpoint for loading more stories via AJAX.
     
@@ -1146,7 +1150,6 @@ def topic_detail(request, slug):
     return render(request, 'topic_detail.html', context)
 
 
-@cache_page(60)  # 1 minute — votes change frequently
 def poll_detail(request, poll_id):
     """Public poll page — works even for expired polls."""
     from django.http import JsonResponse

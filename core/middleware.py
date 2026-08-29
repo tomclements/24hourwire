@@ -37,7 +37,13 @@ class ContentSecurityPolicyMiddleware:
 
 class DetectLanguageMiddleware:
     """Detect preferred language from Accept-Language header.
-    Sets request.detected_language which views can use as default."""
+
+    Sets request.detected_language (Accept-Language only) for views.
+    Also sets request.LANGUAGE_CODE to the language the views will render
+    (?lang= override, else detected_language) so Django cache_page keys
+    differ by language. LocaleMiddleware is not used; with USE_I18N=True,
+    learn_cache_key strips Accept-Language and suffixes LANGUAGE_CODE.
+    """
 
     def __init__(self, get_response):
         self.get_response = get_response
@@ -45,6 +51,10 @@ class DetectLanguageMiddleware:
     def __call__(self, request):
         header = request.META.get('HTTP_ACCEPT_LANGUAGE', '')
         request.detected_language = self._parse(header)
+        language = request.GET.get('lang', request.detected_language)
+        if language not in SUPPORTED_LANGUAGES:
+            language = 'en'
+        request.LANGUAGE_CODE = language
         return self.get_response(request)
 
     def _parse(self, header):

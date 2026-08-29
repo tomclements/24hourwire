@@ -11,8 +11,8 @@ from playwright.sync_api import Page, expect
 
 @pytest.fixture(scope="session")
 def base_url():
-    """Base URL for testing - change to your production URL."""
-    return "https://two4hourwire.onrender.com"  # Production URL
+    """Base URL for testing - local development server."""
+    return "http://127.0.0.1:8000"
 
 
 class TestDifferentAngle:

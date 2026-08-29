@@ -31,6 +31,8 @@ services:
         value: false
       - key: CSRF_TRUSTED_ORIGINS
         value: https://24hourwire.news,https://www.24hourwire.news,https://two4hourwire.onrender.com
+      - key: ALLOWED_HOSTS
+        value: 24hourwire.news,www.24hourwire.news,two4hourwire.onrender.com
       - key: WEB_CONCURRENCY
         value: 1
 
@@ -52,6 +54,11 @@ services:
           type: web
           name: 24hourwire
           envVarKey: SECRET_KEY
+      - key: ALLOWED_HOSTS
+        fromService:
+          type: web
+          name: 24hourwire
+          envVarKey: ALLOWED_HOSTS
 
   # Cron job for building clusters (separate from fetching)
   - type: cron
@@ -72,6 +79,11 @@ services:
           type: web
           name: 24hourwire
           envVarKey: SECRET_KEY
+      - key: ALLOWED_HOSTS
+        fromService:
+          type: web
+          name: 24hourwire
+          envVarKey: ALLOWED_HOSTS
 
   # Cron job for generating poll candidates
   - type: cron
@@ -92,6 +104,11 @@ services:
           type: web
           name: 24hourwire
           envVarKey: SECRET_KEY
+      - key: ALLOWED_HOSTS
+        fromService:
+          type: web
+          name: 24hourwire
+          envVarKey: ALLOWED_HOSTS
       - key: OPENAI_API_KEY
         sync: false
 

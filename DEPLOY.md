@@ -72,15 +72,17 @@ The cron job runs `fetch_news` directly — no web endpoint needed.
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| SECRET_KEY | Django secret key | (must be set in production) |
-| DEBUG | Enable debug mode | True |
-| ALLOWED_HOSTS | Comma-separated domains | localhost,127.0.0.1 |
+| SECRET_KEY | Django secret key | required when DEBUG is False / in production |
+| DEBUG | Enable debug mode | False (only True when explicitly set) |
+| ALLOWED_HOSTS | Comma-separated domains | required when DEBUG is False; missing env is a startup failure |
 | DATABASE_ENGINE | Database backend | django.db.backends.sqlite3 |
 | DATABASE_NAME | Database name | db.sqlite3 |
 | DATABASE_USER | Database user | (empty) |
 | DATABASE_PASSWORD | Database password | (empty) |
 | DATABASE_HOST | Database host | (empty) |
 | DATABASE_PORT | Database port | (empty) |
+
+Note: Render Postgres is configured to use `sslmode=require`.
 
 ## Generate New Secret Key
 

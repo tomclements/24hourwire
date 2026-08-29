@@ -1102,7 +1102,7 @@ class TopicHubTests(TestCase):
         """Topic detail should filter stories by language param."""
         # Create Spanish story that matches
         Story.objects.create(
-            source='El Pais',
+            source='BBC Mundo',
             title='Testing practices en Python',
             excerpt='Test practices.',
             url='https://example.com/es-testing',
@@ -1287,7 +1287,7 @@ class TopicModelTests(TestCase):
         )
         
         self.es_story = Story.objects.create(
-            source='El Pais',
+            source='BBC Mundo',
             title='Resultados de la election en Espana',
             excerpt='Resultados.',
             url='https://example.com/votacion',
@@ -1406,7 +1406,7 @@ class TopicLanguageNameTests(TestCase):
             published=timezone.now(), url_hash='h1', title_fingerprint='f1'
         )
         Story.objects.create(
-            source='El Pais', title='Test story es', excerpt='Test',
+            source='BBC Mundo', title='Test story es', excerpt='Test',
             url='https://example.com/es', language='es', category='world',
             published=timezone.now(), url_hash='h2', title_fingerprint='f2'
         )
@@ -1709,7 +1709,7 @@ class PollDetailViewTests(TestCase):
     def setUp(self):
         self.client = Client()
         from django.core.cache import cache
-        cache.clear()  # @cache_page on poll_detail leaks across tests; ensure fresh render
+        cache.clear()  # isolate from other tests that populate LocMemCache
         self.active_poll = Poll.objects.create(
             language='en',
             question='Is AI regulation necessary?',
@@ -2025,3 +2025,156 @@ class PollAnalyticsTests(TestCase):
             AnalyticsEvent.objects.filter(event_type='poll_view').count(),
             initial_count + 1
         )
+
+
+class LanguageCacheKeyTests(TestCase):
+    """Prove page-cache keys differ by detected language (not just Vary)."""
+
+    def _apply_language_middleware(self, request):
+        from django.http import HttpResponse
+        from core.middleware import DetectLanguageMiddleware
+        DetectLanguageMiddleware(lambda req: HttpResponse('ok'))(request)
+        return request
+
+    def test_middleware_sets_language_code_from_accept_language(self):
+        factory = RequestFactory()
+        req_en = self._apply_language_middleware(
+            factory.get('/', HTTP_ACCEPT_LANGUAGE='en-US,en;q=0.9')
+        )
+        req_es = self._apply_language_middleware(
+            factory.get('/', HTTP_ACCEPT_LANGUAGE='es-MX,es;q=0.9')
+        )
+        self.assertEqual(req_en.detected_language, 'en')
+        self.assertEqual(req_en.LANGUAGE_CODE, 'en')
+        self.assertEqual(req_es.detected_language, 'es')
+        self.assertEqual(req_es.LANGUAGE_CODE, 'es')
+
+    def test_middleware_lang_query_overrides_accept_language(self):
+        factory = RequestFactory()
+        req = self._apply_language_middleware(
+            factory.get('/?lang=es', HTTP_ACCEPT_LANGUAGE='en')
+        )
+        self.assertEqual(req.detected_language, 'en')
+        self.assertEqual(req.LANGUAGE_CODE, 'es')
+
+    def test_middleware_invalid_lang_query_falls_back_to_en(self):
+        factory = RequestFactory()
+        req = self._apply_language_middleware(
+            factory.get('/?lang=xx', HTTP_ACCEPT_LANGUAGE='es')
+        )
+        self.assertEqual(req.LANGUAGE_CODE, 'en')
+
+    def test_learn_cache_key_differs_for_accept_language_en_vs_es(self):
+        from django.core.cache import cache
+        from django.http import HttpResponse
+        from django.utils.cache import learn_cache_key
+
+        cache.clear()
+        factory = RequestFactory()
+        req_en = self._apply_language_middleware(
+            factory.get('/', HTTP_ACCEPT_LANGUAGE='en')
+        )
+        req_es = self._apply_language_middleware(
+            factory.get('/', HTTP_ACCEPT_LANGUAGE='es')
+        )
+        response = HttpResponse('ok')
+        response['Vary'] = 'Accept-Language'
+        key_en = learn_cache_key(req_en, response)
+        key_es = learn_cache_key(req_es, response)
+        self.assertNotEqual(key_en, key_es)
+        self.assertTrue(key_en.endswith('.en.UTC'), key_en)
+        self.assertTrue(key_es.endswith('.es.UTC'), key_es)
+        self.assertNotIn('en-us', key_en)
+        self.assertNotIn('en-us', key_es)
+
+    def test_learn_cache_key_includes_lang_querystring(self):
+        from django.core.cache import cache
+        from django.http import HttpResponse
+        from django.utils.cache import learn_cache_key
+
+        cache.clear()
+        factory = RequestFactory()
+        req_bare = self._apply_language_middleware(
+            factory.get('/', HTTP_ACCEPT_LANGUAGE='en')
+        )
+        req_lang = self._apply_language_middleware(
+            factory.get('/?lang=es', HTTP_ACCEPT_LANGUAGE='en')
+        )
+        response = HttpResponse('ok')
+        response['Vary'] = 'Accept-Language'
+        key_bare = learn_cache_key(req_bare, response)
+        key_lang = learn_cache_key(req_lang, response)
+        self.assertNotEqual(key_bare, key_lang)
+        self.assertTrue(key_bare.endswith('.en.UTC'), key_bare)
+        self.assertTrue(key_lang.endswith('.es.UTC'), key_lang)
+
+    def test_home_cache_does_not_poison_languages(self):
+        from django.core.cache import cache
+
+        cache.clear()
+        Story.objects.create(
+            source='BBC',
+            title='English Unique Cache Title ABCXYZ',
+            excerpt='English excerpt content for cache test.',
+            url='https://example.com/en-cache-lang',
+            language='en',
+            category='world',
+            published=timezone.now() - timedelta(hours=1),
+            url_hash='encache1',
+            title_fingerprint='encachefp1',
+        )
+        Story.objects.create(
+            source='BBC Mundo',
+            title='Titulo Espanol Unico Cache QRS123',
+            excerpt='Extracto en espanol para prueba de cache.',
+            url='https://example.com/es-cache-lang',
+            language='es',
+            category='world',
+            published=timezone.now() - timedelta(hours=1),
+            url_hash='escache1',
+            title_fingerprint='escachefp1',
+        )
+        resp_es = self.client.get('/', HTTP_ACCEPT_LANGUAGE='es')
+        self.assertContains(resp_es, 'Titulo Espanol Unico Cache QRS123')
+        self.assertNotContains(resp_es, 'English Unique Cache Title ABCXYZ')
+        resp_en = self.client.get('/', HTTP_ACCEPT_LANGUAGE='en')
+        self.assertContains(resp_en, 'English Unique Cache Title ABCXYZ')
+        self.assertNotContains(resp_en, 'Titulo Espanol Unico Cache QRS123')
+
+    def test_poll_detail_is_not_cache_page_wrapped(self):
+        import inspect
+        from news import views
+        path = inspect.getfile(views.poll_detail).replace('\\', '/')
+        self.assertTrue(path.endswith('news/views.py'), path)
+        source = inspect.getsource(views.poll_detail)
+        self.assertNotIn('@cache_page', source)
+        self.assertNotIn('vary_on_cookie', source)
+
+    def test_poll_detail_vote_ui_is_not_shared_across_visitors(self):
+        from django.core.cache import cache
+
+        cache.clear()
+        poll = Poll.objects.create(
+            language='en',
+            question='Cache vote UI isolation?',
+            options=['Yes', 'No'],
+            poll_type='topical',
+            status='active',
+            is_active=True,
+            ends_at=timezone.now() + timedelta(days=7),
+        )
+        voter = Client()
+        other = Client()
+        vote = voter.post(
+            f'/poll/{poll.id}/vote/',
+            {'option': '0'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            REMOTE_ADDR='10.0.0.1',
+        )
+        self.assertEqual(vote.status_code, 200)
+        voter_page = voter.get(f'/poll/{poll.id}/', REMOTE_ADDR='10.0.0.1')
+        other_page = other.get(f'/poll/{poll.id}/', REMOTE_ADDR='10.0.0.2')
+        self.assertContains(voter_page, 'You have already voted.')
+        self.assertNotContains(voter_page, 'onclick="submitVote')
+        self.assertContains(other_page, 'onclick="submitVote')
+        self.assertNotContains(other_page, 'You have already voted.')
