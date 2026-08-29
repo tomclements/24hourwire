@@ -5,6 +5,8 @@ Run with: python manage.py test
 
 import json
 import os
+import subprocess
+import sys
 import re
 from datetime import datetime, timedelta
 import inspect
@@ -2824,3 +2826,56 @@ class PostToTwitterSelectionTests(TestCase):
         self.assertNotIn('covered_by_count', text)
         stories[0].refresh_from_db()
         self.assertTrue(stories[0].tweeted)
+
+
+class DashboardRebuildClustersTests(TestCase):
+    """Staff rebuild must spawn manage.py build_clusters out of process."""
+
+    def setUp(self):
+        self.client = Client()
+        self.staff_user = User.objects.create_user(
+            username='dash_staff', password='testpass', is_staff=True
+        )
+        self.normal_user = User.objects.create_user(
+            username='dash_normal', password='testpass'
+        )
+
+    def test_staff_post_rebuild_does_not_call_build_clusters_in_process(self):
+        """Staff POST starts a detached subprocess and does not cluster in-request."""
+        self.client.login(username='dash_staff', password='testpass')
+        proc = MagicMock()
+        with patch('news.models.build_clusters') as mock_build:
+            with patch('news.views_dashboard.subprocess.Popen', return_value=proc) as mock_popen:
+                response = self.client.post('/dashboard/', {
+                    'action': 'rebuild_clusters',
+                }, follow=True)
+        mock_build.assert_not_called()
+        mock_popen.assert_called_once()
+        args, kwargs = mock_popen.call_args
+        argv = args[0]
+        self.assertEqual(argv[0], sys.executable)
+        self.assertTrue(str(argv[1]).endswith('manage.py'))
+        self.assertEqual(argv[2], 'build_clusters')
+        self.assertEqual(len(argv), 3)
+        self.assertIs(kwargs.get('stdin'), subprocess.DEVNULL)
+        self.assertIs(kwargs.get('stdout'), subprocess.DEVNULL)
+        self.assertIs(kwargs.get('stderr'), subprocess.DEVNULL)
+        proc.wait.assert_not_called()
+        proc.communicate.assert_not_called()
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Cluster rebuild started in the background.')
+
+    def test_non_staff_post_does_not_start_rebuild(self):
+        """Anonymous and non-staff POSTs must not spawn a rebuild."""
+        with patch('news.models.build_clusters') as mock_build:
+            with patch('news.views_dashboard.subprocess.Popen') as mock_popen:
+                anon = self.client.post('/dashboard/', {'action': 'rebuild_clusters'})
+                self.assertEqual(anon.status_code, 302)
+                mock_popen.assert_not_called()
+                mock_build.assert_not_called()
+
+                self.client.login(username='dash_normal', password='testpass')
+                response = self.client.post('/dashboard/', {'action': 'rebuild_clusters'})
+                self.assertEqual(response.status_code, 302)
+                mock_popen.assert_not_called()
+                mock_build.assert_not_called()

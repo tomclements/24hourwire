@@ -1,25 +1,41 @@
+import os
+import subprocess
+import sys
+from datetime import timedelta
+
+from django.conf import settings
+from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.utils import timezone
-from django.contrib import messages
-from datetime import timedelta
-from news.models import Story, StoryCluster, build_clusters
+from news.models import Story, StoryCluster
 from news.sources_config import LANGUAGE_FEEDS, LANGUAGE_NAMES, SOURCES
 
 
 def dashboard_view(request):
     cutoff = timezone.now() - timedelta(hours=24)
 
-    # Handle rebuild clusters request
+    # Handle rebuild clusters request out of process so the sole gunicorn
+    # worker is not blocked by CPU-heavy clustering.
     if request.method == 'POST' and request.POST.get('action') == 'rebuild_clusters':
         if request.user.is_staff:
-            total_clusters = 0
-            for lang in LANGUAGE_FEEDS.keys():
-                try:
-                    count = build_clusters(lang)
-                    total_clusters += count
-                except Exception as e:
-                    messages.error(request, f'Error building clusters for {lang}: {e}')
-            messages.success(request, f'Rebuilt {total_clusters} clusters')
+            cmd = [sys.executable, str(settings.BASE_DIR / 'manage.py'), 'build_clusters']
+            popen_kwargs = {
+                'cwd': str(settings.BASE_DIR),
+                'stdin': subprocess.DEVNULL,
+                'stdout': subprocess.DEVNULL,
+                'stderr': subprocess.DEVNULL,
+            }
+            if os.name == 'nt':
+                flags = subprocess.CREATE_NEW_PROCESS_GROUP
+                flags |= getattr(subprocess, 'DETACHED_PROCESS', 0)
+                popen_kwargs['creationflags'] = flags
+            else:
+                popen_kwargs['start_new_session'] = True
+            try:
+                subprocess.Popen(cmd, **popen_kwargs)
+                messages.success(request, 'Cluster rebuild started in the background.')
+            except OSError as e:
+                messages.error(request, f'Failed to start cluster rebuild: {e}')
             return redirect('/dashboard/')
     
     # Story counts per language
