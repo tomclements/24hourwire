@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.core import signing
 from django.http import Http404, HttpResponse
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_headers
 from django.views.decorators.http import condition
@@ -348,8 +349,14 @@ def login_view(request):
         if user is not None:
             if is_staff_or_superuser(user):
                 login(request, user)
-                next_url = request.GET.get('next', 'dashboard')
-                return redirect(next_url)
+                next_url = request.GET.get('next')
+                if next_url and url_has_allowed_host_and_scheme(
+                    next_url,
+                    allowed_hosts={request.get_host()},
+                    require_https=request.is_secure(),
+                ):
+                    return redirect(next_url)
+                return redirect('dashboard')
             else:
                 messages.error(request, 'Access restricted to administrators only.')
         else:

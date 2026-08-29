@@ -2507,3 +2507,57 @@ class StoredMultiCategoryTests(TestCase):
         self.assertIn('get_story_categories', src)
         self.assertIn('persist_story_category_links', src)
 
+
+
+class LoginViewNextRedirectTests(TestCase):
+    """Open-redirect protection for login_view next parameter."""
+
+    def setUp(self):
+        self.client = Client()
+        self.staff_user = User.objects.create_user(
+            username='login_staff', password='testpass', is_staff=True
+        )
+        self.normal_user = User.objects.create_user(
+            username='login_normal', password='testpass'
+        )
+
+    def _post_login(self, username='login_staff', password='testpass', next_url=None):
+        from urllib.parse import urlencode
+        path = '/login/'
+        if next_url is not None:
+            path = '/login/?' + urlencode({'next': next_url})
+        return self.client.post(path, {'username': username, 'password': password})
+
+    def test_next_absolute_evil_host_redirects_to_dashboard(self):
+        response = self._post_login(next_url='https://evil.example')
+        self.assertEqual(response.status_code, 302)
+        location = response['Location']
+        self.assertNotIn('evil', location.lower())
+        self.assertIn('/dashboard', location)
+
+    def test_next_protocol_relative_not_offsite(self):
+        response = self._post_login(next_url='//evil.example')
+        self.assertEqual(response.status_code, 302)
+        location = response['Location']
+        self.assertNotIn('evil', location.lower())
+        self.assertIn('/dashboard', location)
+
+    def test_next_onsite_relative_path_allowed(self):
+        response = self._post_login(next_url='/dashboard')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['Location'], '/dashboard')
+
+    def test_no_next_param_redirects_to_dashboard(self):
+        response = self._post_login()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['Location'], '/dashboard/')
+
+    def test_non_staff_denied(self):
+        response = self._post_login(username='login_normal')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'login.html')
+
+    def test_invalid_credentials_unchanged(self):
+        response = self._post_login(password='wrong-password')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'login.html')
