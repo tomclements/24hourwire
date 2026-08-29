@@ -4,6 +4,7 @@ from django.http import Http404, HttpResponse
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.cache import cache_page
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.vary import vary_on_headers
 from django.views.decorators.http import condition
 from datetime import timedelta
@@ -86,6 +87,7 @@ def is_staff_or_superuser(user):
     return user.is_staff or user.is_superuser
 
 
+@ensure_csrf_cookie
 @cache_page(60)  # Cache home page for 1 minute
 @vary_on_headers('Accept-Language')
 def home(request):
@@ -904,16 +906,18 @@ def widget_js(request):
 
 def track_book_click(request):
     """Track book recommendation clicks via beacon API.
-    
-    Accepts POST requests with JSON body containing book ASIN.
+
+    Accepts POST form data (csrfmiddlewaretoken + asin) or JSON body.
     Records as an analytics event for aggregated reporting.
     """
     from django.http import JsonResponse
     if request.method == 'POST':
         try:
-            import json
-            body = json.loads(request.body.decode('utf-8'))
-            asin = body.get('asin', '')
+            asin = (request.POST.get('asin') or '').strip()
+            if not asin:
+                import json
+                body = json.loads(request.body.decode('utf-8') or '{}')
+                asin = (body.get('asin') or '').strip() if isinstance(body, dict) else ''
             if asin:
                 country_code = request.META.get('HTTP_CF_IPCOUNTRY') or ''
                 user_agent = request.META.get('HTTP_USER_AGENT', '')[:200]
@@ -1091,6 +1095,7 @@ def analytics_dashboard(request):
     return render(request, 'analytics_dashboard.html', context)
 
 
+@ensure_csrf_cookie
 @cache_page(300)  # 5 minutes — topic content changes with new stories
 def topic_detail(request, slug):
     """Display an evergreen topic hub page with live matching stories.

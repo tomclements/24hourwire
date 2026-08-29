@@ -2663,3 +2663,48 @@ class FetchFeedTlsVerificationTests(TestCase):
         warn_args = mock_logger.warning.call_args[0]
         self.assertEqual(warn_args[1], "https://example.com/rss.xml")
         self.assertEqual(warn_args[2], "SSLError")
+
+
+class BookClickTrackingTests(TestCase):
+    """sendBeacon book-click tracking: CSRF via form body, not custom headers."""
+
+    def test_post_without_csrf_is_forbidden(self):
+        client = Client(enforce_csrf_checks=True)
+        response = client.post('/analytics/book-click/', {'asin': 'B00TESTASIN'})
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(
+            AnalyticsEvent.objects.filter(event_type='book_click').count(),
+            0,
+        )
+
+    def test_post_with_csrf_and_asin_records_book_click(self):
+        client = Client(enforce_csrf_checks=True)
+        home = client.get('/')
+        self.assertEqual(home.status_code, 200)
+        self.assertIn('csrftoken', client.cookies)
+        token = client.cookies['csrftoken'].value
+        asin = 'B00TESTASIN'
+        response = client.post('/analytics/book-click/', {
+            'csrfmiddlewaretoken': token,
+            'asin': asin,
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {'status': 'ok'})
+        events = AnalyticsEvent.objects.filter(event_type='book_click')
+        self.assertEqual(events.count(), 1)
+        self.assertEqual(events.get().path, '/book/%s' % asin)
+
+    def test_post_with_csrf_missing_asin_still_ok(self):
+        client = Client(enforce_csrf_checks=True)
+        home = client.get('/')
+        self.assertIn('csrftoken', client.cookies)
+        token = client.cookies['csrftoken'].value
+        response = client.post('/analytics/book-click/', {
+            'csrfmiddlewaretoken': token,
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {'status': 'ok'})
+        self.assertEqual(
+            AnalyticsEvent.objects.filter(event_type='book_click').count(),
+            0,
+        )

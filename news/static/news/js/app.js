@@ -391,7 +391,10 @@
 
     function trackBookClick(asin) {
         if (navigator.sendBeacon) {
-            navigator.sendBeacon('/analytics/book-click/', JSON.stringify({ asin: asin, timestamp: Date.now() }));
+            const data = new FormData();
+            data.append('csrfmiddlewaretoken', CSRF_TOKEN);
+            data.append('asin', asin);
+            navigator.sendBeacon('/analytics/book-click/', data);
         }
     }
 
