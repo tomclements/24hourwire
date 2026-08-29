@@ -503,8 +503,10 @@ class BrandedRedirectTests(TestCase):
         # Check OG image uses story image
         self.assertIn('https://example.com/image.jpg', content)
         
-        # Check JavaScript redirect (not meta refresh, so crawlers read OG tags)
-        self.assertIn('window.location.href', content)
+        # JS redirect lives in a static file; destination URL stays in the page
+        # (JSON config) so crawlers still read OG tags before the redirect.
+        self.assertIn('static/news/js/branded-redirect', content)
+        self.assertIn('bbc.com/news/test-article', content)
     
     def test_template_filter_generates_valid_token(self):
         """Test the sign_share_data template filter."""
@@ -1541,7 +1543,7 @@ class TopicThemeToggleTests(TestCase):
         """Topic detail page should include dark mode FOUC guard and app.css."""
         response = self.client.get('/topic/theme-test/')
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "localStorage.getItem('theme')")
+        self.assertContains(response, 'static/news/js/theme')
         self.assertContains(response, 'static/news/css/app')
 
 
@@ -2220,8 +2222,8 @@ class LanguageCacheKeyTests(TestCase):
         voter_page = voter.get(f'/poll/{poll.id}/', REMOTE_ADDR='10.0.0.1')
         other_page = other.get(f'/poll/{poll.id}/', REMOTE_ADDR='10.0.0.2')
         self.assertContains(voter_page, 'You have already voted.')
-        self.assertNotContains(voter_page, 'onclick="submitVote')
-        self.assertContains(other_page, 'onclick="submitVote')
+        self.assertNotContains(voter_page, 'data-action="submit-vote"')
+        self.assertContains(other_page, 'data-action="submit-vote"')
         self.assertNotContains(other_page, 'You have already voted.')
 
 class PollsListCacheTests(TestCase):
@@ -2879,3 +2881,88 @@ class DashboardRebuildClustersTests(TestCase):
                 self.assertEqual(response.status_code, 302)
                 mock_popen.assert_not_called()
                 mock_build.assert_not_called()
+
+class ContentSecurityPolicyTests(TestCase):
+    """script-src must not use unsafe-inline; first-party JS is in static files."""
+
+    def setUp(self):
+        self.client = Client()
+        from django.core.cache import cache
+        cache.clear()
+        self.poll = Poll.objects.create(
+            language='en',
+            question='CSP poll?',
+            options=['Yes', 'No'],
+            poll_type='opinion',
+            status='active',
+            is_active=True,
+            ends_at=timezone.now() + timedelta(days=7),
+        )
+
+    def _directive(self, response, name):
+        csp = response.get('Content-Security-Policy', '')
+        for part in csp.split(';'):
+            part = part.strip()
+            if part.startswith(name + ' ') or part == name:
+                return part
+        return ''
+
+    def test_homepage_returns_200(self):
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+
+    def test_homepage_script_src_has_no_unsafe_inline(self):
+        response = self.client.get('/')
+        script_src = self._directive(response, 'script-src')
+        self.assertTrue(script_src)
+        self.assertNotIn("'unsafe-inline'", script_src)
+        self.assertIn("'self'", script_src)
+        self.assertIn('googletagmanager.com', script_src)
+        self.assertIn('google-analytics.com', script_src)
+        self.assertIn('pagead2.googlesyndication.com', script_src)
+
+    def test_homepage_style_src_still_allows_unsafe_inline(self):
+        response = self.client.get('/')
+        style_src = self._directive(response, 'style-src')
+        self.assertIn("'unsafe-inline'", style_src)
+        self.assertIn("'self'", style_src)
+        self.assertIn('fonts.googleapis.com', style_src)
+
+    def test_homepage_csp_has_no_nonce(self):
+        response = self.client.get('/')
+        csp = response['Content-Security-Policy']
+        self.assertNotIn('nonce-', csp)
+        self.assertNotIn('nonce=', response.content.decode())
+
+    def test_polls_page_200_and_script_src_has_no_unsafe_inline(self):
+        response = self.client.get('/polls/')
+        self.assertEqual(response.status_code, 200)
+        script_src = self._directive(response, 'script-src')
+        self.assertNotIn("'unsafe-inline'", script_src)
+
+    def test_poll_detail_uses_static_js_not_executable_inline(self):
+        response = self.client.get('/poll/%s/' % self.poll.id)
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn('static/news/js/poll-detail', content)
+        for match in re.finditer(
+            r'<script\b([^>]*)>(.*?)</script>', content, re.I | re.S
+        ):
+            attrs, body = match.group(1), match.group(2)
+            if 'src=' in attrs:
+                continue
+            lower = attrs.lower()
+            if 'application/ld+json' in lower or 'application/json' in lower:
+                continue
+            self.assertFalse(
+                body.strip(),
+                'executable inline script remains: %s' % body[:80],
+            )
+
+    def test_homepage_html_has_no_inline_event_handlers(self):
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertNotIn('onerror=', content)
+        self.assertNotIn('onchange=', content)
+        self.assertNotIn('onclick=', content)

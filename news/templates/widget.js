@@ -79,7 +79,7 @@
             stories.forEach(function(story) {
                 html += '<div class="hourwire-story">';
                 if (story.image_url) {
-                    html += '<a href="' + story.url + '" target="_blank" rel="noopener"><img src="' + story.image_url + '" alt="" class="hourwire-story-image" loading="lazy" onerror="this.style.display=\'none\'"></a>';
+                    html += '<a href="' + story.url + '" target="_blank" rel="noopener"><img src="' + story.image_url + '" alt="" class="hourwire-story-image" loading="lazy"></a>';
                 }
                 html += '<h3 class="hourwire-story-title"><a href="' + story.url + '" target="_blank" rel="noopener">' + story.title + '</a></h3>';
                 html += '<div class="hourwire-story-meta">';
@@ -95,6 +95,10 @@
         html += '<div class="hourwire-footer">News from all angles via <a href="https://24hourwire.news/?lang=' + config.language + '" target="_blank" rel="noopener">24HourWire</a></div>';
         html += '</div>';
         
+        container.addEventListener('error', function (e) {
+            var img = e.target;
+            if (img && img.tagName === 'IMG') img.style.display = 'none';
+        }, true);
         container.innerHTML = html;
     }
     

@@ -149,7 +149,7 @@
                     <article class="book-card" data-book-asin="{{ book.asin }}">
                         <span class="book-badge">Recommended Read</span>
                         {% if book.image_url %}
-                        <img src="{{ book.image_url }}" alt="{{ book.title }}" class="book-cover" loading="lazy" onerror="this.style.display='none'">
+                        <img src="{{ book.image_url }}" alt="{{ book.title }}" class="book-cover" loading="lazy">
                         {% else %}
                         <div class="book-cover" style="display: flex; align-items: center; justify-content: center; background: #f3f4f6; color: #9ca3af; font-size: 2rem;">📚</div>
                         {% endif %}
@@ -193,7 +193,7 @@
 
                     {% if story.image_url %}
                     <a href="{{ story.url }}" target="_blank" rel="noopener" class="story-image-link" itemprop="image" itemscope itemtype="https://schema.org/ImageObject">
-                        <img src="{{ story.image_url }}" alt="{{ story.title }}" class="story-image" loading="lazy" onerror="this.style.display='none'" itemprop="url">
+                        <img src="{{ story.image_url }}" alt="{{ story.title }}" class="story-image" loading="lazy" itemprop="url">
                     </a>
                     {% endif %}
 

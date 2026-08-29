@@ -4,14 +4,13 @@ from news.languages import SUPPORTED_LANGUAGES
 class ContentSecurityPolicyMiddleware:
     """Add a Content-Security-Policy response header.
 
-    `script-src` includes 'unsafe-inline' because the AdSense/gtag snippets and
-    a few legacy templates still rely on inline scripts; the ongoing JS/template
-    refactor removes those, after which this can be tightened.
+    First-party JS lives in static files. JSON-LD and application/json script
+    tags are not executable. Google tag / AdSense hosts remain allowed.
     """
 
     POLICY = (
         "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline' "
+        "script-src 'self' "
         "https://www.googletagmanager.com https://www.google-analytics.com "
         "https://pagead2.googlesyndication.com; "
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "

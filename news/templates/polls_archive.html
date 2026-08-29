@@ -4,14 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script>
-        (function () {
-            try {
-                var theme = localStorage.getItem('theme');
-                if (theme) document.documentElement.setAttribute('data-theme', theme);
-            } catch (e) {}
-        })();
-    </script>
+    <script src="{% static 'news/js/theme.js' %}"></script>
     <title>Poll Archive | 24HourWire</title>
     <meta name="description" content="Browse past community polls and see how the 24HourWire community voted.">
     <meta name="robots" content="index, follow">
@@ -109,7 +102,7 @@
     </style>
 </head>
 <body>
-    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">🌓</button>
+    <button class="theme-toggle" data-action="theme-toggle" title="Toggle dark mode">🌓</button>
     
     <div class="container">
         <div class="header">
@@ -159,18 +152,6 @@
         </div>
     </div>
     
-    <script>
-        function toggleTheme() {
-            const html = document.documentElement;
-            const current = html.getAttribute('data-theme');
-            const next = current === 'dark' ? 'light' : 'dark';
-            html.setAttribute('data-theme', next);
-            localStorage.setItem('theme', next);
-        }
-        (function() {
-            const saved = localStorage.getItem('theme');
-            if (saved) document.documentElement.setAttribute('data-theme', saved);
-        })();
-    </script>
+    <script src="{% static 'news/js/theme-toggle.js' %}"></script>
 </body>
 </html>

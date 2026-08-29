@@ -1,16 +1,10 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script>
-        (function () {
-            try {
-                var theme = localStorage.getItem('theme');
-                if (theme) document.documentElement.setAttribute('data-theme', theme);
-            } catch (e) {}
-        })();
-    </script>
+    <script src="{% static 'news/js/theme.js' %}"></script>
     <title>Poll Management | 24HourWire</title>
     <style>
         :root {
@@ -120,7 +114,7 @@
     </style>
 </head>
 <body>
-    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">🌓</button>
+    <button class="theme-toggle" data-action="theme-toggle" title="Toggle dark mode">🌓</button>
     
     <div class="nav">
         <a href="/?lang={{ language }}">Home</a>
@@ -173,14 +167,14 @@
     <div class="card filters">
         <form method="get" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
             <label for="status" style="font-size: 0.85rem; font-weight: 500;">Status:</label>
-            <select name="status" id="status" onchange="this.form.submit()">
+            <select name="status" id="status">
                 {% for code, name in statuses %}
                 <option value="{{ code }}" {% if status_filter == code %}selected{% endif %}>{{ name }}</option>
                 {% endfor %}
             </select>
             
             <label for="language" style="font-size: 0.85rem; font-weight: 500;">Language:</label>
-            <select name="language" id="language" onchange="this.form.submit()">
+            <select name="language" id="language">
                 <option value="">All</option>
                 {% for code, name in languages.items %}
                 <option value="{{ code }}" {% if language_filter == code %}selected{% endif %}>{{ name }}</option>
@@ -317,7 +311,7 @@
                             <button type="submit" class="btn-expire">Expire</button>
                         </form>
                         {% endif %}
-                        <button type="button" class="btn-edit" onclick="toggleEdit({{ poll.id }})">Edit</button>
+                        <button type="button" class="btn-edit" data-action="toggle-edit" data-poll-id="{{ poll.id }}">Edit</button>
                     </div>
                     
                     <div class="edit-form" id="edit-form-{{ poll.id }}">
@@ -382,23 +376,7 @@
     </div>
     {% endif %}
 
-    <script>
-        function toggleEdit(pollId) {
-            const form = document.getElementById('edit-form-' + pollId);
-            form.classList.toggle('active');
-        }
-        
-        function toggleTheme() {
-            const html = document.documentElement;
-            const current = html.getAttribute('data-theme');
-            const next = current === 'dark' ? 'light' : 'dark';
-            html.setAttribute('data-theme', next);
-            localStorage.setItem('theme', next);
-        }
-        (function() {
-            const saved = localStorage.getItem('theme');
-            if (saved) document.documentElement.setAttribute('data-theme', saved);
-        })();
-    </script>
+    <script src="{% static 'news/js/theme-toggle.js' %}"></script>
+    <script src="{% static 'news/js/polls-manage.js' %}"></script>
 </body>
 </html>

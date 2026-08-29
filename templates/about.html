@@ -4,14 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script>
-        (function () {
-            try {
-                var theme = localStorage.getItem('theme');
-                if (theme) document.documentElement.setAttribute('data-theme', theme);
-            } catch (e) {}
-        })();
-    </script>
+    <script src="{% static 'news/js/theme.js' %}"></script>
     <title>About - 24HourWire | The Latest News from All Angles</title>
     <meta name="description" content="Learn how 24HourWire aggregates news from multiple perspectives. Unbiased news aggregator showing current events from diverse sources.">
     <meta property="og:title" content="About - 24HourWire | The Latest News from All Angles">
@@ -95,7 +88,7 @@
 <body>
     <div style="margin-bottom: 15px; font-size: 0.9rem;">
         <a href="/" style="color: #0066cc; text-decoration: none;">Home</a>
-        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">🌙</button>
+        <button class="theme-toggle" data-action="theme-toggle" title="Toggle dark mode">🌙</button>
     </div>
     
     <a href="/" class="back-link">← Back to news</a>
@@ -185,29 +178,6 @@
         </p>
     </div>
 
-    <script>
-        function toggleTheme() {
-            const html = document.documentElement;
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateThemeIcon(newTheme);
-        }
-
-        function updateThemeIcon(theme) {
-            const btn = document.querySelector('.theme-toggle');
-            btn.textContent = theme === 'dark' ? '☀️' : '🌙';
-            btn.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
-        }
-
-        function loadTheme() {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            updateThemeIcon(savedTheme);
-        }
-
-        loadTheme();
-    </script>
+    <script src="{% static 'news/js/theme-toggle.js' %}"></script>
 </body>
 </html>

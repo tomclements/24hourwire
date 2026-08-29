@@ -7,14 +7,7 @@
     <title>{% block title %}24HourWire | The Latest News from All Angles{% endblock %}</title>
     <meta name="description" content="{% block description %}Get the latest news from all angles with 24HourWire. Unbiased news aggregator showing current events from multiple perspectives. 24 hour news coverage from diverse sources.{% endblock %}">
 
-    <script>
-        (function () {
-            try {
-                var theme = localStorage.getItem('theme');
-                if (theme) document.documentElement.setAttribute('data-theme', theme);
-            } catch (e) {}
-        })();
-    </script>
+    <script src="{% static 'news/js/theme.js' %}"></script>
 
     {% block head_meta %}
     <meta property="og:title" content="24HourWire | The Latest News from All Angles">
@@ -68,12 +61,7 @@
 
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-FLFN6ZYCPX"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-FLFN6ZYCPX');
-    </script>
+    <script src="{% static 'news/js/gtag-config.js' %}"></script>
 </head>
 <body>
     {% csrf_token %}

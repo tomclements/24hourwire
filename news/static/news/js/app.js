@@ -194,7 +194,7 @@
                         <div class="story-header">
                             <a href="${esc(story.url)}" target="_blank" rel="noopener" class="story-title">${esc(story.title)}</a>
                         </div>
-                        ${story.image_url ? `<a href="${esc(story.url)}" target="_blank" rel="noopener" class="story-image-link"><img src="${esc(story.image_url)}" alt="${esc(story.title)}" class="story-image" loading="lazy" onerror="this.style.display='none'"></a>` : ''}
+                        ${story.image_url ? `<a href="${esc(story.url)}" target="_blank" rel="noopener" class="story-image-link"><img src="${esc(story.image_url)}" alt="${esc(story.title)}" class="story-image" loading="lazy"></a>` : ''}
                         <div class="story-meta">
                             <span class="source-tag">${esc(story.source)}${story.is_paywalled ? '<span class="paywall-badge" title="Paywalled">$</span>' : ''}</span>
                             ${story.covered_by_count ? `<span class="covered-badge">${esc(story.covered_by_count)} sources</span>` : ''}
@@ -248,7 +248,7 @@
         article.className = 'book-card';
         article.setAttribute('data-book-asin', book.asin);
         const coverHtml = book.image_url
-            ? `<img src="${esc(book.image_url)}" alt="${esc(book.title)}" class="book-cover" loading="lazy" onerror="this.style.display='none'">`
+            ? `<img src="${esc(book.image_url)}" alt="${esc(book.title)}" class="book-cover" loading="lazy">`
             : `<div class="book-cover" style="display: flex; align-items: center; justify-content: center; background: #f3f4f6; color: #9ca3af; font-size: 2rem;">📚</div>`;
         article.innerHTML = `
             <span class="book-badge">Recommended Read</span>
