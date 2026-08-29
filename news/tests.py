@@ -12,6 +12,7 @@ from unittest.mock import patch, MagicMock
 from django.test import TestCase, Client, RequestFactory
 from django.utils import timezone
 from django.urls import reverse
+from django.db import IntegrityError, transaction
 from django.http import JsonResponse
 
 from django.contrib.auth.models import User
@@ -1705,6 +1706,44 @@ class PollModelTests(TestCase):
             status='pending_review',
         )
         self.assertEqual(spanish_poll.english_translation, 'What is your favorite season?')
+
+    def test_pollvote_unique_constraint(self):
+        """Creating two PollVote rows with the same poll+vote_hash raises IntegrityError."""
+        PollVote.objects.create(
+            poll=self.poll,
+            option_index=0,
+            vote_hash='abc123samehash0000000000000000',
+        )
+        with transaction.atomic():
+            with self.assertRaises(IntegrityError):
+                PollVote.objects.create(
+                    poll=self.poll,
+                    option_index=1,
+                    vote_hash='abc123samehash0000000000000000',
+                )
+
+    def test_record_vote_integrity_error_does_not_double_count(self):
+        """IntegrityError on create returns False and does not increment tally."""
+        request = RequestFactory().post('/')
+        request.META['REMOTE_ADDR'] = '10.0.0.1'
+        request.META['HTTP_USER_AGENT'] = 'RaceAgent'
+
+        vote_hash = self.poll._make_vote_hash(request)
+        PollVote.objects.create(poll=self.poll, option_index=1, vote_hash=vote_hash)
+        self.poll.vote_count = 1
+        self.poll.results = {1: 1}
+        self.poll.save(update_fields=['vote_count', 'results'])
+
+        # Concurrent request already passed exists(); force the create() IntegrityError path.
+        with patch.object(PollVote.objects, 'filter') as mock_filter:
+            mock_filter.return_value.exists.return_value = False
+            success = self.poll.record_vote(1, request)
+
+        self.assertFalse(success)
+        self.poll.refresh_from_db()
+        self.assertEqual(self.poll.vote_count, 1)
+        self.assertEqual(self.poll.results.get(1, self.poll.results.get('1', 0)), 1)
+        self.assertEqual(PollVote.objects.filter(poll=self.poll, vote_hash=vote_hash).count(), 1)
 
 
 class PollDetailViewTests(TestCase):

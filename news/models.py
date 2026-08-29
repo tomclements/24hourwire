@@ -3,7 +3,7 @@ import html
 import re
 from urllib.parse import urlparse, parse_qs, urlencode
 
-from django.db import models
+from django.db import IntegrityError, models, transaction
 
 
 # Pre-compile regex patterns for excerpt cleaning
@@ -755,18 +755,25 @@ class Poll(models.Model):
         if PollVote.objects.filter(poll=self, vote_hash=vote_hash).exists():
             return False
         
-        PollVote.objects.create(
-            poll=self,
-            option_index=option_index,
-            vote_hash=vote_hash,
-        )
-        
-        # Update results counter atomically-ish (safe for our scale)
-        # Normalize keys to integers for consistency
-        key = option_index
-        self.results[key] = self.results.get(key, self.results.get(str(key), 0)) + 1
-        self.vote_count += 1
-        self.save(update_fields=['results', 'vote_count'])
+        try:
+            with transaction.atomic():
+                PollVote.objects.create(
+                    poll=self,
+                    option_index=option_index,
+                    vote_hash=vote_hash,
+                )
+                # Lock the poll row so concurrent tallies cannot last-write-win.
+                poll = Poll.objects.select_for_update().get(pk=self.pk)
+                results = dict(poll.results or {})
+                key = option_index
+                results[key] = results.get(key, results.get(str(key), 0)) + 1
+                poll.results = results
+                poll.vote_count = (poll.vote_count or 0) + 1
+                poll.save(update_fields=['results', 'vote_count'])
+                self.results = poll.results
+                self.vote_count = poll.vote_count
+        except IntegrityError:
+            return False
         return True
     
     def _make_vote_hash(self, request):
@@ -792,8 +799,11 @@ class PollVote(models.Model):
     
     class Meta:
         ordering = ['-created_at']
-        indexes = [
-            models.Index(fields=['poll', 'vote_hash']),
+        constraints = [
+            models.UniqueConstraint(
+                fields=['poll', 'vote_hash'],
+                name='news_pollvote_poll_vote_hash_uniq',
+            ),
         ]
     
     def __str__(self):
