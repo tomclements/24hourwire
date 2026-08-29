@@ -3,11 +3,42 @@ import logging
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from datetime import timedelta
-import tweepy
-from news.models import Story
+from news.models import Story, StoryCluster
 
 logger = logging.getLogger('news.twitter')
 logger.setLevel(logging.INFO)
+
+
+
+def select_story_to_tweet(now=None):
+    """Pick the single best recent untweeted cluster representative.
+
+    Prefers StoryCluster.source_count >= 3, then falls back to >= 2.
+    Coverage comes from the cluster, not a Story field.
+    Returns (story, source_count) or (None, None).
+    """
+    now = now or timezone.now()
+    cutoff = now - timedelta(hours=4)
+
+    def _pick(min_sources):
+        cluster = (
+            StoryCluster.objects.filter(
+                source_count__gte=min_sources,
+                representative_story__published__gte=cutoff,
+                representative_story__tweeted=False,
+            )
+            .select_related('representative_story')
+            .order_by('-source_count', '-representative_story__published')
+            .first()
+        )
+        if cluster is None:
+            return None, None
+        return cluster.representative_story, cluster.source_count
+
+    story, coverage = _pick(3)
+    if story is not None:
+        return story, coverage
+    return _pick(2)
 
 
 class Command(BaseCommand):
@@ -31,6 +62,7 @@ class Command(BaseCommand):
         
         try:
             # Authenticate with Twitter v2 API
+            import tweepy
             client = tweepy.Client(
                 bearer_token=bearer_token,
                 consumer_key=api_key,
@@ -58,22 +90,8 @@ class Command(BaseCommand):
         # - Get stories from last 4 hours (wider window for quality content)
         # - Only post the SINGLE best story per run
         # - Require high quality: covered by 3+ sources, recent
-        cutoff = timezone.now() - timedelta(hours=4)
-        
-        # Get the single best story (prioritize high coverage, then recency)
-        story = Story.objects.filter(
-            published__gte=cutoff,
-            tweeted=False,
-            covered_by_count__gte=3  # Higher bar: 3+ sources
-        ).order_by('-covered_by_count', '-published').first()
-        
-        if not story:
-            # Fallback: try with 2+ sources if nothing with 3+
-            story = Story.objects.filter(
-                published__gte=cutoff,
-                tweeted=False,
-                covered_by_count__gte=2
-            ).order_by('-covered_by_count', '-published').first()
+        # Get the single best story via StoryCluster (coverage lives there)
+        story, coverage = select_story_to_tweet()
         
         if not story:
             logger.info('No quality stories to tweet')
@@ -84,8 +102,7 @@ class Command(BaseCommand):
             # Create tweet text (optimized for engagement)
             title = story.title[:180] if len(story.title) > 180 else story.title
             source = story.source
-            bias = story.bias_label
-            coverage = story.covered_by_count
+            bias = getattr(story, 'bias_label', 'Unknown')
             
             # Format: Engaging headline + Coverage info + Link
             if coverage >= 3:

@@ -2708,3 +2708,119 @@ class BookClickTrackingTests(TestCase):
             AnalyticsEvent.objects.filter(event_type='book_click').count(),
             0,
         )
+
+
+class PostToTwitterSelectionTests(TestCase):
+    """Tweet picks use StoryCluster.source_count, not a fake Story field."""
+
+    def setUp(self):
+        self.now = timezone.now()
+
+    def _story(self, suffix, source='BBC', published=None, tweeted=False):
+        published = self.now - timedelta(hours=1) if published is None else published
+        return Story.objects.create(
+            source=source,
+            title='Clustered Event %s' % suffix,
+            excerpt='excerpt',
+            url='https://example.com/tw-%s' % suffix,
+            language='en',
+            category='world',
+            published=published,
+            tweeted=tweeted,
+            url_hash='tw%s' % suffix,
+            title_fingerprint='twfp%s' % suffix,
+        )
+
+    def _cluster(self, stories, source_count, representative=None):
+        rep = representative or stories[0]
+        cluster = StoryCluster.objects.create(
+            language='en',
+            representative_story=rep,
+            source_count=source_count,
+            sources=[s.source for s in stories],
+        )
+        cluster.stories.add(*stories)
+        return cluster
+
+    def test_selects_untweeted_rep_from_cluster_of_three(self):
+        from news.management.commands.post_to_twitter import select_story_to_tweet
+        stories = [
+            self._story('a', 'BBC'),
+            self._story('b', 'CNN'),
+            self._story('c', 'Reuters'),
+        ]
+        self._cluster(stories, source_count=3, representative=stories[0])
+        story, coverage = select_story_to_tweet()
+        self.assertEqual(story, stories[0])
+        self.assertEqual(coverage, 3)
+
+    def test_does_not_select_story_without_cluster(self):
+        from news.management.commands.post_to_twitter import select_story_to_tweet
+        self._story('lone', 'BBC')
+        story, coverage = select_story_to_tweet()
+        self.assertIsNone(story)
+        self.assertIsNone(coverage)
+
+    def test_does_not_select_source_count_one_when_bar_is_three_then_two(self):
+        from news.management.commands.post_to_twitter import select_story_to_tweet
+        s = self._story('one', 'BBC')
+        self._cluster([s], source_count=1, representative=s)
+        story, coverage = select_story_to_tweet()
+        self.assertIsNone(story)
+        self.assertIsNone(coverage)
+
+    def test_falls_back_to_cluster_of_two_sources(self):
+        from news.management.commands.post_to_twitter import select_story_to_tweet
+        stories = [
+            self._story('a2', 'BBC'),
+            self._story('b2', 'CNN'),
+        ]
+        self._cluster(stories, source_count=2, representative=stories[0])
+        story, coverage = select_story_to_tweet()
+        self.assertEqual(story, stories[0])
+        self.assertEqual(coverage, 2)
+
+    def test_command_source_has_no_covered_by_count_filter(self):
+        import news.management.commands.post_to_twitter as mod
+        self.assertNotIn('covered_by_count', inspect.getsource(mod))
+
+    def test_command_tweets_cluster_coverage_via_mocked_client(self):
+        import sys
+        stories = [
+            self._story('ta', 'BBC'),
+            self._story('tb', 'CNN'),
+            self._story('tc', 'Reuters'),
+        ]
+        self._cluster(stories, source_count=3, representative=stories[0])
+
+        client = MagicMock()
+        me = MagicMock()
+        me.data.username = 'wire'
+        client.get_me.return_value = me
+        tweet = MagicMock()
+        tweet.data = {'id': '1'}
+        client.create_tweet.return_value = tweet
+        fake_tweepy = MagicMock()
+        fake_tweepy.Client.return_value = client
+
+        from django.core.management import call_command
+        from io import StringIO
+        out = StringIO()
+        env = {
+            'TWITTER_API_KEY': 'k',
+            'TWITTER_API_SECRET': 's',
+            'TWITTER_ACCESS_TOKEN': 't',
+            'TWITTER_ACCESS_TOKEN_SECRET': 'ts',
+        }
+        with patch.dict(os.environ, env, clear=False):
+            with patch.dict(sys.modules, {'tweepy': fake_tweepy}):
+                call_command('post_to_twitter', stdout=out)
+
+        client.create_tweet.assert_called_once()
+        text = client.create_tweet.call_args.kwargs['text']
+        self.assertIn('Covered by 3 sources', text)
+        self.assertIn(stories[0].title, text)
+        self.assertIn(stories[0].url, text)
+        self.assertNotIn('covered_by_count', text)
+        stories[0].refresh_from_db()
+        self.assertTrue(stories[0].tweeted)
