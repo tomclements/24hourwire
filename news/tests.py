@@ -2600,3 +2600,66 @@ class LoginViewNextRedirectTests(TestCase):
         response = self._post_login(password='wrong-password')
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'login.html')
+
+
+class FetchFeedTlsVerificationTests(TestCase):
+    """fetch_feed / test_feed must pass a verifying SSL context to urlopen."""
+
+    def test_fetch_feed_does_not_disable_tls_on_urlopen_context(self):
+        import ssl
+        from news.management.commands.fetch_news import Command
+
+        captured = {}
+
+        def fake_urlopen(req, context=None, timeout=None):
+            captured["context"] = context
+            captured["timeout"] = timeout
+            raise ssl.SSLError("certificate verify failed")
+
+        with patch("news.management.commands.fetch_news.urllib.request.urlopen", side_effect=fake_urlopen):
+            with patch("news.management.commands.fetch_news.logger") as mock_logger:
+                result = Command().fetch_feed("https://example.com/rss.xml")
+
+        ctx = captured["context"]
+        self.assertIsNotNone(ctx)
+        self.assertNotEqual(ctx.verify_mode, ssl.CERT_NONE)
+        self.assertEqual(ctx.verify_mode, ssl.CERT_REQUIRED)
+        self.assertTrue(ctx.check_hostname)
+        self.assertEqual(captured["timeout"], 15)
+        self.assertEqual(len(result.entries), 0)
+        mock_logger.warning.assert_called()
+        warn_args = mock_logger.warning.call_args[0]
+        self.assertEqual(warn_args[1], "https://example.com/rss.xml")
+        self.assertEqual(warn_args[2], "SSLError")
+
+    def test_test_feed_does_not_disable_tls_on_urlopen_context(self):
+        import ssl
+        from news.management.commands.health_check import test_feed
+
+        captured = {}
+
+        def fake_urlopen(req, context=None, timeout=None):
+            captured["context"] = context
+            captured["timeout"] = timeout
+            raise ssl.SSLError("certificate verify failed")
+
+        with patch("news.management.commands.health_check.urllib.request.urlopen", side_effect=fake_urlopen):
+            with patch("news.management.commands.health_check.logger") as mock_logger:
+                language, name, status, count = test_feed(
+                    "Example", "https://example.com/rss.xml", "en", timeout=10
+                )
+
+        ctx = captured["context"]
+        self.assertIsNotNone(ctx)
+        self.assertNotEqual(ctx.verify_mode, ssl.CERT_NONE)
+        self.assertEqual(ctx.verify_mode, ssl.CERT_REQUIRED)
+        self.assertTrue(ctx.check_hostname)
+        self.assertEqual(captured["timeout"], 10)
+        self.assertEqual(language, "en")
+        self.assertEqual(name, "Example")
+        self.assertEqual(count, 0)
+        self.assertTrue(status.startswith("error:"))
+        mock_logger.warning.assert_called()
+        warn_args = mock_logger.warning.call_args[0]
+        self.assertEqual(warn_args[1], "https://example.com/rss.xml")
+        self.assertEqual(warn_args[2], "SSLError")

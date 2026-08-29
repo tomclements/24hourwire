@@ -22,8 +22,6 @@ logger.addHandler(handler)
 def test_feed(name, url, language, timeout=10):
     """Test a single feed and return (language, name, status, count)."""
     ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
 
     try:
         req = urllib.request.Request(url, headers={
@@ -37,6 +35,7 @@ def test_feed(name, url, language, timeout=10):
             else:
                 return language, name, 'empty', 0
     except Exception as e:
+        logger.warning('Feed health check failed for %s: %s', url, type(e).__name__)
         error_msg = str(e)[:80]
         return language, name, f'error: {error_msg}', 0
 

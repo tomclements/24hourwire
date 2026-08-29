@@ -156,8 +156,6 @@ class Command(BaseCommand):
 
     def fetch_feed(self, url):
         ctx = ssl.create_default_context()
-        ctx.check_hostname = False
-        ctx.verify_mode = ssl.CERT_NONE
 
         try:
             req = urllib.request.Request(url, headers={
@@ -165,9 +163,10 @@ class Command(BaseCommand):
             })
             with urllib.request.urlopen(req, context=ctx, timeout=15) as response:
                 return feedparser.parse(response.read())
-        except Exception:
+        except Exception as e:
             # Don't use feedparser.parse(url) directly as it has no timeout
             # Return empty feed instead to prevent hanging
+            logger.warning('Feed fetch failed for %s: %s', url, type(e).__name__)
             return feedparser.parse('')
 
     def title_similarity(self, title1, title2):
