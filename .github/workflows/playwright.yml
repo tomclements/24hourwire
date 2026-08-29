@@ -55,6 +55,10 @@ jobs:
     - name: Run Django migrations
       run: |
         python manage.py migrate
+
+    - name: Seed Playwright stories
+      run: |
+        python manage.py seed_playwright_stories
     
     - name: Start Django server
       run: |

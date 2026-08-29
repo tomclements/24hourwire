@@ -2966,3 +2966,21 @@ class ContentSecurityPolicyTests(TestCase):
         self.assertNotIn('onerror=', content)
         self.assertNotIn('onchange=', content)
         self.assertNotIn('onclick=', content)
+
+
+class SeedPlaywrightStoriesTests(TestCase):
+    """seed_playwright_stories creates homepage fixtures and is idempotent."""
+
+    def test_seed_creates_at_least_two_recent_en_stories(self):
+        from django.core.management import call_command
+        call_command("seed_playwright_stories")
+        cutoff = timezone.now() - timedelta(hours=24)
+        count = Story.objects.filter(language="en", published__gte=cutoff).count()
+        self.assertGreaterEqual(count, 2)
+
+    def test_seed_is_safe_to_run_twice(self):
+        from django.core.management import call_command
+        call_command("seed_playwright_stories")
+        first = Story.objects.count()
+        call_command("seed_playwright_stories")
+        self.assertEqual(Story.objects.count(), first)
