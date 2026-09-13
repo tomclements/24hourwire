@@ -35,6 +35,16 @@ services:
         value: 24hourwire.news,www.24hourwire.news,two4hourwire.onrender.com
       - key: WEB_CONCURRENCY
         value: 1
+      # LLM keys for staff generate_now (detached manage.py generate_polls).
+      # Same sync:false pattern as 24hourwire-polls cron — set values in Dashboard.
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: XAI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
 
   # Cron job for fetching news
   - type: cron
