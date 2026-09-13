@@ -44,7 +44,7 @@
 
 {% block content %}
     <nav class="breadcrumb">
-        <a href="/">Home</a> &rsaquo; <a href="/">Topics</a> &rsaquo; {{ topic.title }}
+        <a href="/{% if topic_language and topic_language != 'all' %}?lang={{ topic_language }}{% endif %}">Home</a> &rsaquo; <a href="/{% if topic_language and topic_language != 'all' %}?lang={{ topic_language }}{% endif %}">Topics</a> &rsaquo; {{ topic.title }}
     </nav>
 
     <div class="topic-hero">
@@ -59,9 +59,9 @@
 
             {% if languages_with_stories %}
             <div class="lang-filters">
-                <a href="?" class="lang-pill {% if language == 'all' %}active{% endif %}">All Languages</a>
+                <a href="?lang=all" class="lang-pill {% if topic_language == 'all' %}active{% endif %}">All Languages</a>
                 {% for lang in languages_with_stories %}
-                <a href="?lang={{ lang }}" class="lang-pill {% if language == lang %}active{% endif %}">{{ lang|language_name }}</a>
+                <a href="?lang={{ lang }}" class="lang-pill {% if topic_language == lang %}active{% endif %}">{{ lang|language_name }}</a>
                 {% endfor %}
             </div>
             {% endif %}

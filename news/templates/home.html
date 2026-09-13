@@ -78,7 +78,7 @@
         <div class="coverage-row">
             <div class="topics-scroll">
                 {% for topic in active_topics %}
-                <a href="{{ topic.get_absolute_url }}" class="topic-card">
+                <a href="{{ topic.get_absolute_url }}{% if language and language != 'all' %}?lang={{ language }}{% endif %}" class="topic-card">
                     <div class="topic-card-title">{{ topic.title }}</div>
                     {% if topic.headline %}
                     <div class="topic-card-headline">{{ topic.headline }}</div>

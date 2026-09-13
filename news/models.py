@@ -63,6 +63,17 @@ class Story(models.Model):
     LANGUAGE_CHOICES = [
         ('en', 'English'),
         ('es', 'Español'),
+        ('fr', 'Français'),
+        ('de', 'Deutsch'),
+        ('pt', 'Português'),
+        ('it', 'Italiano'),
+        ('ar', 'العربية'),
+        ('ru', 'Русский'),
+        ('ja', '日本語'),
+        ('zh', '中文'),
+        ('ko', '한국어'),
+        ('tr', 'Türkçe'),
+        ('hi', 'हिन्दी'),
     ]
 
     source = models.CharField(max_length=50)

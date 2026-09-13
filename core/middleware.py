@@ -1,5 +1,8 @@
 from news.languages import SUPPORTED_LANGUAGES
 
+PREFERRED_LANG_COOKIE = 'preferred_lang'
+PREFERRED_LANG_MAX_AGE = 365 * 24 * 60 * 60
+
 
 class ContentSecurityPolicyMiddleware:
     """Add a Content-Security-Policy response header.
@@ -35,13 +38,18 @@ class ContentSecurityPolicyMiddleware:
 
 
 class DetectLanguageMiddleware:
-    """Detect preferred language from Accept-Language header.
+    """Detect preferred language from cookie, query, and Accept-Language.
 
     Sets request.detected_language (Accept-Language only) for views.
     Also sets request.LANGUAGE_CODE to the language the views will render
-    (?lang= override, else detected_language) so Django cache_page keys
-    differ by language. LocaleMiddleware is not used; with USE_I18N=True,
-    learn_cache_key strips Accept-Language and suffixes LANGUAGE_CODE.
+    (?lang= override, else preferred cookie, else detected_language) so Django
+    cache_page keys differ by language. LocaleMiddleware is not used; with
+    USE_I18N=True, learn_cache_key strips Accept-Language and suffixes
+    LANGUAGE_CODE.
+
+    Concrete ?lang= values set the preferred_lang cookie. Explicit lang=all
+    clears it so topic hubs can show all languages without restoring a prior
+    preference.
     """
 
     def __init__(self, get_response):
@@ -50,11 +58,45 @@ class DetectLanguageMiddleware:
     def __call__(self, request):
         header = request.META.get('HTTP_ACCEPT_LANGUAGE', '')
         request.detected_language = self._parse(header)
-        language = request.GET.get('lang', request.detected_language)
-        if language not in SUPPORTED_LANGUAGES:
+
+        lang_param = request.GET.get('lang')
+        cookie_lang = request.COOKIES.get(PREFERRED_LANG_COOKIE, '')
+        set_preferred = None  # None=unchanged, False=clear, str=set
+
+        if lang_param == 'all':
+            # Stay on all for topic filters; do not apply remembered preference.
+            set_preferred = False
+            language = request.detected_language
+            if language not in SUPPORTED_LANGUAGES:
+                language = 'en'
+        elif lang_param in SUPPORTED_LANGUAGES:
+            language = lang_param
+            set_preferred = lang_param
+        elif lang_param:
+            # Invalid explicit lang — fall back safely to en (not cookie/detected).
             language = 'en'
+        elif cookie_lang in SUPPORTED_LANGUAGES:
+            language = cookie_lang
+        else:
+            language = request.detected_language
+            if language not in SUPPORTED_LANGUAGES:
+                language = 'en'
+
         request.LANGUAGE_CODE = language
-        return self.get_response(request)
+        response = self.get_response(request)
+
+        if set_preferred is False:
+            response.delete_cookie(PREFERRED_LANG_COOKIE, path='/')
+        elif set_preferred:
+            response.set_cookie(
+                PREFERRED_LANG_COOKIE,
+                set_preferred,
+                max_age=PREFERRED_LANG_MAX_AGE,
+                path='/',
+                samesite='Lax',
+            )
+
+        return response
 
     def _parse(self, header):
         if not header:

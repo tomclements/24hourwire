@@ -2074,6 +2074,178 @@ class PollAnalyticsTests(TestCase):
         )
 
 
+
+class PreferredLanguagePersistenceTests(TestCase):
+    """Preferred lang cookie + topic hub lang filter across SUPPORTED_LANGUAGES."""
+
+    def _apply_language_middleware(self, request):
+        from django.http import HttpResponse
+        from core.middleware import DetectLanguageMiddleware
+        response = DetectLanguageMiddleware(lambda req: HttpResponse('ok'))(request)
+        return request, response
+
+    def test_story_language_choices_match_supported_languages(self):
+        from news.languages import SUPPORTED_LANGUAGES
+        codes = {c for c, _ in Story.LANGUAGE_CHOICES}
+        self.assertTrue(SUPPORTED_LANGUAGES.issubset(codes))
+        self.assertIn('fr', codes)
+        self.assertIn('ar', codes)
+
+    def test_middleware_uses_preferred_lang_cookie_when_no_query(self):
+        factory = RequestFactory()
+        req = factory.get('/', HTTP_ACCEPT_LANGUAGE='en')
+        req.COOKIES['preferred_lang'] = 'fr'
+        req, _ = self._apply_language_middleware(req)
+        self.assertEqual(req.detected_language, 'en')
+        self.assertEqual(req.LANGUAGE_CODE, 'fr')
+
+    def test_middleware_concrete_lang_sets_preferred_cookie(self):
+        factory = RequestFactory()
+        req = factory.get('/?lang=ar', HTTP_ACCEPT_LANGUAGE='en')
+        req, response = self._apply_language_middleware(req)
+        self.assertEqual(req.LANGUAGE_CODE, 'ar')
+        self.assertEqual(response.cookies['preferred_lang'].value, 'ar')
+
+    def test_middleware_lang_all_clears_preferred_cookie(self):
+        factory = RequestFactory()
+        req = factory.get('/?lang=all', HTTP_ACCEPT_LANGUAGE='es')
+        req.COOKIES['preferred_lang'] = 'fr'
+        req, response = self._apply_language_middleware(req)
+        self.assertEqual(req.detected_language, 'es')
+        self.assertEqual(req.LANGUAGE_CODE, 'es')
+        # delete_cookie sets Max-Age=0
+        self.assertEqual(response.cookies['preferred_lang']['max-age'], 0)
+
+    def test_topic_detail_accepts_supported_lang_not_in_legacy_en_es(self):
+        topic = Topic.objects.create(
+            title='Lang Persist Topic',
+            slug='lang-persist-topic',
+            description='Topic for language persistence tests',
+            keywords=['pytestlangpersist'],
+            categories=['world'],
+            is_active=True,
+        )
+        Story.objects.create(
+            source='Le Monde',
+            title='pytestlangpersist coverage in France',
+            excerpt='French story.',
+            url='https://example.com/fr-lang-persist',
+            language='fr',
+            category='world',
+            published=timezone.now(),
+            url_hash='frlangpersist',
+            title_fingerprint='frlangfp',
+        )
+        response = self.client.get('/topic/lang-persist-topic/?lang=fr')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'pytestlangpersist coverage in France')
+        self.assertContains(response, 'lang-pill active')
+        # French pill active, All Languages not the only active cue via href
+        self.assertContains(response, 'href="?lang=fr"')
+        self.assertContains(response, 'href="?lang=all"')
+        self.assertNotContains(response, 'href="?" class="lang-pill')
+
+    def test_topic_detail_lang_all_keeps_all_languages_active(self):
+        Topic.objects.create(
+            title='All Lang Topic',
+            slug='all-lang-topic',
+            description='All languages topic',
+            keywords=['alllangkeyword'],
+            categories=['world'],
+            is_active=True,
+        )
+        Story.objects.create(
+            source='BBC',
+            title='alllangkeyword english story',
+            excerpt='English.',
+            url='https://example.com/all-lang-en',
+            language='en',
+            category='world',
+            published=timezone.now(),
+            url_hash='alllangen',
+            title_fingerprint='alllangenfp',
+        )
+        response = self.client.get('/topic/all-lang-topic/?lang=all')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'href="?lang=all" class="lang-pill active"')
+        self.assertContains(response, 'alllangkeyword english story')
+
+    def test_topic_detail_restores_preferred_lang_from_cookie(self):
+        topic = Topic.objects.create(
+            title='Cookie Restore Topic',
+            slug='cookie-restore-topic',
+            description='Cookie restore topic',
+            keywords=['cookierestorekw'],
+            categories=['world'],
+            is_active=True,
+        )
+        Story.objects.create(
+            source='Le Monde',
+            title='cookierestorekw french only story',
+            excerpt='French.',
+            url='https://example.com/cookie-restore-fr',
+            language='fr',
+            category='world',
+            published=timezone.now(),
+            url_hash='cookierestorefr',
+            title_fingerprint='cookierestorefrfp',
+        )
+        Story.objects.create(
+            source='BBC',
+            title='cookierestorekw english only story',
+            excerpt='English.',
+            url='https://example.com/cookie-restore-en',
+            language='en',
+            category='world',
+            published=timezone.now(),
+            url_hash='cookierestoreen',
+            title_fingerprint='cookierestoreenfp',
+        )
+        self.client.cookies['preferred_lang'] = 'fr'
+        response = self.client.get('/topic/cookie-restore-topic/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'cookierestorekw french only story')
+        self.assertNotContains(response, 'cookierestorekw english only story')
+
+    def test_home_topic_card_includes_lang_query(self):
+        Topic.objects.create(
+            title='Home Card Topic',
+            slug='home-card-topic',
+            description='Home card topic',
+            keywords=['homecardkw'],
+            categories=['world'],
+            is_active=True,
+            headline='Home card headline',
+        )
+        response = self.client.get('/?lang=de')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '/topic/home-card-topic/?lang=de')
+
+
+    def test_about_uses_preferred_lang_cookie_over_accept_language(self):
+        """Cookie preferred_lang must drive About body, not Accept-Language alone."""
+        self.client.cookies['preferred_lang'] = 'es'
+        response = self.client.get('/about/', HTTP_ACCEPT_LANGUAGE='en')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Acerca de 24HourWire')
+        self.assertNotContains(response, 'About 24HourWire')
+
+    def test_about_cache_key_matches_preferred_lang_content(self):
+        """Regression: preferred_lang=es + Accept en must not cache English under .es."""
+        from django.core.cache import cache
+        cache.clear()
+        self.client.cookies['preferred_lang'] = 'es'
+        first = self.client.get('/about/', HTTP_ACCEPT_LANGUAGE='en')
+        self.assertEqual(first.status_code, 200)
+        self.assertContains(first, 'Acerca de 24HourWire')
+        # Fresh client, Accept=es only: same LANGUAGE_CODE=.es cache key must be Spanish.
+        other = self.client_class()
+        second = other.get('/about/', HTTP_ACCEPT_LANGUAGE='es')
+        self.assertEqual(second.status_code, 200)
+        self.assertContains(second, 'Acerca de 24HourWire')
+        self.assertNotContains(second, 'About 24HourWire')
+
+
 class LanguageCacheKeyTests(TestCase):
     """Prove page-cache keys differ by detected language (not just Vary)."""
 
@@ -2667,6 +2839,7 @@ class FetchFeedTlsVerificationTests(TestCase):
         warn_args = mock_logger.warning.call_args[0]
         self.assertEqual(warn_args[1], "https://example.com/rss.xml")
         self.assertEqual(warn_args[2], "SSLError")
+
 
 
 class BookClickTrackingTests(TestCase):

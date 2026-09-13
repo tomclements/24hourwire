@@ -64,11 +64,21 @@
     }
 
     /* ---------- Language selector ---------- */
+    function setPreferredLangCookie(code) {
+        if (!code || code === 'all') {
+            document.cookie = 'preferred_lang=; Max-Age=0; path=/; SameSite=Lax';
+            return;
+        }
+        document.cookie = 'preferred_lang=' + encodeURIComponent(code) + '; max-age=31536000; path=/; SameSite=Lax';
+    }
+
     const langSelect = document.getElementById('lang-select');
     if (langSelect) {
         langSelect.addEventListener('change', function () {
+            const code = this.value;
+            setPreferredLangCookie(code);
             const url = new URL(window.location);
-            url.searchParams.set('lang', this.value);
+            url.searchParams.set('lang', code);
             window.location.href = url.toString();
         });
     }

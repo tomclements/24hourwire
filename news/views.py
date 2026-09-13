@@ -16,7 +16,17 @@ from .sources_config import (
     LANGUAGE_SOURCE_INFO, DEFAULT_SOURCES, SOURCES, LANGUAGE_NAMES,
     PAYWALLED_SOURCES, CATEGORY_KEYWORDS, CATEGORY_NAMES, UI_STRINGS, LANGUAGE_NAMES,
 )
+from .languages import SUPPORTED_LANGUAGES
 from .categorization import categorize_story, get_story_categories, check_exclusion
+
+
+def _resolve_ui_language(request):
+    """Shared ?lang= resolution: concrete code, else middleware LANGUAGE_CODE."""
+    language = request.GET.get('lang')
+    if language in SUPPORTED_LANGUAGES:
+        return language
+    return getattr(request, 'LANGUAGE_CODE', 'en') or 'en'
+
 
 
 def _latest_story_timestamp(request):
@@ -93,8 +103,8 @@ def is_staff_or_superuser(user):
 def home(request):
     cutoff = timezone.now() - timedelta(hours=24)
     
-    # Get language from request - URL param overrides detected language
-    language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))
+    # Get language from request - URL param, else cookie/detected via middleware
+    language = _resolve_ui_language(request)
     if language not in SOURCES:
         language = 'en'
     
@@ -292,7 +302,7 @@ def healthz(request):
 @cache_page(3600)  # Cache static pages for 1 hour
 @vary_on_headers('Accept-Language')
 def about_view(request):
-    language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))
+    language = _resolve_ui_language(request)
     if language not in SOURCES:
         language = 'en'
 
@@ -317,7 +327,7 @@ def about_view(request):
 
 @cache_page(3600)
 def terms_view(request):
-    language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))
+    language = _resolve_ui_language(request)
     if language == 'es':
         return render(request, 'terms_es.html')
     return render(request, 'terms.html')
@@ -325,7 +335,7 @@ def terms_view(request):
 
 @cache_page(3600)
 def privacy_view(request):
-    language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))
+    language = _resolve_ui_language(request)
     if language == 'es':
         return render(request, 'privacy_es.html')
     return render(request, 'privacy.html')
@@ -650,7 +660,7 @@ def search_stories(request):
     Searches only the last 24 hours of stories. No user tracking.
     """
     query = request.GET.get('q', '').strip()
-    language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))
+    language = _resolve_ui_language(request)
     if language not in SOURCES:
         language = 'en'
     
@@ -687,7 +697,7 @@ def search_stories(request):
 @vary_on_headers('Accept-Language')
 def feeds_view(request):
     """Display available RSS and JSON feeds for the selected language."""
-    language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))
+    language = _resolve_ui_language(request)
     t = UI_STRINGS.get(language, UI_STRINGS['en'])
     
     # Get categories for the selected language only
@@ -1110,16 +1120,32 @@ def topic_detail(request, slug):
     except Topic.DoesNotExist:
         raise Http404("Topic not found")
     
-    # Get language filter from query param
-    language = request.GET.get('lang')
-    if language and language not in [s[0] for s in Story._meta.get_field('language').choices]:
-        language = None
-    
+    # Language filter: ?lang= code | all; bare URL uses cookie → detected → en
+    lang_param = request.GET.get('lang')
+    if lang_param == 'all':
+        filter_language = None
+        language = 'all'
+    elif lang_param in SUPPORTED_LANGUAGES:
+        filter_language = lang_param
+        language = lang_param
+    elif lang_param:
+        # Invalid lang — fall back safely (middleware LANGUAGE_CODE is en)
+        filter_language = getattr(request, 'LANGUAGE_CODE', 'en') or 'en'
+        if filter_language not in SUPPORTED_LANGUAGES:
+            filter_language = 'en'
+        language = filter_language
+    else:
+        filter_language = getattr(request, 'LANGUAGE_CODE', 'en') or 'en'
+        if filter_language not in SUPPORTED_LANGUAGES:
+            filter_language = 'en'
+        language = filter_language
+
     # Fetch matching stories with metadata
-    stories = topic.get_stories(language=language, limit=50)
-    
+    stories = topic.get_stories(language=filter_language, limit=50)
+
     # Apply metadata
-    lang_source_info = LANGUAGE_SOURCE_INFO.get('en', LANGUAGE_SOURCE_INFO.get('en', {}))
+    ui_lang = filter_language or getattr(request, 'LANGUAGE_CODE', 'en') or 'en'
+    lang_source_info = LANGUAGE_SOURCE_INFO.get(ui_lang, LANGUAGE_SOURCE_INFO.get('en', {}))
     for story in stories:
         story.story_categories = get_story_categories(story.title, story.language, story.source)
         bias_info = lang_source_info.get(story.source, ('Unknown', '#999', ''))
@@ -1127,10 +1153,10 @@ def topic_detail(request, slug):
         story.bias_color = bias_info[1]
         story.bias_class = bias_info[0].lower().replace(' ', '-').replace('/', '-') if bias_info[0] else 'unknown'
         story.is_paywalled = story.source in PAYWALLED_SOURCES
-    
+
     # Get languages with stories for filter pills
     languages_with_stories = topic.get_languages_with_stories()
-    
+
     # Bias spectrum: count stories by bias
     # Keys normalized to use underscores (Django templates can't handle hyphens in variable names)
     bias_counts = {}
@@ -1138,28 +1164,30 @@ def topic_detail(request, slug):
         bias = getattr(story, 'bias_label', 'Unknown')
         normalized_bias = bias.replace('-', '_').replace(' ', '_').lower()
         bias_counts[normalized_bias] = bias_counts.get(normalized_bias, 0) + 1
-    
+
     # Total story count (uncapped for display)
-    total_stories = topic.get_story_count(language=language)
-    
+    total_stories = topic.get_story_count(language=filter_language)
+
     # Get translated headline/description for the selected language
-    topic_translation = topic.get_translation(language or 'en')
-    
-    # Get UI strings
-    ui_strings = UI_STRINGS.get('en', UI_STRINGS.get('en', {}))
-    
+    topic_translation = topic.get_translation(filter_language or 'en')
+
+    # Get UI strings (site chrome uses concrete lang even when topic filter is all)
+    ui_strings = UI_STRINGS.get(ui_lang, UI_STRINGS.get('en', {}))
+
     context = {
         'topic': topic,
         'topic_translation': topic_translation,
         'stories': stories,
-        'language': language or 'all',
+        # Concrete lang for site chrome (base.html); topic_language drives hub pills/filter.
+        'language': ui_lang,
+        'topic_language': language,
         'languages_with_stories': languages_with_stories,
         'bias_counts': bias_counts,
         'total_stories': total_stories,
         't': ui_strings,
         'language_names': LANGUAGE_NAMES,
     }
-    
+
     return render(request, 'topic_detail.html', context)
 
 
@@ -1221,7 +1249,7 @@ def poll_detail(request, poll_id):
         })
     
     # Get user's preferred language for navigation links
-    language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))
+    language = _resolve_ui_language(request)
     if language not in SOURCES:
         language = 'en'
     
@@ -1240,7 +1268,7 @@ def poll_detail(request, poll_id):
 def polls_list(request):
     """Public polls listing page — current active polls only."""
     now = timezone.now()
-    language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))
+    language = _resolve_ui_language(request)
     if language not in SOURCES:
         language = 'en'
     language_filter = request.GET.get('lang', '')
@@ -1273,7 +1301,7 @@ def polls_list(request):
 def polls_archive(request):
     """Archive page for closed polls (expired only, not rejected)."""
     now = timezone.now()
-    language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))
+    language = _resolve_ui_language(request)
     if language not in SOURCES:
         language = 'en'
     language_filter = request.GET.get('lang', '')
@@ -1303,7 +1331,7 @@ def polls_manage(request):
     """Staff-only poll review and management page."""
     status_filter = request.GET.get('status', 'pending_review')
     language_filter = request.GET.get('language', '')
-    language = request.GET.get('lang', getattr(request, 'detected_language', 'en'))
+    language = _resolve_ui_language(request)
     if language not in SOURCES:
         language = 'en'
     
