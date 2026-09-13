@@ -43,8 +43,6 @@ def save_status(status):
 def test_feed(name, url, timeout=10):
     """Test a single feed and return (name, status, count, error)."""
     ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
 
     try:
         req = urllib.request.Request(url, headers={

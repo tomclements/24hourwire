@@ -2842,6 +2842,73 @@ class FetchFeedTlsVerificationTests(TestCase):
 
 
 
+class MonitorFeedsAndUpdateExcerptsTlsVerificationTests(TestCase):
+    """monitor_feeds / update_excerpts must pass a verifying SSL context to urlopen."""
+
+    def _assert_source_verifies_tls(self, module):
+        src = inspect.getsource(module)
+        self.assertNotIn("CERT_NONE", src)
+        self.assertNotIn("check_hostname = False", src)
+        self.assertNotIn("check_hostname=False", src)
+
+    def test_monitor_feeds_source_does_not_disable_tls(self):
+        from news.management.commands import monitor_feeds
+        self._assert_source_verifies_tls(monitor_feeds)
+
+    def test_update_excerpts_source_does_not_disable_tls(self):
+        from news.management.commands import update_excerpts
+        self._assert_source_verifies_tls(update_excerpts)
+
+    def test_monitor_feeds_test_feed_does_not_disable_tls_on_urlopen_context(self):
+        import ssl
+        from news.management.commands.monitor_feeds import test_feed
+
+        captured = {}
+
+        def fake_urlopen(req, context=None, timeout=None):
+            captured["context"] = context
+            captured["timeout"] = timeout
+            raise ssl.SSLError("certificate verify failed")
+
+        with patch("news.management.commands.monitor_feeds.urllib.request.urlopen", side_effect=fake_urlopen):
+            name, status, count, error = test_feed(
+                "Example", "https://example.com/rss.xml", timeout=10
+            )
+
+        ctx = captured["context"]
+        self.assertIsNotNone(ctx)
+        self.assertNotEqual(ctx.verify_mode, ssl.CERT_NONE)
+        self.assertEqual(ctx.verify_mode, ssl.CERT_REQUIRED)
+        self.assertTrue(ctx.check_hostname)
+        self.assertEqual(captured["timeout"], 10)
+        self.assertEqual(name, "Example")
+        self.assertEqual(status, "error")
+        self.assertEqual(count, 0)
+        self.assertIn("certificate verify failed", error)
+
+    def test_update_excerpts_does_not_disable_tls_on_urlopen_context(self):
+        import ssl
+        from news.management.commands.update_excerpts import Command
+
+        captured = {}
+
+        def fake_urlopen(req, context=None, timeout=None):
+            captured["context"] = context
+            captured["timeout"] = timeout
+            raise ssl.SSLError("certificate verify failed")
+
+        with patch("news.management.commands.update_excerpts.urllib.request.urlopen", side_effect=fake_urlopen):
+            result = Command().get_meta_description("https://example.com/story")
+
+        ctx = captured["context"]
+        self.assertIsNotNone(ctx)
+        self.assertNotEqual(ctx.verify_mode, ssl.CERT_NONE)
+        self.assertEqual(ctx.verify_mode, ssl.CERT_REQUIRED)
+        self.assertTrue(ctx.check_hostname)
+        self.assertEqual(captured["timeout"], 10)
+        self.assertEqual(result, "")
+
+
 class BookClickTrackingTests(TestCase):
     """sendBeacon book-click tracking: CSRF via form body, not custom headers."""
 
