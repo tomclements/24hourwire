@@ -8,7 +8,7 @@ defaults.
 
 import json
 
-from news.languages import DEFAULT_SOURCES, LANGUAGE_NAMES, SOURCES, UI_STRINGS
+from news.languages import DEFAULT_SOURCES, LANGUAGE_NAMES, SOURCES, SUPPORTED_LANGUAGES, UI_STRINGS
 
 # UI strings that the client-side JavaScript needs (share overlay, modals).
 JS_UI_KEYS = (
@@ -26,7 +26,12 @@ JS_UI_KEYS = (
 
 def site_globals(request):
     """Provide default site-wide context used by base.html."""
-    language = request.GET.get('lang') or getattr(request, 'detected_language', 'en')
+    # Match DetectLanguageMiddleware / news.views._resolve_ui_language so chrome
+    # (t, language, ui_json) follows preferred_lang cookie via LANGUAGE_CODE.
+    # lang=all / invalid / missing → LANGUAGE_CODE (never literal "all" for UI).
+    language = request.GET.get('lang')
+    if language not in SUPPORTED_LANGUAGES:
+        language = getattr(request, 'LANGUAGE_CODE', 'en') or 'en'
     if language not in SOURCES:
         language = 'en'
 

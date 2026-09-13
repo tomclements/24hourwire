@@ -19,6 +19,15 @@
         {% endfor %}
     ];
     
+    function esc(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     var styles = {
         light: `
             .hourwire-widget { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 400px; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #fff; }
@@ -71,28 +80,33 @@
         }
         
         var html = '<div class="hourwire-widget">';
-        html += '<div class="hourwire-header"><a href="https://24hourwire.news/?lang=' + config.language + '" target="_blank" rel="noopener">24HourWire</a></div>';
+        html += '<div class="hourwire-header"><a href="https://24hourwire.news/?lang=' + esc(config.language) + '" target="_blank" rel="noopener">24HourWire</a></div>';
         
         if (stories.length === 0) {
             html += '<div class="hourwire-story" style="text-align:center;color:#94a3b8;padding:20px;">No recent stories</div>';
         } else {
             stories.forEach(function(story) {
+                var url = esc(story.url);
+                var title = esc(story.title);
+                var source = esc(story.source);
+                var imageUrl = esc(story.image_url);
+                var bias = esc(story.bias_label);
                 html += '<div class="hourwire-story">';
                 if (story.image_url) {
-                    html += '<a href="' + story.url + '" target="_blank" rel="noopener"><img src="' + story.image_url + '" alt="" class="hourwire-story-image" loading="lazy"></a>';
+                    html += '<a href="' + url + '" target="_blank" rel="noopener"><img src="' + imageUrl + '" alt="" class="hourwire-story-image" loading="lazy"></a>';
                 }
-                html += '<h3 class="hourwire-story-title"><a href="' + story.url + '" target="_blank" rel="noopener">' + story.title + '</a></h3>';
+                html += '<h3 class="hourwire-story-title"><a href="' + url + '" target="_blank" rel="noopener">' + title + '</a></h3>';
                 html += '<div class="hourwire-story-meta">';
-                html += '<span>' + story.source + '</span>';
+                html += '<span>' + source + '</span>';
                 if (story.bias_label && story.bias_label !== 'Unknown') {
-                    html += '<span class="hourwire-bias ' + story.bias_label + '">' + story.bias_label + '</span>';
+                    html += '<span class="hourwire-bias ' + bias + '">' + bias + '</span>';
                 }
                 html += '</div>';
                 html += '</div>';
             });
         }
         
-        html += '<div class="hourwire-footer">News from all angles via <a href="https://24hourwire.news/?lang=' + config.language + '" target="_blank" rel="noopener">24HourWire</a></div>';
+        html += '<div class="hourwire-footer">News from all angles via <a href="https://24hourwire.news/?lang=' + esc(config.language) + '" target="_blank" rel="noopener">24HourWire</a></div>';
         html += '</div>';
         
         container.addEventListener('error', function (e) {

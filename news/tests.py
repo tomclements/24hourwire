@@ -2245,6 +2245,25 @@ class PreferredLanguagePersistenceTests(TestCase):
         self.assertContains(second, 'Acerca de 24HourWire')
         self.assertNotContains(second, 'About 24HourWire')
 
+    def test_site_globals_honors_preferred_lang_cookie(self):
+        """Chrome context follows preferred_lang even when Accept-Language differs."""
+        from django.http import HttpResponse
+        from core.middleware import DetectLanguageMiddleware
+        from news.context_processors import site_globals
+        from news.languages import UI_STRINGS
+
+        factory = RequestFactory()
+        req = factory.get('/', HTTP_ACCEPT_LANGUAGE='en')
+        req.COOKIES['preferred_lang'] = 'fr'
+        DetectLanguageMiddleware(lambda r: HttpResponse('ok'))(req)
+        self.assertEqual(req.LANGUAGE_CODE, 'fr')
+        self.assertEqual(req.detected_language, 'en')
+        ctx = site_globals(req)
+        self.assertEqual(ctx['language'], 'fr')
+        self.assertEqual(ctx['t'], UI_STRINGS['fr'])
+        self.assertNotEqual(ctx['t'], UI_STRINGS['en'])
+
+
 
 class LanguageCacheKeyTests(TestCase):
     """Prove page-cache keys differ by detected language (not just Vary)."""
