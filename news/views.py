@@ -1385,28 +1385,39 @@ def polls_manage(request):
                     messages.success(request, f'Created poll: {q[:50]}...')
         
         elif action == 'generate_now':
-            # Trigger OpenAI generation immediately
+            # Out of process so the sole gunicorn worker is not blocked by LLM work.
             import os
-            from io import StringIO
-            from django.core.management import call_command
-            
-            out = StringIO()
+            import subprocess
+            import sys
+            from django.conf import settings
+
+            cmd = [
+                sys.executable,
+                str(settings.BASE_DIR / 'manage.py'),
+                'generate_polls',
+                '--language', language,
+                '--num', '3',
+            ]
+            popen_kwargs = {
+                'cwd': str(settings.BASE_DIR),
+                'stdin': subprocess.DEVNULL,
+                'stdout': subprocess.DEVNULL,
+                'stderr': subprocess.DEVNULL,
+            }
+            if os.name == 'nt':
+                flags = subprocess.CREATE_NEW_PROCESS_GROUP
+                flags |= getattr(subprocess, 'DETACHED_PROCESS', 0)
+                popen_kwargs['creationflags'] = flags
+            else:
+                popen_kwargs['start_new_session'] = True
             try:
-                call_command('generate_polls', '--language', language, '--num', '3', stdout=out, stderr=out)
-                output = out.getvalue()
-                if 'Created' in output:
-                    created = output.count('Created:')
-                    messages.success(request, f'OpenAI generation complete. {created} polls created. Check pending review.')
-                elif 'DRY RUN' in output:
-                    messages.warning(request, 'Dry run detected — no polls created.')
-                elif 'disabled' in output.lower():
-                    messages.warning(request, 'Auto-generation is disabled in config.')
-                elif 'OPENAI_API_KEY' in output:
-                    messages.error(request, 'OPENAI_API_KEY is not set. Add it in Render environment variables.')
-                else:
-                    messages.info(request, f'Generation output: {output[:200]}')
-            except Exception as e:
-                messages.error(request, f'Generation failed: {e}')
+                subprocess.Popen(cmd, **popen_kwargs)
+                messages.success(
+                    request,
+                    'Poll generation started in the background. Check pending review shortly.',
+                )
+            except OSError as e:
+                messages.error(request, f'Failed to start poll generation: {e}')
         
         elif poll_id and action:
             poll = Poll.objects.filter(id=poll_id).first()

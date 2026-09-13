@@ -3141,6 +3141,59 @@ class DashboardRebuildClustersTests(TestCase):
                 mock_popen.assert_not_called()
                 mock_build.assert_not_called()
 
+
+class PollsGenerateNowTests(TestCase):
+    """Staff generate_now must spawn manage.py generate_polls out of process."""
+
+    def setUp(self):
+        self.client = Client()
+        self.staff_user = User.objects.create_user(
+            username='poll_staff', password='testpass', is_staff=True
+        )
+        self.normal_user = User.objects.create_user(
+            username='poll_normal', password='testpass'
+        )
+
+    def test_staff_post_generate_now_spawns_detached_subprocess(self):
+        self.client.login(username='poll_staff', password='testpass')
+        proc = MagicMock()
+        with patch('subprocess.Popen', return_value=proc) as mock_popen:
+            with patch('django.core.management.call_command') as mock_call:
+                response = self.client.post('/polls/manage/', {
+                    'action': 'generate_now',
+                }, follow=True)
+        mock_call.assert_not_called()
+        mock_popen.assert_called_once()
+        args, kwargs = mock_popen.call_args
+        argv = args[0]
+        self.assertEqual(argv[0], sys.executable)
+        self.assertTrue(str(argv[1]).endswith('manage.py'))
+        self.assertEqual(argv[2], 'generate_polls')
+        self.assertIn('--language', argv)
+        self.assertIn('--num', argv)
+        self.assertEqual(argv[argv.index('--num') + 1], '3')
+        self.assertIs(kwargs.get('stdin'), subprocess.DEVNULL)
+        self.assertIs(kwargs.get('stdout'), subprocess.DEVNULL)
+        self.assertIs(kwargs.get('stderr'), subprocess.DEVNULL)
+        proc.wait.assert_not_called()
+        proc.communicate.assert_not_called()
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Poll generation started in the background.')
+
+    def test_non_staff_post_does_not_start_generate_now(self):
+        with patch('subprocess.Popen') as mock_popen:
+            with patch('django.core.management.call_command') as mock_call:
+                anon = self.client.post('/polls/manage/', {'action': 'generate_now'})
+                self.assertEqual(anon.status_code, 302)
+                mock_popen.assert_not_called()
+                mock_call.assert_not_called()
+
+                self.client.login(username='poll_normal', password='testpass')
+                response = self.client.post('/polls/manage/', {'action': 'generate_now'})
+                self.assertEqual(response.status_code, 302)
+                mock_popen.assert_not_called()
+                mock_call.assert_not_called()
+
 class ContentSecurityPolicyTests(TestCase):
     """script-src must not use unsafe-inline; first-party JS is in static files."""
 
