@@ -1,4 +1,4 @@
-"""
+﻿"""
 Unit tests for 24HourWire news app.
 Run with: python manage.py test
 """
@@ -209,9 +209,9 @@ class ExcerptCleaningTests(TestCase):
         """Test that Google News RSS reference codes are removed from Hindi excerpts."""
         # Simulate real excerpt from Google News RSS with reference code
         self.story.excerpt = '''
-        भारत ने एक नई अंतरिक्ष योजना की घोषणा की है। 
+        à¤­à¤¾à¤°à¤¤ à¤¨à¥‡ à¤à¤• à¤¨à¤ˆ à¤…à¤‚à¤¤à¤°à¤¿à¤•à¥à¤· à¤¯à¥‹à¤œà¤¨à¤¾ à¤•à¥€ à¤˜à¥‹à¤·à¤£à¤¾ à¤•à¥€ à¤¹à¥ˆà¥¤ 
         <a href="https://news.google.com/rss/articles/CBMi2">Read more</a>
-        यह एक महत्वपूर्ण विकास है।
+        à¤¯à¤¹ à¤à¤• à¤®à¤¹à¤¤à¥à¤µà¤ªà¥‚à¤°à¥à¤£ à¤µà¤¿à¤•à¤¾à¤¸ à¤¹à¥ˆà¥¤
         '''
         self.story.save()
         
@@ -224,8 +224,8 @@ class ExcerptCleaningTests(TestCase):
         self.assertNotIn('</a>', clean)
         
         # Should contain the Hindi text
-        self.assertIn('भारत', clean)
-        self.assertIn('अंतरिक्ष', clean)
+        self.assertIn('à¤­à¤¾à¤°à¤¤', clean)
+        self.assertIn('à¤…à¤‚à¤¤à¤°à¤¿à¤•à¥à¤·', clean)
 
 
 class StoryClusterModelTests(TestCase):
@@ -1112,7 +1112,7 @@ class TopicHubTests(TestCase):
         # Create Spanish story that matches
         Story.objects.create(
             source='BBC Mundo',
-            title='Testing practices en Python',
+            title='Unit testing practices en Python con pytest',
             excerpt='Test practices.',
             url='https://example.com/es-testing',
             language='es',
@@ -1124,7 +1124,7 @@ class TopicHubTests(TestCase):
         
         response = self.client.get('/topic/test-topic/?lang=es')
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Testing practices en Python')
+        self.assertContains(response, 'Unit testing practices en Python con pytest')
     
     def test_topic_detail_page_404_for_inactive(self):
         """Inactive topics should return 404."""
@@ -1424,9 +1424,9 @@ class TopicLanguageNameTests(TestCase):
         """Language filter pills should display full language names, not codes."""
         response = self.client.get('/topic/lang-test/')
         self.assertEqual(response.status_code, 200)
-        # Should show "English" and "Español", not "EN" and "ES"
+        # Should show "English" and "EspaÃ±ol", not "EN" and "ES"
         self.assertContains(response, 'English')
-        self.assertContains(response, 'Español')
+        self.assertContains(response, 'EspaÃ±ol')
         self.assertNotContains(response, '>EN<')
         self.assertNotContains(response, '>ES<')
 
@@ -3296,3 +3296,182 @@ class SeedPlaywrightStoriesTests(TestCase):
         first = Story.objects.count()
         call_command("seed_playwright_stories")
         self.assertEqual(Story.objects.count(), first)
+
+
+class TopicMatchingPrecisionTests(TestCase):
+    """Tiered topic matching: precision over noisy recall (A+B+C redesign)."""
+
+    def setUp(self):
+        from news.topic_matching import GEOPOLITICS_NEGATIVES, keywords_union_from_rules
+
+        geo_neg = list(GEOPOLITICS_NEGATIVES)
+
+        iran_rules = {
+            'anchors': [
+                'iran', 'iranian', 'tehran', 'strait of hormuz', 'hormuz',
+                'irgc', 'pezeshkian', 'khamenei',
+            ],
+            'medium': ['us strikes', 'oil price', 'blockade', 'missile'],
+            'weak': ['jordan', 'naval', 'war'],
+            'negatives': geo_neg,
+            'deny_categories': ['sports', 'entertainment'],
+            'min_score': 2,
+        }
+        self.iran = Topic.objects.create(
+            slug='us-iran-war',
+            title='US-Iran War',
+            keywords=keywords_union_from_rules(iran_rules),
+            match_rules=iran_rules,
+            categories=['world', 'politics'],
+            languages=['en'],
+            is_active=True,
+            priority=10,
+        )
+
+        ai_rules = {
+            'anchors': [
+                'artificial intelligence', 'ai act', 'chatgpt', 'openai',
+                'eu ai act',
+            ],
+            'medium': ['tech policy', 'antitrust', 'big tech'],
+            'weak': ['ai', 'regulation'],
+            'negatives': [],
+            'deny_categories': ['sports'],
+            'min_score': 2,
+        }
+        self.ai = Topic.objects.create(
+            slug='ai-regulation',
+            title='AI Regulation',
+            keywords=keywords_union_from_rules(ai_rules),
+            match_rules=ai_rules,
+            categories=['technology'],
+            languages=['en'],
+            is_active=True,
+            priority=9,
+        )
+
+        ukraine_rules = {
+            'anchors': [
+                'ukraine', 'ukrainian', 'zelensky', 'zelenskyy', 'kyiv', 'kiev',
+            ],
+            'medium': ['putin', 'moscow', 'russia', 'nato', 'sanctions'],
+            'weak': ['war'],
+            'negatives': geo_neg,
+            'deny_categories': ['sports', 'entertainment'],
+            'min_score': 2,
+        }
+        self.ukraine = Topic.objects.create(
+            slug='ukraine-conflict',
+            title='Ukraine Conflict',
+            keywords=keywords_union_from_rules(ukraine_rules),
+            match_rules=ukraine_rules,
+            categories=['world'],
+            languages=['en'],
+            is_active=True,
+            priority=7,
+        )
+
+    def _story(self, title, category='world', language='en', suffix='x'):
+        return Story.objects.create(
+            source='BBC',
+            title=title,
+            excerpt='Excerpt.',
+            url=f'https://example.com/{suffix}-{Story.objects.count()}',
+            language=language,
+            category=category,
+            published=timezone.now(),
+            url_hash=f'h-{suffix}-{Story.objects.count()}',
+            title_fingerprint=f'f-{suffix}-{Story.objects.count()}',
+        )
+
+    def test_us_iran_must_not_jordan_love(self):
+        """NFL Jordan Love must not match us-iran-war."""
+        s = self._story('Jordan Love, Packers look strong in opener', category='sports', suffix='jl')
+        self.assertNotIn(s, list(self.iran.get_stories()))
+
+    def test_us_iran_must_not_michael_jordan(self):
+        """Michael Jordan sports headline must not match us-iran-war."""
+        s = self._story('Michael Jordan returns to Chicago for ceremony', category='sports', suffix='mj')
+        self.assertNotIn(s, list(self.iran.get_stories()))
+
+    def test_us_iran_must_iran_jordan_diplomacy(self):
+        """Iran + Jordan diplomacy should match (anchor + weak)."""
+        s = self._story('Iran and Jordan hold diplomacy talks in Amman', suffix='ij')
+        stories = list(self.iran.get_stories())
+        self.assertIn(s, stories)
+
+    def test_us_iran_must_irgc_hormuz(self):
+        """IRGC / Strait of Hormuz anchors should match."""
+        s = self._story('IRGC threatens shipping near Strait of Hormuz', suffix='hz')
+        self.assertIn(s, list(self.iran.get_stories()))
+
+    def test_ai_must_not_raise_substring(self):
+        """ai subset of raise must not match via weak token alone."""
+        s = self._story('Traders raise concerns over market volatility', category='business', suffix='raise')
+        self.assertNotIn(s, list(self.ai.get_stories()))
+
+    def test_ai_must_eu_ai_act(self):
+        """EU AI Act headline should match."""
+        s = self._story('EU AI Act forces new compliance rules for chatbots', category='technology', suffix='aiact')
+        self.assertIn(s, list(self.ai.get_stories()))
+
+    def test_ukraine_must_not_lone_weak_war(self):
+        """Lone weak token war must not pull Gulf/Iran stories into ukraine."""
+        s = self._story('Iran war escalates in Gulf', suffix='gulfwar')
+        self.assertNotIn(s, list(self.ukraine.get_stories()))
+
+    def test_ukraine_must_zelensky_kyiv(self):
+        """Zelensky/Kyiv anchors should match ukraine topic."""
+        s = self._story('Zelensky addresses lawmakers in Kyiv after strikes', suffix='zel')
+        self.assertIn(s, list(self.ukraine.get_stories()))
+
+    def test_related_topics_jordan_love_excludes_iran(self):
+        """get_related_topics(Jordan Love) must NOT include us-iran-war."""
+        from news.views import get_related_topics
+        s = self._story('Jordan Love leads Packers past rivals', category='sports', suffix='reljl')
+        related = get_related_topics(s, active_topics=[self.iran, self.ai, self.ukraine])
+        slugs = [t.slug for t in related]
+        self.assertNotIn('us-iran-war', slugs)
+
+    def test_related_topics_iran_jordan_diplomacy_may_include(self):
+        """Iran+Jordan diplomacy may include us-iran-war in related pills."""
+        from news.views import get_related_topics
+        s = self._story('Iran and Jordan hold diplomacy talks in Amman', suffix='relij')
+        related = get_related_topics(s, active_topics=[self.iran, self.ai, self.ukraine])
+        slugs = [t.slug for t in related]
+        self.assertIn('us-iran-war', slugs)
+
+    def test_24h_window_still_applies(self):
+        """Stories older than 24h are excluded even if keywords match."""
+        s = self._story('IRGC threatens shipping near Strait of Hormuz', suffix='oldhz')
+        s.published = timezone.now() - timedelta(hours=25)
+        s.save()
+        self.assertNotIn(s, list(self.iran.get_stories()))
+
+    def test_language_filter_still_applies(self):
+        """Language filter on get_stories is preserved."""
+        en = self._story('IRGC threatens shipping near Strait of Hormuz', language='en', suffix='len')
+        es = self._story('IRGC amenaza el Estrecho de Hormuz', language='es', suffix='les')
+        en_only = list(self.iran.get_stories(language='en'))
+        self.assertIn(en, en_only)
+        self.assertNotIn(es, en_only)
+
+    def test_category_only_without_keywords_excluded(self):
+        """Category-only stories without keyword hits stay excluded."""
+        s = self._story('Generic world briefing without region names', category='world', suffix='catonly')
+        self.assertNotIn(s, list(self.iran.get_stories()))
+
+    def test_legacy_keywords_medium_only_compat(self):
+        """Empty match_rules: legacy keywords behave as medium-only."""
+        topic = Topic.objects.create(
+            slug='legacy-kw',
+            title='Legacy',
+            keywords=['hormuz'],
+            match_rules={},
+            categories=['world'],
+            languages=['en'],
+            is_active=True,
+        )
+        s = self._story('Shipping chaos near Hormuz raises oil fears', suffix='leg')
+        self.assertIn(s, list(topic.get_stories()))
+

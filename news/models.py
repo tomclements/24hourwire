@@ -568,6 +568,14 @@ class Topic(models.Model):
     headline = models.CharField(max_length=300, blank=True)
     description = models.TextField(blank=True)
     keywords = models.JSONField(default=list, help_text="Keywords for matching stories by title")
+    match_rules = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text=(
+            "Tiered matching: {anchors, medium, weak, negatives, "
+            "deny_categories, min_score}. Empty => legacy keywords as medium-only."
+        ),
+    )
     categories = models.JSONField(default=list, help_text="Categories to match (e.g., ['sports', 'world'])")
     languages = models.JSONField(default=list, help_text="Language codes to include")
     image_url = models.URLField(blank=True)
@@ -625,55 +633,57 @@ class Topic(models.Model):
     
     def get_stories(self, language=None, limit=50):
         """Fetch matching stories from last 24 hours.
-        
-        Matches are based strictly on keywords in the story title.
-        Category matching is NOT used here to avoid broad, off-topic
-        results (e.g. a generic NBA story matching the World Cup topic
-        just because both have category='sports').
+
+        Uses cheap SQL title__icontains prefilter, then DB-agnostic Python
+        scoring from news.topic_matching (anchors/medium/weak/negatives).
+        Category matching is NOT used to populate results.
         """
         from django.utils import timezone
         from datetime import timedelta
         from django.db.models import Q
-        
+        from news.topic_matching import build_prefilter_q, story_matches_topic
+
         cutoff = timezone.now() - timedelta(hours=24)
-        
-        # Build keyword Q objects — strict title matching only
-        keyword_q = Q()
-        for kw in self.keywords:
-            keyword_q |= Q(title__icontains=kw)
-        
-        # Require keyword match within last 24h
-        base_q = Q(published__gte=cutoff) & keyword_q
+        prefilter = build_prefilter_q(self)
+        if prefilter is None:
+            return Story.objects.none()
+
+        base_q = Q(published__gte=cutoff) & prefilter
         stories = Story.objects.filter(base_q).distinct()
-        
+
         # Language filter
         if language:
             stories = stories.filter(language=language)
         elif self.languages:
             stories = stories.filter(language__in=self.languages)
-        
-        return stories.order_by('-published')[:limit]
-    
+
+        # Oversample candidates then apply precise Python matcher
+        candidates = list(stories.order_by('-published')[: max(limit * 10, 200)])
+        matched_ids = [s.id for s in candidates if story_matches_topic(s, self)][:limit]
+        if not matched_ids:
+            return Story.objects.none()
+        return Story.objects.filter(pk__in=matched_ids).order_by('-published')
+
     def get_story_count(self, language=None):
         """Get count of matching stories."""
         return self.get_stories(language=language, limit=1000).count()
-    
+
     def get_languages_with_stories(self):
         """Return language codes that have matching stories."""
         from django.utils import timezone
         from datetime import timedelta
         from django.db.models import Q
-        
+        from news.topic_matching import build_prefilter_q, story_matches_topic
+
         cutoff = timezone.now() - timedelta(hours=24)
-        keyword_q = Q()
-        for kw in self.keywords:
-            keyword_q |= Q(title__icontains=kw)
-        
-        # Keyword-only matching (same logic as get_stories)
-        base_q = Q(published__gte=cutoff) & keyword_q
-        qs = Story.objects.filter(base_q).distinct().values_list('language', flat=True)
-        
-        return sorted(set(qs))
+        prefilter = build_prefilter_q(self)
+        if prefilter is None:
+            return []
+
+        base_q = Q(published__gte=cutoff) & prefilter
+        candidates = list(Story.objects.filter(base_q).distinct()[:500])
+        langs = {s.language for s in candidates if story_matches_topic(s, self)}
+        return sorted(langs)
 
 
 class Poll(models.Model):
