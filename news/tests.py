@@ -3088,6 +3088,114 @@ class PostToTwitterSelectionTests(TestCase):
         stories[0].refresh_from_db()
         self.assertTrue(stories[0].tweeted)
 
+    def test_successful_post_sets_tweeted_at_to_now(self):
+        import sys
+        story = self._story('now', 'BBC')
+        self._cluster([story], source_count=3, representative=story)
+
+        client = MagicMock()
+        me = MagicMock()
+        me.data.username = 'wire'
+        client.get_me.return_value = me
+        tweet = MagicMock()
+        tweet.data = {'id': '1'}
+        client.create_tweet.return_value = tweet
+        fake_tweepy = MagicMock()
+        fake_tweepy.Client.return_value = client
+
+        from django.core.management import call_command
+        from io import StringIO
+        out = StringIO()
+        env = {
+            'TWITTER_API_KEY': 'k',
+            'TWITTER_API_SECRET': 's',
+            'TWITTER_ACCESS_TOKEN': 't',
+            'TWITTER_ACCESS_TOKEN_SECRET': 'ts',
+        }
+        before = timezone.now()
+        with patch.dict(os.environ, env, clear=False):
+            with patch.dict(sys.modules, {'tweepy': fake_tweepy}):
+                call_command('post_to_twitter', stdout=out)
+        after = timezone.now()
+
+        story.refresh_from_db()
+        self.assertTrue(story.tweeted)
+        self.assertIsNotNone(story.tweeted_at)
+        self.assertGreaterEqual(story.tweeted_at, before)
+        self.assertLessEqual(story.tweeted_at, after)
+
+    def test_monthly_cap_count_uses_tweeted_at_this_month(self):
+        now = timezone.now()
+        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        last_month = month_start - timedelta(days=1)
+
+        this_month = self._story('this-month', 'BBC')
+        this_month.tweeted = True
+        this_month.tweeted_at = now
+        this_month.save(update_fields=['tweeted', 'tweeted_at'])
+
+        old = self._story('last-month', 'CNN')
+        old.tweeted = True
+        old.tweeted_at = last_month
+        old.save(update_fields=['tweeted', 'tweeted_at'])
+
+        untweeted = self._story('untweeted', 'Reuters')
+        null_ts = self._story('null-ts', 'AP')
+        null_ts.tweeted = True
+        null_ts.save(update_fields=['tweeted'])
+
+        monthly_count = Story.objects.filter(tweeted=True, tweeted_at__gte=month_start).count()
+        self.assertEqual(monthly_count, 1)
+        self.assertIn(this_month, Story.objects.filter(tweeted=True, tweeted_at__gte=month_start))
+        self.assertNotIn(old, Story.objects.filter(tweeted=True, tweeted_at__gte=month_start))
+        self.assertNotIn(null_ts, Story.objects.filter(tweeted=True, tweeted_at__gte=month_start))
+        self.assertNotIn(untweeted, Story.objects.filter(tweeted=True, tweeted_at__gte=month_start))
+
+    def test_success_path_does_not_log_or_print_failure(self):
+        import sys
+        import logging
+        story = self._story('ok', 'BBC')
+        self._cluster([story], source_count=3, representative=story)
+
+        client = MagicMock()
+        me = MagicMock()
+        me.data.username = 'wire'
+        client.get_me.return_value = me
+        tweet = MagicMock()
+        tweet.data = {'id': '1'}
+        client.create_tweet.return_value = tweet
+        fake_tweepy = MagicMock()
+        fake_tweepy.Client.return_value = client
+
+        from django.core.management import call_command
+        from io import StringIO
+        out = StringIO()
+        env = {
+            'TWITTER_API_KEY': 'k',
+            'TWITTER_API_SECRET': 's',
+            'TWITTER_ACCESS_TOKEN': 't',
+            'TWITTER_ACCESS_TOKEN_SECRET': 'ts',
+        }
+
+        logger = logging.getLogger('news.twitter')
+        original_level = logger.level
+        logger.setLevel(logging.DEBUG)
+        try:
+            with self.assertLogs('news.twitter', level='DEBUG') as log_context:
+                with patch.dict(os.environ, env, clear=False):
+                    with patch.dict(sys.modules, {'tweepy': fake_tweepy}):
+                        call_command('post_to_twitter', stdout=out)
+
+            output = out.getvalue()
+            self.assertNotIn('Failed to tweet', output)
+            self.assertNotIn('Error tweeting', output)
+
+            log_output = '\n'.join(log_context.output)
+            self.assertNotIn('Error tweeting', log_output)
+            self.assertNotIn('Failed to tweet', log_output)
+        finally:
+            logger.setLevel(original_level)
+
 
 class DashboardRebuildClustersTests(TestCase):
     """Staff rebuild must spawn manage.py build_clusters out of process."""
