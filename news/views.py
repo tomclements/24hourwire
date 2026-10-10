@@ -14,10 +14,17 @@ from django.contrib import messages
 from .models import Story, StoryCluster, AnalyticsEvent, Topic, Poll, PollGenerationConfig
 from .sources_config import (
     LANGUAGE_SOURCE_INFO, DEFAULT_SOURCES, SOURCES, LANGUAGE_NAMES,
-    PAYWALLED_SOURCES, CATEGORY_KEYWORDS, CATEGORY_NAMES, UI_STRINGS, LANGUAGE_NAMES,
+    PAYWALLED_SOURCES, CATEGORY_KEYWORDS, CATEGORY_NAMES, UI_STRINGS,
 )
 from .languages import SUPPORTED_LANGUAGES
 from .categorization import categorize_story, get_story_categories, check_exclusion
+from .source_prefs import (
+    EXCLUDED_SOURCES_COOKIE,
+    EXCLUDED_SOURCES_MAX_AGE,
+    parse_excluded_sources,
+    compute_effective_sources,
+    encode_excluded_sources,
+)
 
 
 def _resolve_ui_language(request):
@@ -26,6 +33,46 @@ def _resolve_ui_language(request):
     if language in SUPPORTED_LANGUAGES:
         return language
     return getattr(request, 'LANGUAGE_CODE', 'en') or 'en'
+
+
+def _resolve_selected_sources_from_param(param_value, lang_sources):
+    """Convert a ?sources= value into a list of source names for the language."""
+    if param_value == 'all':
+        return [s[0] for s in lang_sources]
+    if param_value == 'center':
+        return [s[0] for s in lang_sources if s[1] == 'Center']
+    if param_value == 'left-center':
+        return [s[0] for s in lang_sources if s[1] == 'Left-Center']
+    if param_value == 'left':
+        return [s[0] for s in lang_sources if s[1] == 'Left']
+    if param_value == 'right':
+        return [s[0] for s in lang_sources if s[1] == 'Right']
+    if param_value == 'clear' or param_value == '':
+        return []
+    if not param_value:
+        # None (param absent): default to ALL sources (same as sources=all)
+        return [s[0] for s in lang_sources]
+
+    bias_categories = ['left', 'left-center', 'center', 'right-center', 'right']
+    requested_values = [v.strip().lower() for v in param_value.split(',')]
+
+    if any(v in bias_categories for v in requested_values):
+        selected = []
+        for val in requested_values:
+            if val == 'left':
+                selected.extend([s[0] for s in lang_sources if s[1] == 'Left'])
+            elif val == 'left-center':
+                selected.extend([s[0] for s in lang_sources if s[1] == 'Left-Center'])
+            elif val == 'center':
+                selected.extend([s[0] for s in lang_sources if s[1] == 'Center'])
+            elif val == 'right-center':
+                selected.extend([s[0] for s in lang_sources if s[1] == 'Right-Center'])
+            elif val == 'right':
+                selected.extend([s[0] for s in lang_sources if s[1] == 'Right'])
+        return selected
+
+    # Treat as source names
+    return requested_values
 
 
 
@@ -92,63 +139,68 @@ def is_staff_or_superuser(user):
     return user.is_staff or user.is_superuser
 
 
-@ensure_csrf_cookie
-@cache_page(60)  # Cache home page for 1 minute
-@vary_on_headers('Accept-Language')
-def home(request):
+def _resolve_excluded_sources(request, lang_sources):
+    """Read and validate the excluded_sources cookie for the current language."""
+    raw = request.COOKIES.get(EXCLUDED_SOURCES_COOKIE, '')
+    return parse_excluded_sources(raw, lang_sources)
+
+
+def _select_cluster_representative(cluster, selected_sources, lang_source_info):
+    """Return a representative story for a cluster that is from a selected source.
+
+    If the stored representative's source is selected, return it. Otherwise pick
+    the most recent story in the cluster whose source is selected.
+    """
+    selected_set = set(selected_sources)
+    rep = cluster.representative_story
+    if rep.source in selected_set:
+        return rep
+
+    stories = list(cluster.stories.all().order_by('-published'))
+    for story in stories:
+        if story.source in selected_set:
+            return story
+    return None
+
+
+def _annotate_representative_story(story, cluster, lang_source_info):
+    """Attach bias/display metadata to a cluster representative story."""
+    bias_info = lang_source_info.get(
+        story.source, ('Unknown', '#999', 'https://mediabiasfactcheck.com/')
+    )
+    story.bias_label = bias_info[0]
+    story.bias_color = bias_info[1]
+    story.bias_link = bias_info[2]
+    story.is_paywalled = story.source in PAYWALLED_SOURCES
+    story.story_categories = story.get_persisted_categories()
+    story.covered_by_count = cluster.source_count
+    story.covered_by_sources = cluster.sources
+
+
+def _home_impl(request):
     cutoff = timezone.now() - timedelta(hours=24)
-    
+
     # Get language from request - URL param, else cookie/detected via middleware
     language = _resolve_ui_language(request)
     if language not in SOURCES:
         language = 'en'
-    
+
     # Get sources for this language
     lang_sources = SOURCES.get(language, SOURCES['en'])
     lang_default_sources = DEFAULT_SOURCES.get(language, DEFAULT_SOURCES['en'])
     lang_source_info = LANGUAGE_SOURCE_INFO.get(language, LANGUAGE_SOURCE_INFO['en'])
     category_names = CATEGORY_NAMES.get(language, CATEGORY_NAMES['en'])
-    
+
     selected_sources_param = request.GET.get('sources')
-    
-    if selected_sources_param == 'all':
-        selected_sources = [s[0] for s in lang_sources]
-    elif selected_sources_param == 'center':
-        selected_sources = [s[0] for s in lang_sources if s[1] == 'Center']
-    elif selected_sources_param == 'left-center':
-        selected_sources = [s[0] for s in lang_sources if s[1] == 'Left-Center']
-    elif selected_sources_param == 'left':
-        selected_sources = [s[0] for s in lang_sources if s[1] == 'Left']
-    elif selected_sources_param == 'right':
-        selected_sources = [s[0] for s in lang_sources if s[1] == 'Right']
-    elif selected_sources_param == 'clear' or selected_sources_param == '':
-        selected_sources = []
-    elif selected_sources_param:
-        # Check if the param contains bias categories (left, center, right, etc.)
-        bias_categories = ['left', 'left-center', 'center', 'right-center', 'right']
-        requested_values = [v.strip().lower() for v in selected_sources_param.split(',')]
-        
-        # If any requested value is a bias category, convert to source names
-        if any(v in bias_categories for v in requested_values):
-            selected_sources = []
-            for val in requested_values:
-                if val == 'left':
-                    selected_sources.extend([s[0] for s in lang_sources if s[1] == 'Left'])
-                elif val == 'left-center':
-                    selected_sources.extend([s[0] for s in lang_sources if s[1] == 'Left-Center'])
-                elif val == 'center':
-                    selected_sources.extend([s[0] for s in lang_sources if s[1] == 'Center'])
-                elif val == 'right-center':
-                    selected_sources.extend([s[0] for s in lang_sources if s[1] == 'Right-Center'])
-                elif val == 'right':
-                    selected_sources.extend([s[0] for s in lang_sources if s[1] == 'Right'])
-        else:
-            # Treat as source names
-            selected_sources = requested_values
-    else:
-        # Default to ALL sources (same as sources=all) so "All" bias filter shows everything
-        selected_sources = [s[0] for s in lang_sources]
-    
+    selected_sources = _resolve_selected_sources_from_param(
+        selected_sources_param, lang_sources
+    )
+
+    # Apply per-user source exclusions from cookie
+    excluded_sources = _resolve_excluded_sources(request, lang_sources)
+    effective_sources = compute_effective_sources(selected_sources, excluded_sources)
+    has_source_exclusions = bool(excluded_sources)
+
     # Pre-fetch active topics once to avoid N+1 queries in get_related_topics
     active_topics = list(Topic.objects.filter(is_active=True))
 
@@ -157,18 +209,21 @@ def home(request):
     clusters = StoryCluster.objects.filter(
         language=language,
         source_count__gte=2,
-    ).select_related('representative_story')[:20]
+    ).select_related('representative_story').prefetch_related('stories')[:20]
 
     for cluster in clusters:
-        rep = cluster.representative_story
-        bias_info = lang_source_info.get(rep.source, ('Unknown', '#999', 'https://mediabiasfactcheck.com/'))
-        rep.bias_label = bias_info[0]
-        rep.bias_color = bias_info[1]
-        rep.bias_link = bias_info[2]
-        rep.is_paywalled = rep.source in PAYWALLED_SOURCES
-        rep.story_categories = rep.get_persisted_categories()
-        rep.covered_by_count = cluster.source_count
-        rep.covered_by_sources = cluster.sources
+        if has_source_exclusions:
+            # Show cluster if any of its sources is selected; pick an allowed rep
+            if not any(s in effective_sources for s in cluster.sources):
+                continue
+            rep = _select_cluster_representative(cluster, effective_sources, lang_source_info)
+        else:
+            rep = cluster.representative_story
+
+        if rep is None:
+            continue
+
+        _annotate_representative_story(rep, cluster, lang_source_info)
         most_covered_stories.append(rep)
 
     # Fetch active book recommendations for English categories
@@ -182,7 +237,7 @@ def home(request):
                 recommended_books[book.category] = []
             recommended_books[book.category].append(book)
             all_books.append(book)
-    
+
     # Fetch active poll for this language (at most 1, light presence)
     now = timezone.now()
     active_poll = Poll.objects.filter(
@@ -191,21 +246,21 @@ def home(request):
         status='active',
         ends_at__gt=now,
     ).order_by('?').first()
-    
+
     grouped = {}
     for cat_id, cat_name in category_names.items():
         if cat_id == 'most_covered':
             cat_stories = most_covered_stories
             total_stories = len(cat_stories)
         else:
-            cat_qs = _homepage_story_qs(cutoff, language, selected_sources, cat_id)
+            cat_qs = _homepage_story_qs(cutoff, language, effective_sources, cat_id)
             total_stories = cat_qs.count()
             cat_stories = list(
                 cat_qs.only(*STORY_LIST_FIELDS).prefetch_related('category_links')[:20]
             )
             for story in cat_stories:
                 _annotate_homepage_story(story, lang_source_info, active_topics)
-        
+
         import random
         if cat_id == 'all' and all_books:
             cat_books = list(all_books)
@@ -216,7 +271,7 @@ def home(request):
             if cat_books:
                 random.shuffle(cat_books)
                 cat_books = cat_books[:2]  # Max 2 books per category
-        
+
         # Send first 20 for initial render, include metadata for "load more"
         grouped[cat_id] = {
             'name': cat_name,
@@ -227,11 +282,19 @@ def home(request):
             'books': cat_books,
             'poll': active_poll if cat_id == 'all' else None,
         }
-    
+
+    source_choices = [
+        (name, bias, name not in excluded_sources)
+        for name, bias in lang_sources
+    ]
+    selected_count = sum(1 for _name, _bias, checked in source_choices if checked)
+    total_sources = len(source_choices)
+    effective_empty = not effective_sources
+
     return render(request, 'home.html', {
         'grouped': grouped,
         'sources': lang_sources,
-        'selected_sources': selected_sources,
+        'selected_sources': effective_sources,
         'default_sources': lang_default_sources,
         'language': language,
         'language_names': LANGUAGE_NAMES,
@@ -240,7 +303,38 @@ def home(request):
         'active_topics': active_topics,
         'active_poll': active_poll,
         'most_covered': most_covered_stories[:8],  # Top 8 for dedicated homepage section
+        'source_choices': source_choices,
+        'selected_count': selected_count,
+        'total_sources': total_sources,
+        'has_source_exclusions': has_source_exclusions,
+        'excluded_sources': sorted(excluded_sources),
+        'effective_empty': effective_empty,
     })
+
+
+# Cached variant: used by home() when no personal source exclusions are present.
+_home_cached = cache_page(60)(vary_on_headers('Accept-Language')(_home_impl))
+
+
+@ensure_csrf_cookie
+def home(request):
+    """Home page entry point.
+
+    When the request carries a non-empty, valid excluded_sources cookie we
+    bypass the shared cache so each user sees their personal source selection.
+    """
+    language = _resolve_ui_language(request)
+    if language not in SOURCES:
+        language = 'en'
+    lang_sources = SOURCES.get(language, SOURCES['en'])
+    excluded_sources = _resolve_excluded_sources(request, lang_sources)
+
+    if excluded_sources:
+        response = _home_impl(request)
+        response['Cache-Control'] = 'private, no-cache'
+        return response
+
+    return _home_cached(request)
 
 
 @cache_page(86400)  # 24 hours — robots.txt rarely changes
@@ -755,7 +849,7 @@ def load_more_stories(request):
     lang_sources = SOURCES.get(language, SOURCES['en'])
     lang_default_sources = DEFAULT_SOURCES.get(language, DEFAULT_SOURCES['en'])
     lang_source_info = LANGUAGE_SOURCE_INFO.get(language, LANGUAGE_SOURCE_INFO['en'])
-    
+
     if selected_sources_param == 'all':
         selected_sources = [s[0] for s in lang_sources]
     elif selected_sources_param in ['left', 'left-center', 'center', 'right-center', 'right']:
@@ -765,9 +859,13 @@ def load_more_stories(request):
     else:
         # Default to ALL sources (same as sources=all)
         selected_sources = [s[0] for s in lang_sources]
-    
+
+    excluded_raw = request.GET.get('excluded', '')
+    excluded_sources = parse_excluded_sources(excluded_raw, lang_sources)
+    effective_sources = compute_effective_sources(selected_sources, excluded_sources)
+
     cutoff = timezone.now() - timedelta(hours=24)
-    qs = _homepage_story_qs(cutoff, language, selected_sources, category_id)
+    qs = _homepage_story_qs(cutoff, language, effective_sources, category_id)
     total = qs.count()
     batch = list(qs.only(*STORY_LIST_FIELDS)[offset:offset + 50])
     
