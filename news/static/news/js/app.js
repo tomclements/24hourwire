@@ -53,16 +53,27 @@
     }
 
     /* ---------- Cookie banner ---------- */
+    function updateCookieBannerHeight() {
+        const banner = document.getElementById('cookie-banner');
+        const visible = banner && banner.style.display !== 'none' && getComputedStyle(banner).display !== 'none';
+        const height = visible ? banner.offsetHeight : 0;
+        document.documentElement.style.setProperty('--cookie-banner-height', height + 'px');
+        document.documentElement.classList.toggle('cookie-banner-visible', visible);
+    }
+
     function acceptCookies() {
         document.cookie = 'cookie_consent=accepted; max-age=31536000; path=/';
         const banner = document.getElementById('cookie-banner');
         if (banner) banner.style.display = 'none';
+        updateCookieBannerHeight();
     }
 
     if (!getCookie('cookie_consent')) {
         const banner = document.getElementById('cookie-banner');
         if (banner) banner.style.display = 'block';
     }
+    updateCookieBannerHeight();
+    window.addEventListener('resize', updateCookieBannerHeight);
 
     /* ---------- Language selector ---------- */
     function setPreferredLangCookie(code) {
