@@ -28,6 +28,9 @@
                 <button type="button" class="bias-pill center" data-action="bias-filter" data-bias="center" aria-pressed="false">{{ t.filter_center }}</button>
                 <button type="button" class="bias-pill right-center" data-action="bias-filter" data-bias="right-center" aria-pressed="false">{{ t.filter_right_center }}</button>
                 <button type="button" class="bias-pill right" data-action="bias-filter" data-bias="right" aria-pressed="false">{{ t.filter_right }}</button>
+                <button type="button" class="bias-pill sources-toggle" data-action="toggle-source-picker" aria-expanded="false" aria-controls="source-picker" id="source-picker-label">
+                    {{ t.sources_btn|default:"Sources" }}{% if has_source_exclusions %} ({{ selected_count }}/{{ total_sources }}){% endif %}
+                </button>
             </div>
         </div>
         <button class="scroll-btn right" data-action="scroll-filters" data-dir="right" aria-label="Scroll filters right">
@@ -35,6 +38,25 @@
                 <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
             </svg>
         </button>
+    </div>
+
+    <div id="source-picker" class="source-picker" role="region" aria-labelledby="source-picker-label" hidden>
+        <div class="source-picker-header">
+            <button type="button" class="source-picker-action" data-action="select-all-sources">{{ t.select_all|default:"Select all" }}</button>
+            <button type="button" class="source-picker-action" data-action="clear-all-sources">{{ t.clear_all|default:"Clear all" }}</button>
+        </div>
+        <div class="source-options">
+            {% for name, bias, checked in source_choices %}
+            <label class="source-option">
+                <input type="checkbox" name="source" value="{{ name }}" {% if checked %}checked{% endif %}>
+                <span class="source-option-name">{{ name }}</span>
+                <span class="bias-badge {{ bias|lower|cut:' ' }}">{{ bias }}</span>
+            </label>
+            {% endfor %}
+        </div>
+        <div class="source-picker-footer">
+            <button type="button" class="source-picker-apply" data-action="apply-sources">{{ t.apply|default:"Apply" }}</button>
+        </div>
     </div>
 
     <div class="tabs-wrapper">
@@ -46,7 +68,7 @@
         <div class="tabs-container">
             <nav class="tabs" role="tablist" aria-label="News categories">
                 {% for cat_id, cat_data in grouped.items %}
-                    {% if cat_data.stories|length > 0 and cat_id != 'most_covered' %}
+                    {% if cat_id != 'most_covered' and cat_data.stories|length > 0 or effective_empty %}
                     <a href="#{{ cat_id }}" class="tab {% if forloop.first %}active{% endif %}" role="tab" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}" data-action="show-category" data-category="{{ cat_id }}">
                         {{ cat_data.name }}
                         <span class="tab-count" id="tab-count-{{ cat_id }}" data-total="{{ cat_data.total_stories }}">{{ cat_data.total_stories }}</span>
@@ -78,7 +100,7 @@
         <div class="coverage-row">
             <div class="topics-scroll">
                 {% for topic in active_topics %}
-                <a href="{{ topic.get_absolute_url }}{% if language and language != 'all' %}?lang={{ language }}{% endif %}" class="topic-card">
+                <a href="{{ topic.get_absolute_url }}{% if language and language != 'all' and language != 'en' %}?lang={{ language }}{% endif %}" class="topic-card">
                     <div class="topic-card-title">{{ topic.title }}</div>
                     {% if topic.headline %}
                     <div class="topic-card-headline">{{ topic.headline }}</div>
@@ -132,14 +154,19 @@
     {% endif %}
 
     {% for cat_id, cat_data in grouped.items %}
-    {% if cat_data.stories|length > 0 and cat_id != 'most_covered' %}
+    {% if cat_id != 'most_covered' and cat_data.stories|length > 0 or effective_empty %}
     <section id="{{ cat_id }}" class="category-section" data-count="{{ cat_data.total_stories }}">
         <div class="category-header">
             <h2 class="category-title">{{ cat_data.name }}</h2>
             <span class="category-count" id="count-{{ cat_id }}">{{ cat_data.total_stories }} stories</span>
         </div>
 
-        {% if cat_data.stories %}
+        {% if effective_empty %}
+            <div class="empty-source-selection">
+                <p>{{ t.no_sources_selected|default:"No sources selected. Choose at least one source to see stories." }}</p>
+                <button type="button" class="source-picker-apply" data-action="select-all-sources-apply">{{ t.select_all|default:"Select all sources" }}</button>
+            </div>
+        {% elif cat_data.stories %}
             <div class="stories-grid" data-category="{{ cat_id }}" data-loaded="{{ cat_data.stories|length }}" data-total="{{ cat_data.total_stories }}">
                 {% for story in cat_data.stories %}
 

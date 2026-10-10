@@ -1426,7 +1426,7 @@ class TopicLanguageNameTests(TestCase):
         self.assertEqual(response.status_code, 200)
         # Should show "English" and "EspaÃ±ol", not "EN" and "ES"
         self.assertContains(response, 'English')
-        self.assertContains(response, 'EspaÃ±ol')
+        self.assertContains(response, 'Español')
         self.assertNotContains(response, '>EN<')
         self.assertNotContains(response, '>ES<')
 

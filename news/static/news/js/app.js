@@ -29,6 +29,7 @@
     const UI = readUI();
     const LANG = document.documentElement.getAttribute('data-lang') || 'en';
     const CSRF_TOKEN = getCookie('csrftoken') || '';
+    const EXCLUDED_SOURCES_COOKIE = 'excluded_sources';
 
     /* ---------- Theme ---------- */
     function toggleTheme() {
@@ -158,12 +159,13 @@
         const params = new URLSearchParams(window.location.search);
         const language = params.get('lang') || LANG;
         const sources = params.get('sources') || '';
+        const excluded = getExcludedSourcesCookie();
 
         btn.disabled = true;
         btn.textContent = 'Loading...';
 
         try {
-            const response = await fetch('/api/stories/?lang=' + encodeURIComponent(language) + '&category=' + encodeURIComponent(category) + '&offset=' + loaded + '&sources=' + encodeURIComponent(sources));
+            const response = await fetch('/api/stories/?lang=' + encodeURIComponent(language) + '&category=' + encodeURIComponent(category) + '&offset=' + loaded + '&sources=' + encodeURIComponent(sources) + (excluded ? '&excluded=' + encodeURIComponent(excluded) : ''));
             const data = await response.json();
 
             if (data.stories && data.stories.length > 0) {
@@ -407,6 +409,85 @@
             navigator.sendBeacon('/analytics/book-click/', data);
         }
     }
+
+    /* ---------- Source picker ---------- */
+    function toggleSourcePicker() {
+        const picker = document.getElementById('source-picker');
+        const btn = document.getElementById('source-picker-label');
+        if (!picker) return;
+        const hidden = picker.hidden;
+        picker.hidden = !hidden;
+        if (btn) {
+            btn.setAttribute('aria-expanded', String(hidden));
+        }
+    }
+
+    function closeSourcePicker() {
+        const picker = document.getElementById('source-picker');
+        const btn = document.getElementById('source-picker-label');
+        if (picker) {
+            picker.hidden = true;
+        }
+        if (btn) {
+            btn.setAttribute('aria-expanded', 'false');
+        }
+    }
+
+    function setExcludedSourcesCookie(value) {
+        if (!value) {
+            document.cookie = EXCLUDED_SOURCES_COOKIE + '=; Max-Age=0; path=/; SameSite=Lax';
+            return;
+        }
+        document.cookie = EXCLUDED_SOURCES_COOKIE + '=' + value + '; max-age=31536000; path=/; SameSite=Lax';
+    }
+
+    function getExcludedSourcesCookie() {
+        return getCookie(EXCLUDED_SOURCES_COOKIE) || '';
+    }
+
+    function applySources() {
+        const picker = document.getElementById('source-picker');
+        if (!picker) return;
+        const checkboxes = picker.querySelectorAll('input[name="source"]');
+        const allNames = [];
+        const unchecked = [];
+        checkboxes.forEach(box => {
+            allNames.push(box.value);
+            if (!box.checked) {
+                unchecked.push(box.value);
+            }
+        });
+        if (unchecked.length === 0) {
+            setExcludedSourcesCookie('');
+        } else {
+            const encoded = unchecked.map(name => encodeURIComponent(name)).join(',');
+            setExcludedSourcesCookie(encoded);
+        }
+        window.location.reload();
+    }
+
+    function selectAllSources() {
+        const picker = document.getElementById('source-picker');
+        if (!picker) return;
+        picker.querySelectorAll('input[name="source"]').forEach(box => { box.checked = true; });
+    }
+
+    function clearAllSources() {
+        const picker = document.getElementById('source-picker');
+        if (!picker) return;
+        picker.querySelectorAll('input[name="source"]').forEach(box => { box.checked = false; });
+    }
+
+    function selectAllSourcesApply() {
+        setExcludedSourcesCookie('');
+        window.location.reload();
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            closeSourcePicker();
+        }
+    });
 
     /* ---------- Bias filters ---------- */
     let selectedBiases = new Set(['all']);
@@ -666,6 +747,11 @@
             case 'accept-cookies': acceptCookies(); break;
             case 'close-different-angle': closeDifferentAngle(); break;
             case 'close-overlay': closeShareOverlay(); break;
+            case 'toggle-source-picker': toggleSourcePicker(); break;
+            case 'apply-sources': applySources(); break;
+            case 'select-all-sources': selectAllSources(); break;
+            case 'clear-all-sources': clearAllSources(); break;
+            case 'select-all-sources-apply': selectAllSourcesApply(); break;
             case 'share-twitter': shareToTwitter(el.getAttribute('data-title'), el.getAttribute('data-url')); break;
             case 'share-facebook': shareToFacebook(el.getAttribute('data-url')); break;
             case 'share-linkedin': shareToLinkedIn(el.getAttribute('data-url')); break;
