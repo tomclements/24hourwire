@@ -118,7 +118,8 @@ class Command(BaseCommand):
             if tweet and tweet.data:
                 # Mark as tweeted
                 story.tweeted = True
-                story.save(update_fields=['tweeted'])
+                story.tweeted_at = timezone.now()
+                story.save(update_fields=['tweeted', 'tweeted_at'])
                 
                 logger.info(f'Posted: {story.title[:50]}...')
                 self.stdout.write(self.style.SUCCESS(f'Posted: {story.title[:60]}...'))
