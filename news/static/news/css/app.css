@@ -60,7 +60,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-right: auto;
+            margin-inline-end: auto;
         }
         
         .header-logo img {
@@ -111,7 +111,7 @@
             
             .header-logo {
                 justify-content: center;
-                margin-right: 0;
+                margin-inline-end: 0;
             }
             
             .header-logo img {
@@ -139,7 +139,7 @@
                 flex: 1;
                 min-width: 0;
                 justify-content: flex-start;
-                margin-right: 0;
+                margin-inline-end: 0;
             }
             
             .header-logo-text {
@@ -183,12 +183,13 @@
             }
             
             .search-input {
-                padding: 8px 14px 8px 36px;
+                padding: 8px 14px;
+                padding-inline-start: 36px;
                 font-size: 0.85rem;
             }
             
             .search-icon {
-                left: 12px;
+                inset-inline-start: 12px;
             }
             
             .search-icon svg {
@@ -215,7 +216,8 @@
         
         .search-input {
             width: 100%;
-            padding: 10px 16px 10px 40px;
+            padding: 10px 16px;
+            padding-inline-start: 40px;
             border: 1px solid var(--border);
             border-radius: 24px;
             font-size: 0.9rem;
@@ -232,11 +234,36 @@
         
         .search-icon {
             position: absolute;
-            left: 14px;
+            inset-inline-start: 14px;
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-muted);
             pointer-events: none;
+        }
+
+        /* Phones: logo + title on row 1, search + language + theme on row 2.
+           Must come after the base .search-container rule to override it. */
+        @media (max-width: 640px) {
+            .header-top {
+                flex-wrap: wrap;
+                row-gap: 8px;
+            }
+
+            .header-logo {
+                flex: 1 1 auto;
+            }
+
+            .header-actions {
+                flex: 1 1 100%;
+                min-width: 0;
+            }
+
+            .search-container {
+                flex: 1 1 auto;
+                width: auto;
+                max-width: none;
+                min-width: 0;
+            }
         }
         
         .search-icon svg {
