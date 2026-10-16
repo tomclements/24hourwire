@@ -12,15 +12,17 @@ import json
 import os
 from datetime import datetime, timedelta
 from difflib import SequenceMatcher
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
-from django.db import OperationalError, connection
+from django.db import OperationalError, connection, DataError, IntegrityError, transaction
 from news.models import Story, StoryCategory, normalize_url, title_fingerprint, clean_title
 from news.sources_config import LANGUAGE_FEEDS, SUPPORTED_LANGUAGES
 from news.categorization import get_story_categories
 
 
 STATUS_FILE = 'feed_status.json'
+URL_MAX = Story._meta.get_field('url').max_length
+IMAGE_URL_MAX = Story._meta.get_field('image_url').max_length
 
 
 def persist_story_category_links(stories):
@@ -245,9 +247,18 @@ class Command(BaseCommand):
             self.safe_write(f"  {safe_name}...", ending=" ")
             logger.info(f'Fetching {safe_name} ({language})')
 
-            feed = self.fetch_feed(feed_url)
+            try:
+                feed = self.fetch_feed(feed_url)
+                entries = list(feed.entries[:25])
+            except OperationalError:
+                raise
+            except Exception as e:
+                logger.error(f'{safe_name} ({language}): feed failed: {e}')
+                self.failed_feeds.append(f'{safe_name} ({language})')
+                self.safe_write(self.style.ERROR("FAILED"))
+                continue
 
-            if not feed.entries:
+            if not entries:
                 logger.warning(f'{safe_name}: EMPTY')
                 self.safe_write(self.style.WARNING("EMPTY"))
                 continue
@@ -255,7 +266,11 @@ class Command(BaseCommand):
             source_count = 0
             to_create = []
             
-            for entry in feed.entries[:25]:  # Reduced from 30 to save memory/processing
+            for entry in entries:  # Reduced from 30 to save memory/processing
+                if len(entry.get('link', '')) > URL_MAX:
+                    self.skipped_oversized += 1
+                    logger.warning(f'{safe_name} ({language}): skipped oversized url {entry.get("link", "")[:120]}...')
+                    continue
                 url = normalize_url(entry.get('link', ''))
                 url_hash = hashlib.sha256(url.encode()).hexdigest()
 
@@ -326,6 +341,8 @@ class Command(BaseCommand):
 
                 # Extract image URL from RSS entry
                 image_url = extract_image_url(entry)
+                if image_url and len(image_url) > IMAGE_URL_MAX:
+                    image_url = ''
 
                 cats = get_story_categories(title, language, source_name) or ['world']
                 story = Story(
@@ -358,14 +375,12 @@ class Command(BaseCommand):
                 
                 # Insert in batches
                 if len(to_create) >= 25:
-                    Story.objects.bulk_create(to_create, ignore_conflicts=True)
-                    persist_story_category_links(to_create)
+                    self.save_batch(to_create, safe_name, language)
                     to_create = []
 
             # Insert remaining stories for this source
             if to_create:
-                Story.objects.bulk_create(to_create, ignore_conflicts=True)
-                persist_story_category_links(to_create)
+                self.save_batch(to_create, safe_name, language)
 
             # Safe logging for Unicode source names
             try:
@@ -381,6 +396,16 @@ class Command(BaseCommand):
                 gc.collect()
 
         return total_new, total_dupes, url_dupes, title_dupes, fuzzy_dupes
+
+    def save_batch(self, stories, safe_name, language):
+        """Insert one batch atomically; log and continue on bad data."""
+        try:
+            with transaction.atomic():
+                Story.objects.bulk_create(stories, ignore_conflicts=True)
+                persist_story_category_links(stories)
+        except (DataError, IntegrityError) as e:
+            logger.error(f'{safe_name} ({language}): batch insert failed: {e}')
+            self.failed_feeds.append(f'{safe_name} ({language})')
 
     @retry_on_db_error(max_retries=3, delay=2)
     def clean_old_stories(self):
@@ -420,7 +445,7 @@ class Command(BaseCommand):
         if not self.check_db_connection():
             logger.error('Database connection failed - cannot proceed with fetch')
             self.safe_write(self.style.ERROR("ERROR: Database connection failed. Cannot fetch news."))
-            return
+            raise CommandError('Database connection failed')
 
         try:
             deleted_count = self.clean_old_stories()
@@ -452,6 +477,8 @@ class Command(BaseCommand):
         url_dupes = 0
         title_dupes = 0
         fuzzy_dupes = 0
+        self.failed_feeds = []
+        self.skipped_oversized = 0
 
         if language == 'all':
             languages = list(LANGUAGE_FEEDS.keys())
@@ -474,3 +501,8 @@ class Command(BaseCommand):
             f"\nFetch complete: {total_new} new stories "
             f"({total_dupes} duplicates skipped: {url_dupes} url, {title_dupes} title, {fuzzy_dupes} similar)"
         ))
+        if self.skipped_oversized:
+            self.safe_write(f"Skipped {self.skipped_oversized} stories with oversized url")
+        if self.failed_feeds:
+            logger.error(f'Failed feeds: {", ".join(self.failed_feeds)}')
+            self.safe_write(self.style.WARNING(f"Failed feeds: {', '.join(self.failed_feeds)}"))

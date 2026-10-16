@@ -10,12 +10,14 @@ import sys
 import re
 from datetime import datetime, timedelta
 import inspect
+from io import StringIO
 from unittest.mock import patch, MagicMock
 from django.test import TestCase, Client, RequestFactory
 from django.utils import timezone
 from django.urls import reverse
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, transaction, DataError
 from django.http import JsonResponse
+from django.core.management import call_command
 
 from django.contrib.auth.models import User
 from news.models import Story, StoryCategory, StoryCluster, Topic, Poll, PollVote, AnalyticsEvent, title_fingerprint, normalize_url, build_clusters, clean_title
@@ -3582,4 +3584,95 @@ class TopicMatchingPrecisionTests(TestCase):
         )
         s = self._story('Shipping chaos near Hormuz raises oil fears', suffix='leg')
         self.assertIn(s, list(topic.get_stories()))
+
+
+class FetchNewsCommandTests(TestCase):
+    """Tests for fetch_news management command oversize-url and isolation handling."""
+
+    def _make_entry(self, link, title, summary='', image_url=None, published=None):
+        """Build a feedparser-like entry for mocking."""
+        pub = published if published is not None else timezone.now()
+
+        class Entry:
+            def __init__(self):
+                self.link = link
+                self.title = title
+                self.summary = summary
+                self.published_parsed = pub.timetuple()
+                if image_url:
+                    self.media_thumbnail = [{'url': image_url, 'width': 100, 'height': 100}]
+                else:
+                    self.media_thumbnail = []
+                self.media_content = []
+                self.enclosures = []
+
+            def get(self, key, default=None):
+                return getattr(self, key, default)
+
+        return Entry()
+
+    def _make_feed(self, entries):
+        """Build a feedparser-like feed for mocking."""
+        class Feed:
+            pass
+        f = Feed()
+        f.entries = entries
+        return f
+
+    def test_oversized_url_skipped_others_inserted(self):
+        """An entry with a URL over Story.url max_length is skipped; others in the feed are saved."""
+        from news.management.commands.fetch_news import Command
+        url_max = Story._meta.get_field('url').max_length
+        long_url = 'https://example.com/' + 'x' * url_max
+        normal_url = 'https://example.com/normal'
+        entries = [
+            self._make_entry(long_url, 'Oversized URL story'),
+            self._make_entry(normal_url, 'Normal story'),
+        ]
+        feeds = {'en': [('Test Source', 'http://test.feed')]}
+        with patch.dict('news.management.commands.fetch_news.LANGUAGE_FEEDS', feeds, clear=True):
+            with patch.object(Command, 'fetch_feed', return_value=self._make_feed(entries)):
+                call_command('fetch_news', '--language', 'all')
+        self.assertFalse(Story.objects.filter(url=long_url).exists())
+        self.assertTrue(Story.objects.filter(url=normal_url).exists())
+
+    def test_oversized_image_url_stored_empty(self):
+        """An oversized image_url is blanked and the story is still inserted."""
+        from news.management.commands.fetch_news import Command
+        image_max = Story._meta.get_field('image_url').max_length
+        normal_url = 'https://example.com/normal'
+        long_image = 'https://example.com/img/' + 'x' * image_max
+        entries = [self._make_entry(normal_url, 'Story with big image', image_url=long_image)]
+        feeds = {'en': [('Test Source', 'http://test.feed')]}
+        with patch.dict('news.management.commands.fetch_news.LANGUAGE_FEEDS', feeds, clear=True):
+            with patch.object(Command, 'fetch_feed', return_value=self._make_feed(entries)):
+                call_command('fetch_news', '--language', 'all')
+        story = Story.objects.get(url=normal_url)
+        self.assertEqual(story.image_url, '')
+
+    def test_feed_failure_does_not_stop_next_feed_or_language(self):
+        """A feed that raises DataError is isolated; later feeds/languages run and command exits 0."""
+        from news.management.commands.fetch_news import Command
+
+        class BadFeed:
+            @property
+            def entries(self):
+                raise DataError('parse error')
+
+        def fetch_feed(url):
+            if 'bad' in url:
+                return BadFeed()
+            return self._make_feed([self._make_entry('https://example.com/good', 'Good story')])
+
+        feeds = {
+            'en': [('Bad Source', 'http://bad.feed'), ('Good Source', 'http://good.feed')],
+            'es': [('Good ES Source', 'http://good.es.feed')],
+        }
+        out = StringIO()
+        with patch.dict('news.management.commands.fetch_news.LANGUAGE_FEEDS', feeds, clear=True):
+            with patch.object(Command, 'fetch_feed', side_effect=fetch_feed):
+                call_command('fetch_news', '--language', 'all', stdout=out)
+        output = out.getvalue()
+        self.assertTrue(Story.objects.filter(url='https://example.com/good').exists())
+        self.assertIn('Failed feeds', output)
 
