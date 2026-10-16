@@ -49,3 +49,9 @@ def language_name(code):
     Usage: {{ lang|language_name }}
     """
     return LANGUAGE_NAMES.get(code, code)
+
+
+@register.filter
+def topic_translation(topic, language):
+    """Return the topic's translated headline/description for language."""
+    return topic.get_translation(language)

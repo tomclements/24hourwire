@@ -448,6 +448,15 @@ UI_STRINGS = {
     'copy_link': 'Copier le lien',
     'copied': 'Copié !',
     'close': 'Fermer',
+    'sources_btn': 'Sources',
+    'select_all': 'Tout sélectionner',
+    'apply': 'Appliquer',
+    'no_sources_selected': 'Aucune source sélectionnée. Choisissez au moins une source pour voir les articles.',
+    'sources_selected': '{count}/{total} sources',
+    'ongoing_coverage': 'Couverture en cours',
+    'most_covered_heading': 'Les plus couverts par les sources',
+    'read_coverage': 'Lire la couverture →',
+    'site_title': '24HourWire | Les dernières actualités sous tous les angles',
 }
 
 PAYWALLED_SOURCES = {

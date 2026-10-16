@@ -406,6 +406,15 @@ UI_STRINGS = {
     'copy_link': 'Копировать ссылку',
     'copied': 'Скопировано!',
     'close': 'Закрыть',
+    'sources_btn': 'Источники',
+    'select_all': 'Выбрать все',
+    'apply': 'Применить',
+    'no_sources_selected': 'Источники не выбраны. Выберите хотя бы один источник, чтобы видеть истории.',
+    'sources_selected': '{count}/{total} источников',
+    'ongoing_coverage': 'Актуальное освещение',
+    'most_covered_heading': 'Самое освещаемое в источниках',
+    'read_coverage': 'Читать освещение →',
+    'site_title': '24HourWire | Последние новости со всех сторон',
 }
 
 PAYWALLED_SOURCES = {

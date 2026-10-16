@@ -481,12 +481,14 @@
         const picker = document.getElementById('source-picker');
         if (!picker) return;
         picker.querySelectorAll('input[name="source"]').forEach(box => { box.checked = true; });
+        updateSourceFilterUI();
     }
 
     function clearAllSources() {
         const picker = document.getElementById('source-picker');
         if (!picker) return;
         picker.querySelectorAll('input[name="source"]').forEach(box => { box.checked = false; });
+        updateSourceFilterUI();
     }
 
     function selectAllSourcesApply() {
@@ -501,7 +503,7 @@
     });
 
     /* ---------- Bias filters ---------- */
-    let selectedBiases = new Set(['all']);
+    let selectedBiases = new Set();
 
     function toggleBiasFilter(bias) {
         if (bias === 'all') {
@@ -531,27 +533,74 @@
         });
     }
 
+    function updateSourceFilterUI() {
+        const picker = document.getElementById('source-picker');
+        const label = document.getElementById('filter-label');
+        if (!picker || !label) return;
+        const checkboxes = Array.from(picker.querySelectorAll('input[name="source"]'));
+        const total = checkboxes.length;
+        const checked = checkboxes.filter(box => box.checked).length;
+        const allText = label.getAttribute('data-all') || 'All sources';
+        const noneText = label.getAttribute('data-none') || 'No sources selected';
+        const someText = label.getAttribute('data-some') || '{count}/{total} sources';
+
+        const biasPills = Array.from(document.querySelectorAll('.bias-pill.active:not([data-bias="all"])'));
+        const activeFilters = document.getElementById('active-filters');
+        if (activeFilters) {
+            let text;
+            if (biasPills.length && checked > 0) {
+                text = biasPills.map(p => p.textContent.trim()).join(', ');
+            } else if (checked === total && total > 0) {
+                text = allText;
+            } else if (checked === 0) {
+                text = noneText;
+            } else {
+                text = someText.replace('{count}', String(checked)).replace('{total}', String(total));
+            }
+            activeFilters.textContent = text;
+        }
+
+        const allPill = document.querySelector('.bias-pill[data-bias="all"]');
+        if (allPill) {
+            const allActive = checked === total && total > 0 && biasPills.length === 0;
+            allPill.classList.toggle('active', allActive);
+            allPill.setAttribute('aria-pressed', String(allActive));
+        }
+
+        const pickerLabel = document.getElementById('source-picker-label');
+        if (pickerLabel) {
+            const defaultText = pickerLabel.getAttribute('data-default-text') || 'Sources';
+            pickerLabel.textContent = checked === total && total > 0
+                ? defaultText
+                : defaultText + ' (' + checked + '/' + total + ')';
+        }
+    }
+
     function initBiasFilters() {
         const params = new URLSearchParams(window.location.search);
         const sources = params.get('sources');
-        if (sources && sources !== 'all') {
-            selectedBiases.clear();
-            sources.split(',').forEach(bias => selectedBiases.add(bias.trim()));
+        const picker = document.getElementById('source-picker');
+        const checkboxes = picker ? Array.from(picker.querySelectorAll('input[name="source"]')) : [];
+        const total = checkboxes.length;
+        const checked = checkboxes.filter(box => box.checked).length;
+
+        selectedBiases = new Set();
+        if (sources) {
+            if (sources === 'all') {
+                if (checked === total && total > 0) {
+                    selectedBiases.add('all');
+                }
+            } else {
+                sources.split(',').forEach(bias => {
+                    const b = bias.trim();
+                    if (b) selectedBiases.add(b);
+                });
+            }
+        } else if (checked === total && total > 0) {
+            selectedBiases.add('all');
         }
         updateBiasButtons();
-        const label = document.getElementById('active-filters');
-        if (label) {
-            const names = {
-                'left': 'Left',
-                'left-center': 'Left-Center',
-                'center': 'Center',
-                'right-center': 'Right-Center',
-                'right': 'Right'
-            };
-            label.textContent = selectedBiases.has('all')
-                ? 'All Sources'
-                : Array.from(selectedBiases).map(b => names[b] || b).join(', ');
-        }
+        updateSourceFilterUI();
     }
 
     /* ---------- Different Angle ---------- */
@@ -780,6 +829,13 @@
 
     initBiasFilters();
     loadTheme();
+
+    const sourcePicker = document.getElementById('source-picker');
+    if (sourcePicker) {
+        sourcePicker.querySelectorAll('input[name="source"]').forEach(box => {
+            box.addEventListener('change', updateSourceFilterUI);
+        });
+    }
 
     const modal = document.getElementById('different-angle-modal');
     if (modal) {

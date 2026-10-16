@@ -408,6 +408,15 @@ UI_STRINGS = {
     'copy_link': 'Bağlantıyı kopyala',
     'copied': 'Kopyalandı!',
     'close': 'Kapat',
+    'sources_btn': 'Kaynaklar',
+    'select_all': 'Tümünü seç',
+    'apply': 'Uygula',
+    'no_sources_selected': 'Hiç kaynak seçilmedi. Haberleri görmek için en az bir kaynak seçin.',
+    'sources_selected': '{count}/{total} kaynak',
+    'ongoing_coverage': 'Devam eden haberler',
+    'most_covered_heading': 'Kaynaklar arasında en çok kapsanan',
+    'read_coverage': 'Haberi oku →',
+    'site_title': '24HourWire | Tüm Açılardan Son Haberler',
 }
 
 PAYWALLED_SOURCES = {

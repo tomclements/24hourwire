@@ -377,6 +377,15 @@ UI_STRINGS = {
     'copy_link': '复制链接',
     'copied': '已复制！',
     'close': '关闭',
+    'sources_btn': '来源',
+    'select_all': '全选',
+    'apply': '应用',
+    'no_sources_selected': '未选择来源。请至少选择一个来源以查看新闻。',
+    'sources_selected': '{count}/{total} 来源',
+    'ongoing_coverage': '持续报道',
+    'most_covered_heading': '各来源报道最多',
+    'read_coverage': '阅读报道 →',
+    'site_title': '24HourWire | 来自各个角度的最新新闻',
 }
 
 PAYWALLED_SOURCES = {

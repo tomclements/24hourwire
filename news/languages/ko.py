@@ -407,6 +407,15 @@ UI_STRINGS = {
     'copy_link': '링크 복사',
     'copied': '복사됨!',
     'close': '닫기',
+    'sources_btn': '출처',
+    'select_all': '모두 선택',
+    'apply': '적용',
+    'no_sources_selected': '선택된 출처가 없습니다. 뉴스를 보려면 최소 한 개의 출처를 선택하세요.',
+    'sources_selected': '{count}/{total} 출처',
+    'ongoing_coverage': '진행 중인 보도',
+    'most_covered_heading': '출처별 가장 많이 보도된 뉴스',
+    'read_coverage': '보도 읽기 →',
+    'site_title': '24HourWire | 모든 각도에서 본 최신 뉴스',
 }
 
 PAYWALLED_SOURCES = {

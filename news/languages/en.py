@@ -642,6 +642,11 @@ UI_STRINGS = {
     'copy_link': 'Copy Link',
     'copied': 'Copied!',
     'close': 'Close',
+    'sources_selected': '{count}/{total} sources',
+    'ongoing_coverage': 'Ongoing Coverage',
+    'most_covered_heading': 'Most Covered Across Sources',
+    'read_coverage': 'Read coverage →',
+    'site_title': '24HourWire | The Latest News from All Angles',
 }
 
 PAYWALLED_SOURCES = {
