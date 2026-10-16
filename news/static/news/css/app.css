@@ -1836,8 +1836,13 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             gap: 16px;
+        }
+
+        #cookie-banner > div > span {
+            flex: 1 1 auto;
+            min-width: 0;
         }
 
         html.cookie-banner-visible body {
@@ -1858,18 +1863,18 @@
         @media (max-width: 640px) {
             #cookie-banner {
                 padding: 6px 12px;
-                font-size: 0.8rem;
-                line-height: 1.3;
+                font-size: 0.75rem;
+                line-height: 1.25;
             }
 
             #cookie-banner > div {
-                justify-content: center;
+                flex-wrap: nowrap;
                 gap: 8px;
             }
 
             #cookie-banner button {
-                padding: 6px 12px;
-                font-size: 0.85rem;
+                padding: 5px 10px;
+                font-size: 0.75rem;
             }
         }
         

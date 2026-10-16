@@ -388,9 +388,9 @@ CATEGORY_KEYWORDS_WEIGHTED = {
 UI_STRINGS = {
     'subtitle': 'Choisissez votre biais | Services de presse et autres flux | Dernières 24 heures',
     'how_it_works': 'Comment ça marche',
-    'privacy_text': 'Nous respectons votre vie privée. Ce site utilise des publicités contextuelles (pas de cookies de suivi) et affiche titres/résumés selon le fair use.',
-    'privacy_link': 'Politique de confidentialité',
-    'got_it': 'Compris',
+    'privacy_text': 'Publicités contextuelles uniquement, pas de cookies de traçage.',
+    'privacy_link': 'Confidentialité',
+    'got_it': 'OK',
     'sources': 'Sources :',
     'center_default': 'Sources centrales (par défaut)',
     'all_sources': 'Toutes les sources',
@@ -457,6 +457,20 @@ UI_STRINGS = {
     'most_covered_heading': 'Les plus couverts par les sources',
     'read_coverage': 'Lire la couverture →',
     'site_title': '24HourWire | Les dernières actualités sous tous les angles',
+    'footer_about_title': 'À propos de 24HourWire',
+    'footer_about_text': 'Agrégation d\'actualités de tout l\'échiquier politique pour vous donner l\'image complète. Mis à jour toutes les 15 minutes.',
+    'footer_contact': 'Contact',
+    'footer_x': '@24HourWire sur X',
+    'footer_community': 'Communauté',
+    'footer_polls': 'Sondages',
+    'footer_legal': 'Mentions légales',
+    'footer_terms_of_service': 'Conditions d\'utilisation',
+    'footer_copyright_policy': 'Politique de droits d\'auteur',
+    'footer_news_copy': 'Contenu d\'actualité © éditeurs respectifs.',
+    'footer_rss_feeds': 'Flux RSS',
+    'footer_admin_login': 'Connexion admin',
+    'footer_logout': 'Déconnexion',
+    'footer_privacy_policy': 'Politique de confidentialité',
 }
 
 PAYWALLED_SOURCES = {

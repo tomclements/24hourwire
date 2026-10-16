@@ -110,42 +110,42 @@
     <footer>
         <div class="footer-content">
             <div class="footer-section">
-                <h4>About 24HourWire</h4>
-                <p>Aggregating news from across the political spectrum to give you the full picture. Updated every 15 minutes.</p>
-                <p style="margin-top: 12px;"><a href="/about/?lang={{ language }}">Learn how it works</a></p>
+                <h4>{{ t.footer_about_title }}</h4>
+                <p>{{ t.footer_about_text }}</p>
+                <p style="margin-top: 12px;"><a href="/about/?lang={{ language }}">{{ t.how_it_works }}</a></p>
             </div>
 
             <div class="footer-section">
-                <h4>Sources</h4>
+                <h4>{{ t.sources_btn }}</h4>
                 <p>{{ selected_sources|join:", " }}</p>
             </div>
 
             <div class="footer-section">
-                <h4>Contact</h4>
+                <h4>{{ t.footer_contact }}</h4>
                 <p><a href="mailto:admin@24hourwire.news">admin@24hourwire.news</a></p>
-                <p><a href="https://x.com/24HourWire" target="_blank" rel="noopener">@24HourWire on X</a></p>
+                <p><a href="https://x.com/24HourWire" target="_blank" rel="noopener">{{ t.footer_x }}</a></p>
             </div>
 
             <div class="footer-section">
-                <h4>Community</h4>
-                <p><a href="/polls/?lang={{ language }}">Polls</a></p>
+                <h4>{{ t.footer_community }}</h4>
+                <p><a href="/polls/?lang={{ language }}">{{ t.footer_polls }}</a></p>
             </div>
 
             <div class="footer-section">
-                <h4>Legal</h4>
-                <p><a href="/terms/?lang={{ language }}">Terms of Service</a></p>
-                <p><a href="/privacy/?lang={{ language }}">Privacy Policy</a></p>
-                <p><a href="/copyright/?lang={{ language }}">Copyright Policy</a></p>
+                <h4>{{ t.footer_legal }}</h4>
+                <p><a href="/terms/?lang={{ language }}">{{ t.footer_terms_of_service }}</a></p>
+                <p><a href="/privacy/?lang={{ language }}">{{ t.footer_privacy_policy }}</a></p>
+                <p><a href="/copyright/?lang={{ language }}">{{ t.footer_copyright_policy }}</a></p>
             </div>
         </div>
 
         <div class="footer-bottom">
-            <p>&copy; 2026 24HourWire. News content &copy; respective publishers. | <a href="{% url 'feeds' %}?lang={{ language }}">RSS Feeds</a></p>
+            <p>&copy; 2026 24HourWire. {{ t.footer_news_copy }} | <a href="{% url 'feeds' %}?lang={{ language }}">{{ t.footer_rss_feeds }}</a></p>
             <p class="admin-link">
                 {% if user.is_authenticated %}
-                    {{ user.username }} | <a href="/logout/">Logout</a>
+                    {{ user.username }} | <a href="/logout/">{{ t.footer_logout }}</a>
                 {% else %}
-                    <a href="/login/">Admin Login</a>
+                    <a href="/login/">{{ t.footer_admin_login }}</a>
                 {% endif %}
             </p>
         </div>
