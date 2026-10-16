@@ -50,7 +50,7 @@
             <label class="source-option">
                 <input type="checkbox" name="source" value="{{ name }}" {% if checked %}checked{% endif %}>
                 <span class="source-option-name">{{ name }}</span>
-                <span class="bias-badge {{ bias|lower|cut:' ' }}">{{ bias }}</span>
+                <span class="bias-badge {{ bias|lower|cut:' ' }}">{{ bias|bias_label:language }}</span>
             </label>
             {% endfor %}
         </div>
@@ -137,9 +137,9 @@
                     </div>
                     <div class="story-meta">
                         <span class="source-tag">{{ story.source }}</span>
-                        <span class="covered-badge">{{ story.covered_by_count }} sources</span>
-                        <span class="bias-badge {{ story.bias_class|default:'center' }}">{{ story.bias_label }}</span>
-                        <span class="time-badge">{{ story.published|timesince }} {{ t.ago }}</span>
+                        <span class="covered-badge"><bdi>{{ story.covered_by_count|source_count_label:language }}</bdi></span>
+                        <span class="bias-badge {{ story.bias_class|default:'center' }}">{{ story.bias_label|bias_label:language }}</span>
+                        <span class="time-badge"><bdi dir="auto">{{ story.published|local_timesince:language }}</bdi></span>
                     </div>
                     <div class="story-actions" style="margin-top: 12px;">
                         <div class="story-links">
@@ -230,12 +230,12 @@
                         <span class="source-tag">{{ story.source }}{% if story.is_paywalled %}<span class="paywall-badge" title="{{ t.paywall_title }}">$</span>{% endif %}</span>
 
                         {% if story.covered_by_count %}
-                        <span class="covered-badge">{{ story.covered_by_count }} sources</span>
+                        <span class="covered-badge"><bdi>{{ story.covered_by_count|source_count_label:language }}</bdi></span>
                         {% endif %}
 
-                        <span class="bias-badge {{ story.bias_class|default:'center' }}">{{ story.bias_label }}</span>
+                        <span class="bias-badge {{ story.bias_class|default:'center' }}">{{ story.bias_label|bias_label:language }}</span>
 
-                        <span class="time-badge" itemprop="datePublished" content="{{ story.published|date:'c' }}">{{ story.published|timesince }} {{ t.ago }}</span>
+                        <span class="time-badge" itemprop="datePublished" content="{{ story.published|date:'c' }}"><bdi dir="auto">{{ story.published|local_timesince:language }}</bdi></span>
                     </div>
 
                     {% with story.get_clean_excerpt as clean_excerpt %}
@@ -247,7 +247,9 @@
                     {% if story.related_topics %}
                     <div class="topic-pills">
                         {% for topic in story.related_topics %}
-                        <a href="{{ topic.get_absolute_url }}?lang={{ language }}" class="topic-pill">{{ topic.title }}</a>
+                        {% with topic_trans=topic|topic_translation:language %}
+                        <a href="{{ topic.get_absolute_url }}?lang={{ language }}" class="topic-pill">{{ topic_trans.title }}</a>
+                        {% endwith %}
                         {% endfor %}
                     </div>
                     {% endif %}

@@ -2,37 +2,37 @@
 {% load static %}
 {% load news_extras %}
 
-{% block title %}{{ topic.meta_title|default:topic_translation.title }} | 24HourWire{% endblock %}
-{% block description %}{{ topic.meta_description|default:topic_translation.description|truncatechars:200 }}{% endblock %}
+{% block title %}{{ topic|topic_meta_title:language }}{% endblock %}
+{% block description %}{{ topic|topic_meta_description:language|truncatechars:200 }}{% endblock %}
 
 {% block head_meta %}
     <meta name="robots" content="index, follow">
 
-    <meta property="og:title" content="{{ topic.meta_title|default:topic_translation.title }} | 24HourWire">
-    <meta property="og:description" content="{{ topic.meta_description|default:topic_translation.description|truncatechars:200 }}">
+    <meta property="og:title" content="{{ topic|topic_meta_title:language }}">
+    <meta property="og:description" content="{{ topic|topic_meta_description:language|truncatechars:200 }}">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://24hourwire.news{{ topic.get_absolute_url }}">
     <meta property="og:site_name" content="24HourWire">
     {% if topic.image_url %}
     <meta property="og:image" content="{{ topic.image_url }}">
-    <meta property="og:image:alt" content="{{ topic.title }}">
+    <meta property="og:image:alt" content="{{ topic_translation.title }}">
     {% else %}
     <meta property="og:image" content="https://24hourwire.news{% static 'news/images/logo.jpg' %}">
-    <meta property="og:image:alt" content="24HourWire - {{ topic.title }}">
+    <meta property="og:image:alt" content="24HourWire - {{ topic_translation.title }}">
     {% endif %}
     <meta property="og:locale" content="en_US">
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="@24HourWire">
     <meta name="twitter:creator" content="@24HourWire">
-    <meta name="twitter:title" content="{{ topic.meta_title|default:topic_translation.title }} | 24HourWire">
-    <meta name="twitter:description" content="{{ topic.meta_description|default:topic_translation.description|truncatechars:200 }}">
+    <meta name="twitter:title" content="{{ topic|topic_meta_title:language }}">
+    <meta name="twitter:description" content="{{ topic|topic_meta_description:language|truncatechars:200 }}">
     {% if topic.image_url %}
     <meta name="twitter:image" content="{{ topic.image_url }}">
-    <meta name="twitter:image:alt" content="{{ topic.title }}">
+    <meta name="twitter:image:alt" content="{{ topic_translation.title }}">
     {% else %}
     <meta name="twitter:image" content="https://24hourwire.news{% static 'news/images/logo.jpg' %}">
-    <meta name="twitter:image:alt" content="24HourWire - {{ topic.title }}">
+    <meta name="twitter:image:alt" content="24HourWire - {{ topic_translation.title }}">
     {% endif %}
 
     <link rel="canonical" href="https://24hourwire.news{{ topic.get_absolute_url }}">
@@ -164,8 +164,8 @@
 
             <div class="story-meta">
                 <span class="source-tag">{{ story.source }}</span>
-                <span class="bias-badge {{ story.bias_class }}">{{ story.bias_label }}</span>
-                <span class="time-badge" itemprop="datePublished" content="{{ story.published|date:'c' }}">{{ story.published|timesince }} {{ t.ago }}</span>
+                <span class="bias-badge {{ story.bias_class }}">{{ story.bias_label|bias_label:language }}</span>
+                <span class="time-badge" itemprop="datePublished" content="{{ story.published|date:'c' }}"><bdi dir="auto">{{ story.published|local_timesince:language }}</bdi></span>
             </div>
 
             {% with story.get_clean_excerpt as clean_excerpt %}
