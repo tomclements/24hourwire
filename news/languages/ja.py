@@ -399,6 +399,15 @@ UI_STRINGS = {
     'copy_link': 'リンクをコピー',
     'copied': 'コピーしました！',
     'close': '閉じる',
+    'sources_btn': 'ソース',
+    'select_all': 'すべて選択',
+    'apply': '適用',
+    'no_sources_selected': 'ソースが選択されていません。ニュースを表示するには最低1つのソースを選んでください。',
+    'sources_selected': '{count}/{total} ソース',
+    'ongoing_coverage': '継続的な報道',
+    'most_covered_heading': '各ソースで最も報じられたニュース',
+    'read_coverage': '報道を読む →',
+    'site_title': '24HourWire | あらゆる角度からの最新ニュース',
 }
 
 PAYWALLED_SOURCES = {

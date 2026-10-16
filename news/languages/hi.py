@@ -383,6 +383,15 @@ UI_STRINGS = {
     'copy_link': 'लिंक कॉपी करें',
     'copied': 'कॉपी किया गया!',
     'close': 'बंद करें',
+    'sources_btn': 'स्रोत',
+    'select_all': 'सभी चुनें',
+    'apply': 'लागू करें',
+    'no_sources_selected': 'कोई स्रोत नहीं चुना गया। समाचार देखने के लिए कम से कम एक स्रोत चुनें।',
+    'sources_selected': '{count}/{total} स्रोत',
+    'ongoing_coverage': 'निरंतर कवरेज',
+    'most_covered_heading': 'स्रोतों में सबसे अधिक कवर',
+    'read_coverage': 'कवरेज पढ़ें →',
+    'site_title': '24HourWire | हर कोण से ताज़ा ख़बरें',
 }
 
 PAYWALLED_SOURCES = set()

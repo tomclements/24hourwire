@@ -291,6 +291,16 @@ def _home_impl(request):
     total_sources = len(source_choices)
     effective_empty = not effective_sources
 
+    strings = UI_STRINGS.get(language, UI_STRINGS['en'])
+    if selected_count == total_sources:
+        filter_label_text = strings.get('all_sources', 'All sources')
+    elif selected_count == 0:
+        filter_label_text = strings.get('no_sources_selected', 'No sources selected')
+    else:
+        filter_label_text = strings.get('sources_selected', '{count}/{total} sources').format(
+            count=selected_count, total=total_sources
+        )
+
     return render(request, 'home.html', {
         'grouped': grouped,
         'sources': lang_sources,
@@ -298,7 +308,7 @@ def _home_impl(request):
         'default_sources': lang_default_sources,
         'language': language,
         'language_names': LANGUAGE_NAMES,
-        't': UI_STRINGS.get(language, UI_STRINGS['en']),
+        't': strings,
         'source_filter': selected_sources_param or 'default',
         'active_topics': active_topics,
         'active_poll': active_poll,
@@ -309,6 +319,7 @@ def _home_impl(request):
         'has_source_exclusions': has_source_exclusions,
         'excluded_sources': sorted(excluded_sources),
         'effective_empty': effective_empty,
+        'filter_label_text': filter_label_text,
     })
 
 

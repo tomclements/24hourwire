@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="{{ language }}" data-lang="{{ language }}">
+<html lang="{{ language }}" data-lang="{{ language }}" dir="{% if language == 'ar' %}rtl{% else %}ltr{% endif %}">
 {% load static %}
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}24HourWire | The Latest News from All Angles{% endblock %}</title>
+    <title>{% block title %}{{ t.site_title|default:"24HourWire | The Latest News from All Angles" }}{% endblock %}</title>
     <meta name="description" content="{% block description %}Get the latest news from all angles with 24HourWire. Unbiased news aggregator showing current events from multiple perspectives. 24 hour news coverage from diverse sources.{% endblock %}">
 
     <script src="{% static 'news/js/theme.js' %}"></script>
@@ -154,7 +154,7 @@
     <div id="cookie-banner">
         <div>
             <span>{{ t.privacy_text }} <a href="{% url 'privacy' %}?lang={{ language }}" style="color: var(--accent);">{{ t.privacy_link }}</a></span>
-            <button data-action="accept-cookies" style="background: var(--primary); color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: var(--radius); font-weight: 500;">
+            <button data-action="accept-cookies" class="cookie-accept-btn">
                 {{ t.got_it }}
             </button>
         </div>

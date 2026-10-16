@@ -21,15 +21,15 @@
         </button>
         <div class="tabs-container">
             <div class="bias-filters">
-                <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500; flex-shrink: 0;" id="filter-label">{{ t.filter_label }} <span id="active-filters">{{ t.all_sources }}</span></span>
-                <button type="button" class="bias-pill all" data-action="bias-filter" data-bias="all" aria-pressed="false">{{ t.filter_all }}</button>
+                <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500; flex-shrink: 0;" id="filter-label" data-total="{{ total_sources }}" data-all="{{ t.all_sources }}" data-none="{{ t.no_sources_selected }}" data-some="{{ t.sources_selected }}">{{ t.filter_label }} <span id="active-filters">{{ filter_label_text }}</span></span>
+                <button type="button" class="bias-pill all {% if selected_count == total_sources %}active{% endif %}" data-action="bias-filter" data-bias="all" aria-pressed="{% if selected_count == total_sources %}true{% else %}false{% endif %}">{{ t.filter_all }}</button>
                 <button type="button" class="bias-pill left" data-action="bias-filter" data-bias="left" aria-pressed="false">{{ t.filter_left }}</button>
                 <button type="button" class="bias-pill left-center" data-action="bias-filter" data-bias="left-center" aria-pressed="false">{{ t.filter_left_center }}</button>
                 <button type="button" class="bias-pill center" data-action="bias-filter" data-bias="center" aria-pressed="false">{{ t.filter_center }}</button>
                 <button type="button" class="bias-pill right-center" data-action="bias-filter" data-bias="right-center" aria-pressed="false">{{ t.filter_right_center }}</button>
                 <button type="button" class="bias-pill right" data-action="bias-filter" data-bias="right" aria-pressed="false">{{ t.filter_right }}</button>
-                <button type="button" class="bias-pill sources-toggle" data-action="toggle-source-picker" aria-expanded="false" aria-controls="source-picker" id="source-picker-label">
-                    {{ t.sources_btn|default:"Sources" }}{% if has_source_exclusions %} ({{ selected_count }}/{{ total_sources }}){% endif %}
+                <button type="button" class="bias-pill sources-toggle" data-action="toggle-source-picker" aria-expanded="false" aria-controls="source-picker" id="source-picker-label" data-default-text="{{ t.sources_btn|default:'Sources' }}">
+                    {{ t.sources_btn|default:"Sources" }}{% if selected_count != total_sources %} ({{ selected_count }}/{{ total_sources }}){% endif %}
                 </button>
             </div>
         </div>
@@ -93,22 +93,24 @@
         <div class="topics-header">
             <h2 class="topics-title">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent);"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-                Ongoing Coverage
+                {{ t.ongoing_coverage }}
             </h2>
             <button class="coverage-toggle" data-action="toggle-coverage" data-target="topics-section" aria-expanded="true" aria-label="Collapse coverage" title="Collapse coverage">−</button>
         </div>
         <div class="coverage-row">
             <div class="topics-scroll">
                 {% for topic in active_topics %}
+                {% with topic_trans=topic|topic_translation:language %}
                 <a href="{{ topic.get_absolute_url }}{% if language and language != 'all' and language != 'en' %}?lang={{ language }}{% endif %}" class="topic-card">
                     <div class="topic-card-title">{{ topic.title }}</div>
-                    {% if topic.headline %}
-                    <div class="topic-card-headline">{{ topic.headline }}</div>
-                    {% elif topic.description %}
-                    <div class="topic-card-headline">{{ topic.description|truncatechars:100 }}</div>
+                    {% if topic_trans.headline %}
+                    <div class="topic-card-headline">{{ topic_trans.headline }}</div>
+                    {% elif topic_trans.description %}
+                    <div class="topic-card-headline">{{ topic_trans.description|truncatechars:100 }}</div>
                     {% endif %}
-                    <div class="topic-card-arrow">Read coverage →</div>
+                    <div class="topic-card-arrow">{{ t.read_coverage }}</div>
                 </a>
+                {% endwith %}
                 {% endfor %}
             </div>
         </div>
@@ -122,7 +124,7 @@
         <div class="most-covered-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
             <h2 style="font-size: 1.1rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 8px; margin: 0;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent);"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                Most Covered Across Sources
+                {{ t.most_covered_heading }}
             </h2>
             <button class="coverage-toggle" data-action="toggle-coverage" data-target="most-covered-section" aria-expanded="true" aria-label="Collapse coverage" title="Collapse coverage">−</button>
         </div>

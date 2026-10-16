@@ -421,6 +421,15 @@ UI_STRINGS = {
     'copy_link': 'نسخ الرابط',
     'copied': 'تم النسخ!',
     'close': 'إغلاق',
+    'sources_btn': 'مصادر',
+    'select_all': 'تحديد الكل',
+    'apply': 'تطبيق',
+    'no_sources_selected': 'لم يتم تحديد مصادر. اختر مصدرًا واحدًا على الأقل لعرض الأخبار.',
+    'sources_selected': '{count}/{total} مصادر',
+    'ongoing_coverage': 'تغطية مستمرة',
+    'most_covered_heading': 'الأكثر تغطية عبر المصادر',
+    'read_coverage': 'اقرأ التغطية ←',
+    'site_title': '24HourWire | أحدث الأخبار من جميع الزوايا',
 }
 
 PAYWALLED_SOURCES = set()
