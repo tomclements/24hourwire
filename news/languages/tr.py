@@ -348,9 +348,9 @@ CATEGORY_KEYWORDS_WEIGHTED = {
 UI_STRINGS = {
     'subtitle': 'Yöneliminizi seçin | Haber ajansları ve diğer kaynaklar | Son 24 saat',
     'how_it_works': 'Nasıl çalışır',
-    'privacy_text': 'Gizliliğinize saygı duyuyoruz. Bu site bağlamsal reklamlar kullanır (izleme çerezi yok) ve başlıkları/özetleri adil kullanım kapsamında gösterir.',
-    'privacy_link': 'Gizlilik Politikası',
-    'got_it': 'Anladım',
+    'privacy_text': 'Yalnızca bağlamsal reklamlar, izleme çerezi yok.',
+    'privacy_link': 'Gizlilik',
+    'got_it': 'Tamam',
     'sources': 'Kaynaklar:',
     'center_default': 'Merkez kaynaklar (varsayılan)',
     'all_sources': 'Tüm kaynaklar',
@@ -417,6 +417,20 @@ UI_STRINGS = {
     'most_covered_heading': 'Kaynaklar arasında en çok kapsanan',
     'read_coverage': 'Haberi oku →',
     'site_title': '24HourWire | Tüm Açılardan Son Haberler',
+    'footer_about_title': '24HourWire Hakkında',
+    'footer_about_text': 'Siyasi spektrumun her kesiminden haberleri bir araya getirerek size tam resmi sunuyoruz. Her 15 dakikada güncellenir.',
+    'footer_contact': 'İletişim',
+    'footer_x': 'X\'te @24HourWire',
+    'footer_community': 'Topluluk',
+    'footer_polls': 'Anketler',
+    'footer_legal': 'Yasal',
+    'footer_terms_of_service': 'Hizmet şartları',
+    'footer_copyright_policy': 'Telif hakkı politikası',
+    'footer_news_copy': 'Haber içeriği © ilgili yayıncılar.',
+    'footer_rss_feeds': 'RSS Beslemeleri',
+    'footer_admin_login': 'Yönetici girişi',
+    'footer_logout': 'Çıkış yap',
+    'footer_privacy_policy': 'Gizlilik Politikası',
 }
 
 PAYWALLED_SOURCES = {

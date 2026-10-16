@@ -19,7 +19,7 @@ class ContentSecurityPolicyMiddleware:
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
         "font-src 'self' https://fonts.gstatic.com; "
         "img-src 'self' data: https:; "
-        "connect-src 'self' https://www.googletagmanager.com https://www.google-analytics.com; "
+        "connect-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://ep1.adtrafficquality.google; "
         "frame-src https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net; "
         "object-src 'none'; "
         "base-uri 'self'; "

@@ -317,9 +317,9 @@ CATEGORY_KEYWORDS_WEIGHTED = {
 UI_STRINGS = {
     'subtitle': '选择你的立场 | 通讯社和其他信息源 | 过去24小时',
     'how_it_works': '工作原理',
-    'privacy_text': '我们尊重您的隐私。本网站使用情境广告（无追踪Cookie）并根据合理使用原则显示标题/摘要。',
-    'privacy_link': '隐私政策',
-    'got_it': '知道了',
+    'privacy_text': '仅上下文广告，无跟踪 Cookie。',
+    'privacy_link': '隐私',
+    'got_it': '确定',
     'sources': '来源：',
     'center_default': '中立来源（默认）',
     'all_sources': '所有来源',
@@ -386,6 +386,20 @@ UI_STRINGS = {
     'most_covered_heading': '各来源报道最多',
     'read_coverage': '阅读报道 →',
     'site_title': '24HourWire | 来自各个角度的最新新闻',
+    'footer_about_title': '关于 24HourWire',
+    'footer_about_text': '聚合政治光谱各方的资讯，呈现完整图景。每15分钟更新。',
+    'footer_contact': '联系我们',
+    'footer_x': 'X 上的 @24HourWire',
+    'footer_community': '社区',
+    'footer_polls': '投票',
+    'footer_legal': '法律信息',
+    'footer_terms_of_service': '服务条款',
+    'footer_copyright_policy': '版权政策',
+    'footer_news_copy': '新闻内容 © 各出版商。',
+    'footer_rss_feeds': 'RSS 订阅',
+    'footer_admin_login': '管理员登录',
+    'footer_logout': '退出登录',
+    'footer_privacy_policy': '隐私政策',
 }
 
 PAYWALLED_SOURCES = {

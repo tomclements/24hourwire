@@ -347,8 +347,8 @@ CATEGORY_KEYWORDS_WEIGHTED = {
 UI_STRINGS = {
     'subtitle': '편향 선택 | 통신사 및 기타 피드 | 지난 24시간',
     'how_it_works': '작동 방식',
-    'privacy_text': '귀하의 개인정보를 존중합니다. 이 사이트는 맥락 광고(추적 쿠키 없이)를 사용하고 공정 사용에 따라 헤드라인/요약을 표시합니다.',
-    'privacy_link': '개인정보 처리방침',
+    'privacy_text': '문맥 광고만, 추적 쿠키 없음.',
+    'privacy_link': '개인정보',
     'got_it': '확인',
     'sources': '출처:',
     'center_default': '중립 출처 (기본)',
@@ -416,6 +416,20 @@ UI_STRINGS = {
     'most_covered_heading': '출처별 가장 많이 보도된 뉴스',
     'read_coverage': '보도 읽기 →',
     'site_title': '24HourWire | 모든 각도에서 본 최신 뉴스',
+    'footer_about_title': '24HourWire 소개',
+    'footer_about_text': '정치적 스펙트럼 전체의 뉴스를 모아 전체 그림을 보여드립니다. 15분마다 업데이트됩니다.',
+    'footer_contact': '문의',
+    'footer_x': 'X에서 @24HourWire',
+    'footer_community': '커뮤니티',
+    'footer_polls': '투표',
+    'footer_legal': '법적 정보',
+    'footer_terms_of_service': '서비스 약관',
+    'footer_copyright_policy': '저작권 정책',
+    'footer_news_copy': '뉴스 콘텐츠 © 해당 출판사.',
+    'footer_rss_feeds': 'RSS 피드',
+    'footer_admin_login': '관리자 로그인',
+    'footer_logout': '로그아웃',
+    'footer_privacy_policy': '개인정보 처리방침',
 }
 
 PAYWALLED_SOURCES = {

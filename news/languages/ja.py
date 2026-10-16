@@ -339,9 +339,9 @@ CATEGORY_KEYWORDS_WEIGHTED = {
 UI_STRINGS = {
     'subtitle': 'バイアスを選択 | ワイヤーサービスとその他のフィード | 過去24時間',
     'how_it_works': '仕組み',
-    'privacy_text': 'プライバシーを尊重しています。このサイトはコンテキスト広告（追跡Cookieなし）を使用し、フェアユースに基づいて見出し/要約を表示します。',
-    'privacy_link': 'プライバシーポリシー',
-    'got_it': '了解',
+    'privacy_text': 'コンテキスト広告のみ、トラッキングクッキーなし。',
+    'privacy_link': 'プライバシー',
+    'got_it': 'OK',
     'sources': 'ソース:',
     'center_default': '中央ソース（デフォルト）',
     'all_sources': 'すべてのソース',
@@ -408,6 +408,20 @@ UI_STRINGS = {
     'most_covered_heading': '各ソースで最も報じられたニュース',
     'read_coverage': '報道を読む →',
     'site_title': '24HourWire | あらゆる角度からの最新ニュース',
+    'footer_about_title': '24HourWireについて',
+    'footer_about_text': '政治スペクトル全体からニュースを集め、全体像をお届けします。15分ごとに更新。',
+    'footer_contact': 'お問い合わせ',
+    'footer_x': 'Xで@24HourWire',
+    'footer_community': 'コミュニティ',
+    'footer_polls': 'アンケート',
+    'footer_legal': '法的情報',
+    'footer_terms_of_service': '利用規約',
+    'footer_copyright_policy': '著作権ポリシー',
+    'footer_news_copy': 'ニュースコンテンツ © 各出版社。',
+    'footer_rss_feeds': 'RSSフィード',
+    'footer_admin_login': '管理者ログイン',
+    'footer_logout': 'ログアウト',
+    'footer_privacy_policy': 'プライバシーポリシー',
 }
 
 PAYWALLED_SOURCES = {

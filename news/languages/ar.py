@@ -361,9 +361,9 @@ CATEGORY_KEYWORDS_WEIGHTED = {
 UI_STRINGS = {
     'subtitle': 'اختر توجهك | خدمات الأنباء والتغذية الأخرى | آخر 24 ساعة',
     'how_it_works': 'كيف يعمل',
-    'privacy_text': 'نحترم خصوصيتك. يستخدم هذا الموقع إعلانات سياقية (بدون ملفات تعريف الارتباط التتبعية) ويعرض العناوين/الملخصات بموجب الاستخدام العادل.',
-    'privacy_link': 'سياسة الخصوصية',
-    'got_it': 'فهمت',
+    'privacy_text': 'إعلانات سياقية فقط، بدون ملفات تعريف ارتباط تتبعية.',
+    'privacy_link': 'الخصوصية',
+    'got_it': 'موافق',
     'sources': 'المصادر:',
     'center_default': 'المصادر المركزية (افتراضي)',
     'all_sources': 'جميع المصادر',
@@ -430,6 +430,20 @@ UI_STRINGS = {
     'most_covered_heading': 'الأكثر تغطية عبر المصادر',
     'read_coverage': 'اقرأ التغطية ←',
     'site_title': '24HourWire | أحدث الأخبار من جميع الزوايا',
+    'footer_about_title': 'عن 24HourWire',
+    'footer_about_text': 'نقوم بتجميع الأخبار من كامل الطيف السياسي لتمنحك الصورة الكاملة. يتم التحديث كل 15 دقيقة.',
+    'footer_contact': 'تواصل',
+    'footer_x': '@24HourWire على X',
+    'footer_community': 'المجتمع',
+    'footer_polls': 'استطلاعات الرأي',
+    'footer_legal': 'قانوني',
+    'footer_terms_of_service': 'شروط الخدمة',
+    'footer_copyright_policy': 'سياسة حقوق النشر',
+    'footer_news_copy': 'محتوى الأخبار © الناشرون المعنيون.',
+    'footer_rss_feeds': 'تغذيات RSS',
+    'footer_admin_login': 'تسجيل دخول المشرف',
+    'footer_logout': 'تسجيل الخروج',
+    'footer_privacy_policy': 'سياسة الخصوصية',
 }
 
 PAYWALLED_SOURCES = set()

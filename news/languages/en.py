@@ -578,9 +578,9 @@ CATEGORY_NAMES = OrderedDict([
 UI_STRINGS = {
     'subtitle': 'Choose your bias | Wire services and other feeds | Last 24 hours',
     'how_it_works': 'How it works',
-    'privacy_text': 'We respect your privacy. This site uses contextual ads (no tracking cookies) and shows headlines/summaries under fair use.',
-    'privacy_link': 'Privacy Policy',
-    'got_it': 'Got it',
+    'privacy_text': 'Contextual ads only, no tracking cookies.',
+    'privacy_link': 'Privacy',
+    'got_it': 'OK',
     'sources': 'Sources:',
     'center_default': 'Center sources (default)',
     'all_sources': 'All sources',
@@ -647,6 +647,20 @@ UI_STRINGS = {
     'most_covered_heading': 'Most Covered Across Sources',
     'read_coverage': 'Read coverage →',
     'site_title': '24HourWire | The Latest News from All Angles',
+    'footer_about_title': 'About 24HourWire',
+    'footer_about_text': 'Aggregating news from across the political spectrum to give you the full picture. Updated every 15 minutes.',
+    'footer_contact': 'Contact',
+    'footer_x': '@24HourWire on X',
+    'footer_community': 'Community',
+    'footer_polls': 'Polls',
+    'footer_legal': 'Legal',
+    'footer_terms_of_service': 'Terms of Service',
+    'footer_copyright_policy': 'Copyright Policy',
+    'footer_news_copy': 'News content © respective publishers.',
+    'footer_rss_feeds': 'RSS Feeds',
+    'footer_admin_login': 'Admin Login',
+    'footer_logout': 'Logout',
+    'footer_privacy_policy': 'Privacy Policy',
 }
 
 PAYWALLED_SOURCES = {

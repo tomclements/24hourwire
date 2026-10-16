@@ -611,19 +611,21 @@ class Topic(models.Model):
         return self.title
     
     def get_translation(self, language='en'):
-        """Get translated headline/description for a language.
-        
+        """Get translated title/headline/description for a language.
+
         Falls back to English if no translation exists.
-        Returns dict with headline and description.
+        Returns dict with title, headline and description.
         """
         if language == 'en' or not self.translations:
             return {
+                'title': self.title,
                 'headline': self.headline,
                 'description': self.description,
             }
-        
+
         lang_data = self.translations.get(language, {})
         return {
+            'title': lang_data.get('title', self.title),
             'headline': lang_data.get('headline', self.headline),
             'description': lang_data.get('description', self.description),
         }

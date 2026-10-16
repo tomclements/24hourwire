@@ -323,9 +323,9 @@ CATEGORY_KEYWORDS_WEIGHTED = {
 UI_STRINGS = {
     'subtitle': 'अपना झुकाव चुनें | वायर सेवाएं और अन्य फीड | पिछले 24 घंटे',
     'how_it_works': 'यह कैसे काम करता है',
-    'privacy_text': 'हम आपकी गोपनीयता का सम्मान करते हैं। यह साइट संदर्भिक विज्ञापन (कोई ट्रैकिंग कुकी नहीं) का उपयोग करती है और शीर्षक/सारांश फेयर यूज के तहत दिखाती है।',
-    'privacy_link': 'गोपनीयता नीति',
-    'got_it': 'समझ गए',
+    'privacy_text': 'केवल संदर्भ विज्ञापन, कोई ट्रैकिंग कुकीज़ नहीं।',
+    'privacy_link': 'गोपनीयता',
+    'got_it': 'ठीक',
     'sources': 'स्रोत:',
     'center_default': 'केंद्रीय स्रोत (डिफ़ॉल्ट)',
     'all_sources': 'सभी स्रोत',
@@ -392,6 +392,20 @@ UI_STRINGS = {
     'most_covered_heading': 'स्रोतों में सबसे अधिक कवर',
     'read_coverage': 'कवरेज पढ़ें →',
     'site_title': '24HourWire | हर कोण से ताज़ा ख़बरें',
+    'footer_about_title': '24HourWire के बारे में',
+    'footer_about_text': 'पूरे राजनीतिक स्पेक्ट्रम से समाचार एकत्रित करके आपको पूरी तस्वीर दिखाते हैं। हर 15 मिनट में अपडेट।',
+    'footer_contact': 'संपर्क',
+    'footer_x': 'X पर @24HourWire',
+    'footer_community': 'समुदाय',
+    'footer_polls': 'पोल',
+    'footer_legal': 'कानूनी',
+    'footer_terms_of_service': 'सेवा की शर्तें',
+    'footer_copyright_policy': 'कॉपीराइट नीति',
+    'footer_news_copy': 'समाचार सामग्री © संबंधित प्रकाशक।',
+    'footer_rss_feeds': 'RSS फ़ीड',
+    'footer_admin_login': 'एडमिन लॉगिन',
+    'footer_logout': 'लॉगआउट',
+    'footer_privacy_policy': 'गोपनीयता नीति',
 }
 
 PAYWALLED_SOURCES = set()

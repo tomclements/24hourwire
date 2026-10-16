@@ -55,18 +55,22 @@ class Command(BaseCommand):
             'meta_description': 'Live coverage of the US-Iran conflict, Strait of Hormuz disruptions, oil market impacts, and regional escalation from diverse global sources.',
             'translations': {
                 'es': {
+                    'title': 'Guerra EE.UU.-Iran y crisis del Estrecho de Ormuz',
                     'headline': 'Guerra EE.UU.-Iran y crisis del Estrecho de Ormuz',
                     'description': 'Cobertura en curso del conflicto militar entre Estados Unidos e Iran, incluyendo ataques aereos, el bloqueo del Estrecho de Ormuz, la escalada regional y los esfuerzos diplomaticos.',
                 },
                 'ar': {
+                    'title': 'الحرب الأمريكية-الإيرانية وأزمة مضيق هرمز',
                     'headline': 'الحرب الأمريكية-الإيرانية وأزمة مضيق هرمز',
                     'description': 'تغطية مستمرة للصراع العسكري الأمريكي-الإيراني، بما في ذلك الضربات الجوية وحصار مضيق هرمز والتصعيد الإقليمي وجهود الدبلوماسية.',
                 },
                 'fr': {
+                    'title': 'Guerre Etats-Unis-Iran et crise du detroit d\'Ormuz',
                     'headline': 'Guerre Etats-Unis-Iran et crise du detroit d\'Ormuz',
                     'description': 'Couverture en cours du conflit militaire entre les Etats-Unis et l\'Iran, incluant les frappes aeriennes, le blocus du detroit d\'Ormuz, l\'escalade regionale et les efforts diplomatiques.',
                 },
                 'de': {
+                    'title': 'USA-Iran-Krieg und Strae-von-Hormus-Krise',
                     'headline': 'USA-Iran-Krieg und Strae-von-Hormus-Krise',
                     'description': 'Laufende Berichterstattung uber den USA-iranischen Militaerkonflikt, einschliesslich Luftangriffen, der Strasse von Hormus-Blockade, regionaler Eskalation und diplomatischen Bemuhungen.',
                 },
@@ -102,10 +106,12 @@ class Command(BaseCommand):
             'meta_description': 'Global AI regulation news: EU AI Act, US tech policy, antitrust actions, and data privacy developments from diverse sources.',
             'translations': {
                 'es': {
+                    'title': 'Regulacion de IA y tecnologia',
                     'headline': 'Politica, etica y el futuro de la inteligencia artificial',
                     'description': 'Mantengase informado sobre los esfuerzos globales de regulacion de IA, desde la Ley de IA de la UE hasta las ordenes ejecutivas de EE.UU. y los marcos emergentes en todo el mundo. Cobertura de big tech, antitrust, privacidad de datos y politica de innovacion.',
                 },
                 'de': {
+                    'title': 'KI- und Technologieregulierung',
                     'headline': 'Politik, Ethik und die Zukunft der kunstlichen Intelligenz',
                     'description': 'Bleiben Sie uber globale KI-Regulierungsbemuhungen informiert, von der EU-KI-Verordnung bis zu US-Executive Orders und neuen Rahmenwerken weltweit. Berichterstattung zu Big Tech, Kartellrecht, Datenschutz und Innovationspolitik.',
                 },
@@ -140,10 +146,12 @@ class Command(BaseCommand):
             'meta_description': 'Global economic news: war-driven inflation, energy price shocks, supply chain disruptions, and market movements from diverse international sources.',
             'translations': {
                 'es': {
+                    'title': 'Economia global',
                     'headline': 'Inflacion impulsada por la guerra, choques de petroleo y temores de recesion',
                     'description': 'Siga la economia global bajo presion del conflicto en Medio Oriente: aumentos de precios energeticos, interrupciones de la cadena de suministro, respuestas de bancos centrales y datos de inflacion.',
                 },
                 'de': {
+                    'title': 'Globale Wirtschaft',
                     'headline': 'Kriegsbedingte Inflation, Oelschocks und Rezessionsangste',
                     'description': 'Verfolgen Sie die globale Wirtschaft unter Druck durch den Nahostkonflikt: Energiepreisanstiege, Lieferkettenstoerungen, Zentralbankreaktionen und Inflationsdaten.',
                 },
@@ -178,10 +186,12 @@ class Command(BaseCommand):
             'meta_description': 'Latest Ukraine war coverage: battlefield updates, diplomacy, sanctions, and humanitarian news from sources worldwide.',
             'translations': {
                 'es': {
+                    'title': 'Conflicto en Ucrania',
                     'headline': 'Cobertura continua de la guerra y su impacto global',
                     'description': 'Cobertura integral de la guerra entre Rusia y Ucrania, incluyendo actualizaciones del campo de batalla, esfuerzos diplomaticos, impacto humanitario y repercusiones globales de sanciones y energia.',
                 },
                 'de': {
+                    'title': 'Ukraine-Konflikt',
                     'headline': 'Laufende Berichterstattung uber den Krieg und seine globalen Auswirkungen',
                     'description': 'Umfassende Berichterstattung zum Russland-Ukraine-Krieg, einschliesslich Schlachtfeld-Updates, diplomatischer Bemuhungen, humanitarem Einfluss und globalen Sanktions- und Energieauswirkungen.',
                 },
@@ -216,10 +226,12 @@ class Command(BaseCommand):
             'meta_description': 'Latest news on US-China relations, trade talks, the AI race, semiconductor restrictions, and diplomatic developments from sources across the political spectrum.',
             'translations': {
                 'es': {
+                    'title': 'Relaciones EE.UU.-China',
                     'headline': 'Guerra comercial, rivalidad tecnologica y competencia geopolitica',
                     'description': 'Siga la evolucion de la rivalidad entre Estados Unidos y China, desde las negociaciones comerciales y aranceles hasta la carrera de IA, las restricciones de semiconductores y el posicionamiento militar en el Indo-Pacifico.',
                 },
                 'zh': {
+                    'title': '中美关系',
                     'headline': '贸易战、科技竞争与地缘政治博弈',
                     'description': '追踪中美之间不断演变的竞争关系，从贸易谈判和关税到人工智能竞赛、半导体限制以及印太地区的军事态势。',
                 },
@@ -254,10 +266,12 @@ class Command(BaseCommand):
             'meta_description': 'Latest Israel-Palestine conflict coverage: Gaza, West Bank, Lebanon, humanitarian developments, and diplomatic efforts from diverse global sources.',
             'translations': {
                 'es': {
+                    'title': 'Conflicto israeli-palestino',
                     'headline': 'Conflicto israeli-palestino: Gaza, Cisjordania y crisis humanitaria',
                     'description': 'Cobertura del conflicto israeli-palestino, incluyendo operaciones en Gaza, desarrollos en Cisjordania, tensiones en la frontera con Libano, condiciones humanitarias y esfuerzos diplomaticos regionales.',
                 },
                 'ar': {
+                    'title': 'الصراع الإسرائيلي-الفلسطيني',
                     'headline': 'الصراع الإسرائيلي-الفلسطيني: غزة والضفة الغربية والأزمة الإنسانية',
                     'description': 'تغطية الصراع الإسرائيلي-الفلسطيني، بما في ذلك العمليات في غزة والتطورات في الضفة الغربية والتوترات على الحدود اللبنانية والوضع الإنساني وجهود الدبلوماسية الإقليمية.',
                 },

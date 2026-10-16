@@ -102,7 +102,7 @@
                 {% for topic in active_topics %}
                 {% with topic_trans=topic|topic_translation:language %}
                 <a href="{{ topic.get_absolute_url }}{% if language and language != 'all' and language != 'en' %}?lang={{ language }}{% endif %}" class="topic-card">
-                    <div class="topic-card-title">{{ topic.title }}</div>
+                    <div class="topic-card-title">{{ topic_trans.title }}</div>
                     {% if topic_trans.headline %}
                     <div class="topic-card-headline">{{ topic_trans.headline }}</div>
                     {% elif topic_trans.description %}
