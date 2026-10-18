@@ -1336,6 +1336,17 @@ class RobotsTxtTopicTests(TestCase):
         self.assertContains(response, 'Allow: /topic/')
 
 
+class AdsTxtTests(TestCase):
+    def test_ads_txt(self):
+        response = self.client.get('/ads.txt', follow=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'text/plain; charset=utf-8')
+        self.assertEqual(
+            response.content,
+            b'google.com, pub-1306415581374425, DIRECT, f08c47fec0942fa0\n',
+        )
+
+
 class TopicTranslationTests(TestCase):
     """Tests for topic headline/description translations."""
     
