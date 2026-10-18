@@ -3354,6 +3354,25 @@ class ContentSecurityPolicyTests(TestCase):
         self.assertIn('google-analytics.com', script_src)
         self.assertIn('pagead2.googlesyndication.com', script_src)
 
+    def test_homepage_adsense_frame_and_connect_hosts(self):
+        response = self.client.get('/')
+        frame_src = self._directive(response, 'frame-src')
+        connect_src = self._directive(response, 'connect-src')
+        script_src = self._directive(response, 'script-src')
+        for host in ('https://pagead2.googlesyndication.com',
+                     'https://googleads.g.doubleclick.net',
+                     'https://tpc.googlesyndication.com'):
+            self.assertIn(host, frame_src)
+        for host in ('https://pagead2.googlesyndication.com',
+                     'https://googleads.g.doubleclick.net',
+                     'https://ep1.adtrafficquality.google'):
+            self.assertIn(host, connect_src)
+        # script-src adds only the ep2 ad-quality host
+        self.assertIn('https://ep2.adtrafficquality.google', script_src)
+        for host in ('tpc.googlesyndication.com', 'doubleclick.net',
+                     'fundingchoicesmessages.google.com'):
+            self.assertNotIn(host, script_src)
+
     def test_homepage_style_src_still_allows_unsafe_inline(self):
         response = self.client.get('/')
         style_src = self._directive(response, 'style-src')
