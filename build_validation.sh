@@ -63,7 +63,7 @@ while IFS= read -r -d '' file; do
         error "Syntax error in: $file"
         SYNTAX_ERRORS=$((SYNTAX_ERRORS + 1))
     fi
-done < <(find . -name "*.py" -type f ! -path "./venv/*" ! -path "./.git/*" ! -path "./__pycache__/*" -print0)
+done < <(find . -type d \( -name venv -o -name .venv -o -name env -o -name site-packages -o -name node_modules -o -name .git -o -name __pycache__ -o -name staticfiles -o -name .tox -o -name .mypy_cache -o -name .pytest_cache \) -prune -o -type f -name "*.py" -print0)
 
 if [ $SYNTAX_ERRORS -eq 0 ]; then
     success "No Python syntax errors"
