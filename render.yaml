@@ -18,6 +18,17 @@ services:
       python manage.py collectstatic --no-input
     startCommand: gunicorn core.wsgi:application --timeout 120 --workers 1 --max-requests 1000 --max-requests-jitter 100
     healthCheckPath: /healthz
+    buildFilter:
+      ignoredPaths:
+        - "docs/**"
+        - ".github/**"
+        - "tests/**"
+        - "**/tests.py"
+        - "**/tests_*.py"
+        - "test_*.py"
+        - "artifacts/**"
+        - "logs/**"
+        - "**/*.log"
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -53,7 +64,16 @@ services:
     plan: starter
     buildCommand: pip install -r requirements.txt
     startCommand: python manage.py fetch_news
-    schedule: "0,15,30,45 * * * *"  # Every 15 minutes
+    schedule: "*/30 * * * *"  # Every 30 minutes
+    buildFilter:
+      paths:
+        - "**/*.py"
+        - requirements.txt
+      ignoredPaths:
+        - "tests/**"
+        - "**/tests.py"
+        - "**/tests_*.py"
+        - "test_*.py"
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -79,6 +99,15 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: python manage.py build_clusters
     schedule: "0 * * * *"  # Every hour at minute 0
+    buildFilter:
+      paths:
+        - "**/*.py"
+        - requirements.txt
+      ignoredPaths:
+        - "tests/**"
+        - "**/tests.py"
+        - "**/tests_*.py"
+        - "test_*.py"
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -104,6 +133,15 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: python manage.py generate_polls
     schedule: "0 6 * * *"  # Daily at 6 AM UTC
+    buildFilter:
+      paths:
+        - "**/*.py"
+        - requirements.txt
+      ignoredPaths:
+        - "tests/**"
+        - "**/tests.py"
+        - "**/tests_*.py"
+        - "test_*.py"
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -132,6 +170,15 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: python manage.py purge_analytics
     schedule: "0 5 * * *"  # Daily at 5 AM UTC
+    buildFilter:
+      paths:
+        - "**/*.py"
+        - requirements.txt
+      ignoredPaths:
+        - "tests/**"
+        - "**/tests.py"
+        - "**/tests_*.py"
+        - "test_*.py"
     envVars:
       - key: DATABASE_URL
         fromDatabase:
