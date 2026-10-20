@@ -3361,7 +3361,9 @@ class ContentSecurityPolicyTests(TestCase):
         script_src = self._directive(response, 'script-src')
         for host in ('https://pagead2.googlesyndication.com',
                      'https://googleads.g.doubleclick.net',
-                     'https://tpc.googlesyndication.com'):
+                     'https://tpc.googlesyndication.com',
+                     'https://ep2.adtrafficquality.google',
+                     'https://www.google.com'):
             self.assertIn(host, frame_src)
         for host in ('https://pagead2.googlesyndication.com',
                      'https://googleads.g.doubleclick.net',

@@ -20,7 +20,7 @@ class ContentSecurityPolicyMiddleware:
         "font-src 'self' https://fonts.gstatic.com; "
         "img-src 'self' data: https:; "
         "connect-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://ep1.adtrafficquality.google https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net; "
-        "frame-src https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com; "
+        "frame-src https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://ep2.adtrafficquality.google https://www.google.com; "
         "object-src 'none'; "
         "base-uri 'self'; "
         "form-action 'self'; "
