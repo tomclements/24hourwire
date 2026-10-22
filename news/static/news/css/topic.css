@@ -446,6 +446,27 @@
             font-size: 0.8rem;
             color: var(--text-muted);
         }
+
+        .footer-bottom p {
+            white-space: normal;
+        }
+
+        .footer-sep {
+            margin: 0 4px;
+        }
+
+        @media (max-width: 480px) {
+            .footer-bottom .footer-sep {
+                display: none;
+            }
+
+            .footer-bottom p {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 4px 12px;
+            }
+        }
         
         @media (max-width: 640px) {
             .topic-hero h1 {

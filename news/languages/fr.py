@@ -415,6 +415,7 @@ UI_STRINGS = {
     'bias_rating': 'Évaluation du biais',
     'ago': 'il y a',
     'show_stories': 'Afficher',
+    'story': 'article',
     'stories': 'articles',
     'no_stories': 'Aucun article dans cette catégorie',
     'footer_copy': 'Contenu d\'actualité © éditeurs respectifs. Titres et résumés utilisés selon le fair use à titre informatif.',
@@ -427,6 +428,7 @@ UI_STRINGS = {
     'logo_tagline': 'Les actualités sous différents angles',
     'search_placeholder': 'Rechercher des actualités...',
     'toggle_theme': 'Changer de thème',
+    'language_label': 'Langue',
     'filter_label': 'Filtrer par :',
     # Bias filter buttons
     'filter_all': 'Tous',

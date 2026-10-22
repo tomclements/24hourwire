@@ -103,9 +103,9 @@
                 {% with topic_trans=topic|topic_translation:language %}
                 <a href="{{ topic.get_absolute_url }}{% if language and language != 'all' and language != 'en' %}?lang={{ language }}{% endif %}" class="topic-card">
                     <div class="topic-card-title">{{ topic_trans.title }}</div>
-                    {% if topic_trans.headline %}
+                    {% if topic_trans.headline and not topic_trans.headline|repeats_title:topic_trans.title %}
                     <div class="topic-card-headline">{{ topic_trans.headline }}</div>
-                    {% elif topic_trans.description %}
+                    {% elif topic_trans.description and not topic_trans.description|repeats_title:topic_trans.title %}
                     <div class="topic-card-headline">{{ topic_trans.description|truncatechars:100 }}</div>
                     {% endif %}
                     <div class="topic-card-arrow">{{ t.read_coverage }}</div>
@@ -160,7 +160,7 @@
     <section id="{{ cat_id }}" class="category-section" data-count="{{ cat_data.total_stories }}">
         <div class="category-header">
             <h2 class="category-title">{{ cat_data.name }}</h2>
-            <span class="category-count" id="count-{{ cat_id }}">{{ cat_data.total_stories }} stories</span>
+            <span class="category-count" id="count-{{ cat_id }}">{{ cat_data.total_stories }} {% if cat_data.total_stories == 1 %}{{ t.story|default:"story" }}{% else %}{{ t.stories|default:"stories" }}{% endif %}</span>
         </div>
 
         {% if effective_empty %}

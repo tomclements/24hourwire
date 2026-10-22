@@ -445,6 +445,7 @@ UI_STRINGS = {
     'bias_rating': 'Ausrichtungsbewertung',
     'ago': 'vor',
     'show_stories': 'Anzeigen',
+    'story': 'Artikel',
     'stories': 'Artikel',
     'no_stories': 'Keine Artikel in dieser Kategorie',
     'footer_copy': 'Nachrichteninhalte © jeweilige Verlage. Schlagzeilen und Zusammenfassungen unter Fair Use zu Informationszwecken.',
@@ -457,6 +458,7 @@ UI_STRINGS = {
     'logo_tagline': 'News aus verschiedenen Perspektiven',
     'search_placeholder': 'Nachrichten suchen...',
     'toggle_theme': 'Thema umschalten',
+    'language_label': 'Sprache',
     'filter_label': 'Filtern nach:',
     # Bias filter buttons
     'filter_all': 'Alle',

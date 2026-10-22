@@ -21,6 +21,8 @@ JS_UI_KEYS = (
     'loading_related',
     'no_related_stories',
     'error_loading',
+    'stories',
+    'story',
 )
 
 

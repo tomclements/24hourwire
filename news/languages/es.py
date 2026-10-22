@@ -455,6 +455,7 @@ UI_STRINGS = {
     'bias_rating': 'Calificación de sesgo',
     'ago': 'ago',
     'show_stories': 'Mostrar',
+    'story': 'historia',
     'stories': 'historias',
     'no_stories': 'No hay historias en esta categoría',
     'footer_copy': 'Contenido de noticias © respectivos editores. Titulares y resúmenes utilizados bajo uso justo con fines informativos.',
@@ -467,6 +468,7 @@ UI_STRINGS = {
     'logo_tagline': 'Noticias desde todos los ángulos',
     'search_placeholder': 'Buscar noticias...',
     'toggle_theme': 'Cambiar modo oscuro',
+    'language_label': 'Idioma',
     'filter_label': 'Filtrar:',
     # Bias filter buttons
     'filter_all': 'Todas',

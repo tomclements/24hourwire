@@ -71,6 +71,23 @@ def topic_translation(topic, language):
     return topic.get_translation(language)
 
 
+def _normalized_starts_with(value, title):
+    """Return True when value starts with title, ignoring case and whitespace."""
+    value = str(value or '')
+    title = str(title or '')
+    if not title:
+        return False
+    value = ''.join(value.split()).casefold()
+    title = ''.join(title.split()).casefold()
+    return value.startswith(title)
+
+
+@register.filter
+def repeats_title(value, title):
+    """Return True when value is a repeat of title (starts with, case/space insensitive)."""
+    return _normalized_starts_with(value, title)
+
+
 @register.filter
 def topic_meta_title(topic, language):
     """Return the topic meta title with the site suffix exactly once.
