@@ -388,6 +388,7 @@ UI_STRINGS = {
     'bias_rating': 'تقييم التوجه',
     'ago': 'منذ',
     'show_stories': 'عرض',
+    'story': 'خبر',
     'stories': 'أخبار',
     'no_stories': 'لا توجد أخبار في هذه الفئة',
     'footer_copy': 'محتوى الأخبار © الناشرون المعنية. يتم استخدام العناوين والملخصات بموجب الاستخدام العادل لأغراض إعلامية.',
@@ -400,6 +401,7 @@ UI_STRINGS = {
     'logo_tagline': 'أخبار من منظور مختلف',
     'search_placeholder': 'البحث في الأخبار...',
     'toggle_theme': 'تبديل السمة',
+    'language_label': 'اللغة',
     'filter_label': 'تصفية حسب:',
     # Bias filter buttons
     'filter_all': 'الكل',

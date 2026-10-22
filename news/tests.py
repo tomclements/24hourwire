@@ -3618,6 +3618,175 @@ class TopicMatchingPrecisionTests(TestCase):
         self.assertIn(s, list(topic.get_stories()))
 
 
+class I18nHomeAndFooterTests(TestCase):
+    """Tests for i18n home page strings and base footer RTL fixes."""
+
+    def setUp(self):
+        self.client = Client()
+        from django.core.cache import cache
+        cache.clear()
+
+    def test_spanish_home_singular_category_count(self):
+        """Spanish homepage with one story should render '1 historia', not '1 historias'."""
+        story = Story.objects.create(
+            source='BBC Mundo',
+            title='Noticia de prueba en español',
+            excerpt='Extracto de la noticia de prueba.',
+            url='https://example.com/es-test',
+            language='es',
+            category='world',
+            published=timezone.now() - timedelta(hours=1),
+            url_hash='estest123',
+            title_fingerprint='estestfp123',
+        )
+        StoryCategory.objects.create(story=story, slug='world')
+        response = self.client.get('/?lang=es')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn('1 historia', content)
+        self.assertNotIn('1 historias', content)
+
+    def test_english_home_singular_category_count(self):
+        """English homepage with one story should render '1 story', not '1 stories'."""
+        story = Story.objects.create(
+            source='BBC',
+            title='English test story',
+            excerpt='Test excerpt.',
+            url='https://example.com/en-test',
+            language='en',
+            category='world',
+            published=timezone.now() - timedelta(hours=1),
+            url_hash='entest123',
+            title_fingerprint='entestfp123',
+        )
+        StoryCategory.objects.create(story=story, slug='world')
+        response = self.client.get('/?lang=en')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn('1 story', content)
+        self.assertNotIn('1 stories', content)
+
+    def test_spanish_home_shows_localized_language_label(self):
+        """Spanish homepage language selector label should read 'Idioma'."""
+        Story.objects.create(
+            source='BBC Mundo',
+            title='Noticia de prueba',
+            excerpt='Extracto.',
+            url='https://example.com/es-label',
+            language='es',
+            category='world',
+            published=timezone.now() - timedelta(hours=1),
+            url_hash='eslabel123',
+            title_fingerprint='eslabelfp123',
+        )
+        response = self.client.get('/?lang=es')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn('>Idioma<', content)
+        self.assertIn('aria-label="Idioma"', content)
+
+    def test_topic_card_does_not_repeat_headline_equal_to_title(self):
+        """Topic card should skip headline when it equals the title."""
+        topic = Topic.objects.create(
+            slug='repeated-headline',
+            title='Repeated Headline',
+            headline='Repeated Headline',
+            description='Different description text.',
+            keywords=['repeated'],
+            categories=['world'],
+            languages=['en', 'es'],
+            is_active=True,
+            translations={
+                'es': {
+                    'title': 'Titulo Repetido',
+                    'headline': 'Titulo Repetido',
+                    'description': 'Descripcion diferente.',
+                }
+            }
+        )
+        Story.objects.create(
+            source='BBC',
+            title='Story about repeated topic',
+            excerpt='A story matching the topic keywords.',
+            url='https://example.com/repeated',
+            language='en',
+            category='world',
+            published=timezone.now(),
+            url_hash='rep123',
+            title_fingerprint='repfp123',
+        )
+        response = self.client.get('/?lang=es')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        # Title should appear once in the topic card context.
+        self.assertIn('Titulo Repetido', content)
+        topic_card_match = re.search(
+            r'<a[^>]*class="topic-card"[^>]*>.*?</a>',
+            content,
+            re.DOTALL
+        )
+        self.assertIsNotNone(topic_card_match)
+        topic_card_html = topic_card_match.group(0)
+        # The headline div should not be rendered with the same text as title.
+        self.assertNotIn('<div class="topic-card-headline">Titulo Repetido</div>', topic_card_html)
+        # Description fallback should be used instead.
+        self.assertIn('Descripcion diferente.', topic_card_html)
+
+    def test_topic_card_headline_starting_with_title_shows_description(self):
+        """Topic card should treat a headline that starts with the title as a repeat."""
+        topic = Topic.objects.create(
+            slug='starts-with-headline',
+            title='Title Extra Text',
+            headline='Title: extra text',
+            description='Fallback description text.',
+            keywords=['starts'],
+            categories=['world'],
+            languages=['en', 'es'],
+            is_active=True,
+            translations={
+                'es': {
+                    'title': 'Título extra',
+                    'headline': ' TÍTULO  extra text',
+                    'description': 'Descripción de respaldo.',
+                }
+            }
+        )
+        Story.objects.create(
+            source='BBC',
+            title='Story that starts topic',
+            excerpt='A story matching the topic keywords.',
+            url='https://example.com/starts',
+            language='en',
+            category='world',
+            published=timezone.now(),
+            url_hash='starts123',
+            title_fingerprint='startsfp123',
+        )
+        response = self.client.get('/?lang=es')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn('Título extra', content)
+        topic_card_match = re.search(
+            r'<a[^>]*class="topic-card"[^>]*>.*?</a>',
+            content,
+            re.DOTALL
+        )
+        self.assertIsNotNone(topic_card_match)
+        topic_card_html = topic_card_match.group(0)
+        # The Spanish headline starts with the title (different case/spacing) and should be skipped.
+        self.assertNotIn('<div class="topic-card-headline"> TÍTULO  extra text</div>', topic_card_html)
+        # Description fallback should be rendered instead.
+        self.assertIn('Descripción de respaldo.', topic_card_html)
+
+    def test_footer_has_period_inside_bdi_and_footer_seps(self):
+        """Footer copyright period stays inside bdi; separators use footer-sep spans."""
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn('<bdi>&copy; 2026 24HourWire.</bdi>', content)
+        self.assertIn('<span class="footer-sep" aria-hidden="true">|</span>', content)
+
+
 class FetchNewsCommandTests(TestCase):
     """Tests for fetch_news management command oversize-url and isolation handling."""
 

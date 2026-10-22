@@ -242,7 +242,7 @@
                 grid.dataset.loaded = loaded + data.stories.length;
 
                 const countEl = document.getElementById('count-' + category);
-                if (countEl) countEl.textContent = data.total + ' stories';
+                if (countEl) countEl.textContent = data.total + ' ' + (data.total === 1 ? (UI.story || 'story') : (UI.stories || 'stories'));
 
                 const tabCountEl = document.getElementById('tab-count-' + category);
                 if (tabCountEl) {

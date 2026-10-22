@@ -609,6 +609,7 @@ UI_STRINGS = {
     'bias_rating': 'Bias rating',
     'ago': 'ago',
     'show_stories': 'Show',
+    'story': 'story',
     'stories': 'stories',
     'no_stories': 'No stories in this category',
     'footer_copy': 'News content &copy; respective publishers. Headlines and summaries used under fair use for informational purposes.',
@@ -621,6 +622,7 @@ UI_STRINGS = {
     'logo_tagline': 'News from all angles',
     'search_placeholder': 'Search news...',
     'toggle_theme': 'Toggle dark mode',
+    'language_label': 'Language',
     'filter_label': 'Filter:',
     # Bias filter buttons
     'filter_all': 'All',

@@ -88,8 +88,8 @@
                     </div>
 
                     <div class="header-controls">
-                        <label for="lang-select" class="visually-hidden">Language</label>
-                        <select id="lang-select" aria-label="Language">
+                        <label for="lang-select" class="visually-hidden">{{ t.language_label|default:"Language" }}</label>
+                        <select id="lang-select" aria-label="{{ t.language_label|default:"Language" }}">
                             {% for code, name in language_names.items %}
                                 <option value="{{ code }}" {% if code == language %}selected{% endif %}>{{ name }}</option>
                             {% endfor %}
@@ -140,10 +140,10 @@
         </div>
 
         <div class="footer-bottom">
-            <p><bdi>&copy; 2026 24HourWire</bdi>. {{ t.footer_news_copy }} | <a href="{% url 'feeds' %}?lang={{ language }}">{{ t.footer_rss_feeds }}</a></p>
+            <p><bdi>&copy; 2026 24HourWire.</bdi> {{ t.footer_news_copy }} <span class="footer-sep" aria-hidden="true">|</span> <a href="{% url 'feeds' %}?lang={{ language }}">{{ t.footer_rss_feeds }}</a></p>
             <p class="admin-link">
                 {% if user.is_authenticated %}
-                    {{ user.username }} | <a href="/logout/">{{ t.footer_logout }}</a>
+                    {{ user.username }} <span class="footer-sep" aria-hidden="true">|</span> <a href="/logout/">{{ t.footer_logout }}</a>
                 {% else %}
                     <a href="/login/">{{ t.footer_admin_login }}</a>
                 {% endif %}
