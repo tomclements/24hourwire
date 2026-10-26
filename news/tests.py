@@ -1,4 +1,4 @@
-﻿"""
+"""
 Unit tests for 24HourWire news app.
 Run with: python manage.py test
 """
@@ -126,6 +126,8 @@ class StoryShareViewTests(TestCase):
     """Tests for story_share view."""
     
     def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
         self.client = Client()
         self.story = Story.objects.create(
             source='BBC',
@@ -158,6 +160,12 @@ class StoryShareViewTests(TestCase):
         """Test that correct template is used."""
         response = self.client.get(f'/story/{self.story.id}/')
         self.assertTemplateUsed(response, 'story_share.html')
+
+    def test_story_share_page_has_canonical_link(self):
+        """A valid /story/<id>/ page still contains a canonical link element."""
+        response = self.client.get(f'/story/{self.story.id}/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'rel="canonical"')
 
 
 class HomeViewTests(TestCase):
@@ -1327,13 +1335,47 @@ class TopicModelTests(TestCase):
 
 
 class RobotsTxtTopicTests(TestCase):
-    """Tests that robots.txt allows topic pages."""
-    
+    """Tests for robots.txt content and caching."""
+
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+
     def test_robots_txt_allows_topic(self):
         """robots.txt should Allow /topic/."""
         response = self.client.get('/robots.txt')
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Allow: /topic/')
+
+    def test_robots_txt_does_not_disallow_story(self):
+        """robots.txt must not contain Disallow: /story/ in the User-agent: * group."""
+        response = self.client.get('/robots.txt')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertNotIn('Disallow: /story/', content)
+
+    def test_robots_txt_keeps_other_rules(self):
+        """robots.txt must keep the remaining crawl rules."""
+        response = self.client.get('/robots.txt')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn('Disallow: /dashboard/', content)
+        self.assertIn('Disallow: /login/', content)
+        self.assertIn('Disallow: /go/', content)
+        self.assertIn('Disallow: /different-angle/', content)
+        self.assertIn('Allow: /topic/', content)
+        self.assertIn('Crawl-delay: 1', content)
+        self.assertIn('Sitemap: https://24hourwire.news/sitemap.xml', content)
+        self.assertIn('Sitemap: https://24hourwire.news/news-sitemap.xml', content)
+
+    def test_robots_txt_keeps_social_bot_story_allow(self):
+        """Social crawler groups still explicitly allow /story/."""
+        response = self.client.get('/robots.txt')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn('User-agent: Twitterbot', content)
+        self.assertIn('User-agent: facebookexternalhit', content)
+        self.assertIn('User-agent: LinkedInBot', content)
 
 
 class AdsTxtTests(TestCase):
@@ -2475,7 +2517,7 @@ class PollsListCacheTests(TestCase):
 
 
 class AnalyticsMiddlewareSkipAndWriteTests(TestCase):
-    """Bots must not INSERT; human writes must not call objects.create inline in __call__."""
+    """Bot and human visits are stored; writes must not call objects.create inline in __call__."""
 
     def test_call_does_not_create_inline(self):
         import inspect
@@ -2486,20 +2528,26 @@ class AnalyticsMiddlewareSkipAndWriteTests(TestCase):
         self.assertIn("Thread", sched_src)
         self.assertIn("objects.create", inspect.getsource(mw._write_analytics_event))
 
-    def test_bot_user_agent_does_not_insert(self):
+    def test_bot_user_agent_is_stored_as_bot(self):
         before = AnalyticsEvent.objects.count()
         response = self.client.get(
             "/terms/",
             HTTP_USER_AGENT="Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(AnalyticsEvent.objects.count(), before)
+        self.assertEqual(AnalyticsEvent.objects.count(), before + 1)
+        event = AnalyticsEvent.objects.latest("id")
+        self.assertEqual(event.path, "/terms/")
+        self.assertTrue(event.is_bot)
 
-    def test_curl_user_agent_does_not_insert(self):
+    def test_curl_user_agent_is_stored_as_bot(self):
         before = AnalyticsEvent.objects.count()
         response = self.client.get("/terms/", HTTP_USER_AGENT="curl/8.0.1")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(AnalyticsEvent.objects.count(), before)
+        self.assertEqual(AnalyticsEvent.objects.count(), before + 1)
+        event = AnalyticsEvent.objects.latest("id")
+        self.assertEqual(event.path, "/terms/")
+        self.assertTrue(event.is_bot)
 
     def test_human_request_creates_event(self):
         before = AnalyticsEvent.objects.count()
@@ -2512,6 +2560,100 @@ class AnalyticsMiddlewareSkipAndWriteTests(TestCase):
         event = AnalyticsEvent.objects.latest("id")
         self.assertEqual(event.path, "/terms/")
         self.assertFalse(event.is_bot)
+
+    def test_googlebot_public_path_is_stored_as_bot(self):
+        """A Googlebot request to a normal 200 page creates a bot AnalyticsEvent."""
+        before = AnalyticsEvent.objects.count()
+        response = self.client.get(
+            "/about/",
+            HTTP_USER_AGENT=(
+                "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+            ),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(AnalyticsEvent.objects.count(), before + 1)
+        event = AnalyticsEvent.objects.latest("id")
+        self.assertEqual(event.path, "/about/")
+        self.assertTrue(event.is_bot)
+
+    def test_browser_request_is_stored_as_human(self):
+        """A normal browser request creates a human AnalyticsEvent."""
+        before = AnalyticsEvent.objects.count()
+        response = self.client.get(
+            "/about/",
+            HTTP_USER_AGENT=(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            ),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(AnalyticsEvent.objects.count(), before + 1)
+        event = AnalyticsEvent.objects.latest("id")
+        self.assertEqual(event.path, "/about/")
+        self.assertFalse(event.is_bot)
+
+    def test_skipped_paths_do_not_create_events(self):
+        """Skip-listed paths must not INSERT rows for bot or human UAs."""
+        skipped_paths = [
+            "/robots.txt",
+            "/sitemap.xml",
+            "/news-sitemap.xml",
+            "/ads.txt",
+            "/static/news/js/theme.js",
+            "/favicon.ico",
+            "/healthz",
+        ]
+        bot_ua = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+        human_ua = (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        )
+        for path in skipped_paths:
+            for ua in (bot_ua, human_ua):
+                with self.subTest(path=path, ua=ua[:20]):
+                    before = AnalyticsEvent.objects.count()
+                    response = self.client.get(path, HTTP_USER_AGENT=ua)
+                    self.assertIn(response.status_code, (200, 404))
+                    self.assertEqual(
+                        AnalyticsEvent.objects.count(),
+                        before,
+                        f"Skip-listed path {path} should not create an AnalyticsEvent",
+                    )
+
+
+class AnalyticsDashboardBotSplitTests(TestCase):
+    """The analytics dashboard must keep human and bot counts separate."""
+
+    def test_dashboard_splits_human_and_bot_counts(self):
+        """Human counts exclude bots; bot_stats reflect the split."""
+        AnalyticsEvent.objects.create(
+            event_type="page_view", path="/terms/", language="en", is_bot=False
+        )
+        AnalyticsEvent.objects.create(
+            event_type="page_view", path="/about/", language="en", is_bot=False
+        )
+        AnalyticsEvent.objects.create(
+            event_type="page_view", path="/terms/", language="en", is_bot=True
+        )
+        AnalyticsEvent.objects.create(
+            event_type="page_view", path="/go/abc/", language="en", is_bot=True
+        )
+
+        User.objects.create_user(
+            username="staffer", email="staff@example.com", password="testpass", is_staff=True
+        )
+        self.client.login(username="staffer", password="testpass")
+
+        response = self.client.get(reverse("analytics_dashboard"))
+        self.assertEqual(response.status_code, 200)
+        summary = response.context["summary"]
+        bot_stats = response.context["bot_stats"]
+        self.assertEqual(summary["today"], 2)
+        self.assertEqual(summary["last_7_days"], 2)
+        self.assertEqual(bot_stats["today_bots"], 2)
+        self.assertEqual(bot_stats["today_human"], 2)
+        self.assertEqual(bot_stats["last_7_bots"], 2)
+        self.assertEqual(bot_stats["last_7_human"], 2)
 
 
 class PurgeAnalyticsCommandTests(TestCase):
@@ -2535,6 +2677,26 @@ class PurgeAnalyticsCommandTests(TestCase):
     def test_purge_help_documents_seven_day_retention(self):
         from news.management.commands.purge_analytics import Command
         self.assertIn("7 days", Command.help)
+
+    def test_purge_deletes_old_bot_rows(self):
+        """purge_analytics removes bot rows older than the retention window."""
+        from io import StringIO
+        from django.core.management import call_command
+
+        old_bot = AnalyticsEvent.objects.create(
+            event_type="page_view", path="/old-bot/", is_bot=True
+        )
+        fresh_bot = AnalyticsEvent.objects.create(
+            event_type="page_view", path="/fresh-bot/", is_bot=True
+        )
+        AnalyticsEvent.objects.filter(pk=old_bot.pk).update(
+            timestamp=timezone.now() - timedelta(days=8)
+        )
+        out = StringIO()
+        call_command("purge_analytics", stdout=out)
+        self.assertFalse(AnalyticsEvent.objects.filter(pk=old_bot.pk).exists())
+        self.assertTrue(AnalyticsEvent.objects.filter(pk=fresh_bot.pk).exists())
+        self.assertIn("Purged", out.getvalue())
 
 
 class DifferentAngleTemplateTests(TestCase):

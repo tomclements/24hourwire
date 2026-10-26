@@ -353,10 +353,10 @@ def robots_txt(request):
     """Serve robots.txt dynamically.
     
     Strategy:
-    - Block ephemeral pages (/go/, /story/) from Google indexing to avoid
-      'Crawled - currently not indexed' and 404 issues
+    - Block ephemeral/private pages (/go/, /dashboard/, /login/,
+      /different-angle/) from Google indexing
     - Allow social media crawlers (Twitter, Facebook, LinkedIn) to access
-      /go/ pages for generating preview cards
+      /go/ and /story/ pages for generating preview cards
     - Sitemap only includes stable pages and recent 24h stories
     """
     content = """User-agent: *
@@ -365,7 +365,6 @@ Allow: /topic/
 Disallow: /dashboard/
 Disallow: /login/
 Disallow: /go/
-Disallow: /story/
 Disallow: /different-angle/
 Crawl-delay: 1
 

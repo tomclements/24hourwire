@@ -60,6 +60,8 @@ class AnalyticsMiddleware:
         '/favicon',
         '/robots.txt',
         '/sitemap',
+        '/news-sitemap',
+        '/ads.txt',
         '/healthz',
     ]
     
@@ -104,9 +106,7 @@ class AnalyticsMiddleware:
         # Get user agent (truncated)
         user_agent = request.META.get('HTTP_USER_AGENT', '')[:200]
         
-        # Skip INSERT for obvious bots/crawlers (do not store a row at all)
-        if self._is_bot(user_agent):
-            return response
+        is_bot = self._is_bot(user_agent)
 
         payload = {
             "event_type": event_type,
@@ -114,7 +114,7 @@ class AnalyticsMiddleware:
             "language": language[:5] if language else "",
             "country_code": country_code[:5] if country_code else "",
             "user_agent": user_agent,
-            "is_bot": False,
+            "is_bot": is_bot,
         }
         _schedule_analytics_write(payload)
 
