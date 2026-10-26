@@ -1,6 +1,8 @@
 """Tests for the per-user source picker feature."""
 
+import re
 from datetime import timedelta
+from pathlib import Path
 
 from django.test import TestCase, Client, override_settings
 from django.utils import timezone
@@ -250,3 +252,41 @@ class SourcePickerAPITests(TestCase):
         titles = [s['title'] for s in data['stories']]
         self.assertIn('Reuters story', titles)
         self.assertIn('AP story', titles)
+
+
+class SourcePickerCssGuardTests(TestCase):
+    """Static guard tests for the source-picker CSS fix.
+
+    These tests exist to prevent accidental regression of the layout that
+    caused source names to squeeze to one letter per line and tiles to
+    overlap in languages with long bias badges.
+    """
+
+    def setUp(self):
+        self.css_path = Path(__file__).resolve().parent / 'static' / 'news' / 'css' / 'app.css'
+        self.css = self.css_path.read_text(encoding='utf-8')
+
+    def _rule_block(self, selector):
+        pattern = re.escape(selector) + r'\s*\{[^}]*\}'
+        match = re.search(pattern, self.css, re.DOTALL)
+        self.assertIsNotNone(match, f'Could not find {selector} rule in app.css')
+        return match.group(0)
+
+    def test_source_options_rows_size_to_content(self):
+        block = self._rule_block('.source-options')
+        self.assertRegex(block, r'grid-auto-rows\s*:\s*max-content')
+
+    def test_source_option_name_has_guard_against_squeeze(self):
+        block = self._rule_block('.source-option-name')
+        self.assertRegex(block, r'min-width\s*:\s*6em')
+        self.assertRegex(block, r'overflow-wrap\s*:\s*break-word')
+        self.assertNotRegex(block, r'overflow-wrap\s*:\s*anywhere')
+
+    def test_desktop_source_options_columns_are_wide_enough(self):
+        media_pattern = (
+            r'@media\s*\(\s*min-width\s*:\s*601px\s*\)\s*\{[^}]*'
+            r'\.source-options\s*\{[^}]*\}\s*\}'
+        )
+        media_match = re.search(media_pattern, self.css, re.DOTALL)
+        self.assertIsNotNone(media_match, 'Could not find desktop .source-options media rule')
+        self.assertRegex(media_match.group(0), r'minmax\s*\(\s*220px')
