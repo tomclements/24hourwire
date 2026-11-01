@@ -19,6 +19,15 @@ TIMESINCE_FIXES = {
 }
 
 
+@register.simple_tag
+def format_string(template, **kwargs):
+    """Substitute named placeholders in a translation string.
+
+    Usage: {% format_string t.load_more_stories loaded=cat_data.loaded total=cat_data.total_stories %}
+    """
+    return str(template or '').format(**kwargs)
+
+
 @register.filter
 def sign_share_data(story):
     """Generate a signed token for stateless branded sharing.

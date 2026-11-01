@@ -420,6 +420,7 @@ UI_STRINGS = {
     'sources_selected': '{count}/{total} 출처',
     'ongoing_coverage': '진행 중인 보도',
     'most_covered_heading': '출처별 가장 많이 보도된 뉴스',
+    'load_more_stories': '더 많은 기사 불러오기 ({loaded}/{total} 표시)',
     'read_coverage': '보도 읽기 →',
     'site_title': '24HourWire | 모든 각도에서 본 최신 뉴스',
     'footer_about_title': '24HourWire 소개',

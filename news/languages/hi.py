@@ -396,6 +396,7 @@ UI_STRINGS = {
     'sources_selected': '{count}/{total} स्रोत',
     'ongoing_coverage': 'निरंतर कवरेज',
     'most_covered_heading': 'स्रोतों में सबसे अधिक कवर',
+    'load_more_stories': 'और कहानियाँ लोड करें ({total} में से {loaded} दिखाई गईं)',
     'read_coverage': 'कवरेज पढ़ें →',
     'site_title': '24HourWire | हर कोण से ताज़ा ख़बरें',
     'footer_about_title': '24HourWire के बारे में',

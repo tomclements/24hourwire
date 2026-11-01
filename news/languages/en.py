@@ -653,6 +653,7 @@ UI_STRINGS = {
     'sources_selected': '{count}/{total} sources',
     'ongoing_coverage': 'Ongoing Coverage',
     'most_covered_heading': 'Most Covered Across Sources',
+    'load_more_stories': 'Load more stories ({loaded} of {total} shown)',
     'read_coverage': 'Read coverage →',
     'site_title': '24HourWire | The Latest News from All Angles',
     'footer_about_title': 'About 24HourWire',

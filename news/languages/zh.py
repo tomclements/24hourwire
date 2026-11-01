@@ -390,6 +390,7 @@ UI_STRINGS = {
     'sources_selected': '{count}/{total} 来源',
     'ongoing_coverage': '持续报道',
     'most_covered_heading': '各来源报道最多',
+    'load_more_stories': '加载更多报道（已显示 {loaded} / {total}）',
     'read_coverage': '阅读报道 →',
     'site_title': '24HourWire | 来自各个角度的最新新闻',
     'footer_about_title': '关于 24HourWire',

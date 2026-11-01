@@ -463,6 +463,7 @@ UI_STRINGS = {
     'sources_selected': '{count}/{total} sources',
     'ongoing_coverage': 'Couverture en cours',
     'most_covered_heading': 'Les plus couverts par les sources',
+    'load_more_stories': 'Charger plus d\'articles ({loaded} sur {total} affichés)',
     'read_coverage': 'Lire la couverture →',
     'site_title': '24HourWire | Les dernières actualités sous tous les angles',
     'footer_about_title': 'À propos de 24HourWire',
