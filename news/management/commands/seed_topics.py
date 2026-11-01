@@ -283,6 +283,12 @@ class Command(BaseCommand):
                     'description': 'Copertura completa della guerra tra Russia e Ucraina, inclusi aggiornamenti dal campo di battaglia, sforzi diplomatici, impatto umanitario e ripercussioni globali di sanzioni ed energia.',
                     'meta_title': 'Conflitto in Ucraina',
                 },
+                'ar': {
+                    'title': 'الصراع الأوكراني',
+                    'headline': 'التغطية المستمرة للحرب وتأثيرها العالمي',
+                    'description': 'تغطية شاملة للحرب الروسية-الأوكرانية، بما في ذلك تحديثات ساحة المعركة والجهود الدبلوماسية والتأثير الإنساني والتداعيات العالمية للعقوبات والطاقة.',
+                    'meta_title': 'الصراع الأوكراني',
+                },
             },
         })
 
@@ -330,6 +336,18 @@ class Command(BaseCommand):
                     'headline': 'Guerre commerciale, rivalité technologique et compétition géopolitique',
                     'description': "Suivez l'évolution de la rivalité entre les États-Unis et la Chine, des négociations commerciales et des tarifs douaniers à la course à l'IA, aux restrictions sur les semi-conducteurs et au positionnement militaire dans l'Indo-Pacifique.",
                     'meta_title': 'Relations États-Unis-Chine',
+                },
+                'de': {
+                    'title': 'US-chinesische Beziehungen',
+                    'headline': 'Handelskrieg, Technologierivalität und geopolitischer Wettbewerb',
+                    'description': 'Verfolgen Sie die sich entwickelnde Rivalität zwischen den Vereinigten Staaten und China, von Handelsverhandlungen und Zöllen bis zum KI-Wettlauf, Halbleiterbeschränkungen und militärischem Posturing im Indo-Pazifik.',
+                    'meta_title': 'US-chinesische Beziehungen',
+                },
+                'ar': {
+                    'title': 'العلاقات الأمريكية-الصينية',
+                    'headline': 'الحرب التجارية والتنافس التكنولوجي والجيوسياسي',
+                    'description': 'تابع التنافس المتطور بين الولايات المتحدة والصين، من المفاوضات التجارية والتعريفات إلى سباق الذكاء الاصطناعي وقيود أشباه الموصلات والتحركات العسكرية في منطقة المحيط الهندي والهادئ.',
+                    'meta_title': 'العلاقات الأمريكية-الصينية',
                 },
             },
         })
@@ -552,6 +570,12 @@ class Command(BaseCommand):
                     'headline': 'Instytucje UE, wybory i transgraniczne debaty polityczne',
                     'description': 'Relacje z polityki europejskiej, od instytucji UE i wyborów po rządy narodowe, koalicje i debaty polityczne kształtujące kontynent.',
                     'meta_title': 'Polityka europejska',
+                },
+                'ar': {
+                    'title': 'السياسة الأوروبية',
+                    'headline': 'مؤسسات الاتحاد الأوروبي والانتخابات والمناقشات السياسية عبر الحدود',
+                    'description': 'تغطية للسياسة الأوروبية، من مؤسسات الاتحاد الأوروبي والانتخابات إلى الحكومات الوطنية والائتلافات والمناقشات السياسية التي تشكل القارة.',
+                    'meta_title': 'السياسة الأوروبية',
                 },
             },
         })

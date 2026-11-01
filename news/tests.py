@@ -24,6 +24,7 @@ from news.models import Story, StoryCategory, StoryCluster, Topic, Poll, PollVot
 from news.views import story_share, different_angle, branded_redirect
 from django.core import signing
 from news.templatetags.news_extras import sign_share_data
+from news.languages import LANGUAGE_MODULES
 
 
 class StoryModelTests(TestCase):
@@ -1685,6 +1686,128 @@ class HomepageTopicCardsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         # The template uses {% if active_topics %} so context must include it
         # We verify the response renders successfully with topics in the DB
+
+
+class LoadMoreI18nTests(TestCase):
+    """Tests for translated 'Load more stories' label on homepage and in JS config."""
+
+    def setUp(self):
+        self.client = Client()
+        from django.core.cache import cache
+        cache.clear()
+
+    def _create_stories(self, language, count=25):
+        now = timezone.now()
+        for i in range(count):
+            Story.objects.create(
+                source='testsource',
+                title=f'{language.upper()} Story {i}',
+                excerpt=f'Excerpt {i}',
+                url=f'https://example.com/{language}/{i}',
+                language=language,
+                category='world',
+                published=now - timedelta(minutes=i),
+                url_hash=f'{language}hash{i}',
+                title_fingerprint=f'{language}fp{i}',
+            )
+
+    def _assert_load_more_translated(self, language, translated_phrase):
+        self._create_stories(language)
+        response = self.client.get(f'/?lang={language}&sources=testsource')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn(translated_phrase, content)
+        self.assertNotIn('Load more stories', content)
+        # The template should expose the unsubstituted template string to JS.
+        self.assertIn(f'data-label-template="{LANGUAGE_MODULES[language].UI_STRINGS["load_more_stories"]}"', content)
+
+    def test_load_more_label_translated_es(self):
+        """Spanish homepage renders translated load-more label."""
+        self._assert_load_more_translated('es', 'Cargar más historias')
+
+    def test_load_more_label_translated_de(self):
+        """German homepage renders translated load-more label."""
+        self._assert_load_more_translated('de', 'Weitere Geschichten laden')
+
+    def test_load_more_label_translated_ar(self):
+        """Arabic homepage renders translated load-more label."""
+        self._assert_load_more_translated('ar', 'تحميل المزيد من القصص')
+
+    def test_all_language_modules_have_load_more_key(self):
+        """Every supported language module defines load_more_stories."""
+        for code, mod in LANGUAGE_MODULES.items():
+            self.assertIn(
+                'load_more_stories', mod.UI_STRINGS,
+                f"Language {code} is missing load_more_stories UI string"
+            )
+
+
+class TopicTranslationsI18nTests(TestCase):
+    """Tests for missing topic translations caught by QA."""
+
+    def test_seed_topics_includes_missing_ar_and_de_translations(self):
+        """After seeding, the three patched topics have ar/de translations."""
+        call_command('seed_topics')
+
+        us_china = Topic.objects.get(slug='us-china-relations')
+        self.assertIn('de', us_china.translations)
+        self.assertIn('ar', us_china.translations)
+        for lang in ('de', 'ar'):
+            self.assertIn('title', us_china.translations[lang])
+            self.assertIn('headline', us_china.translations[lang])
+            self.assertIn('description', us_china.translations[lang])
+            self.assertIn('meta_title', us_china.translations[lang])
+
+        ukraine = Topic.objects.get(slug='ukraine-conflict')
+        self.assertIn('ar', ukraine.translations)
+        for field in ('title', 'headline', 'description', 'meta_title'):
+            self.assertIn(field, ukraine.translations['ar'])
+
+        europe = Topic.objects.get(slug='european-politics')
+        self.assertIn('ar', europe.translations)
+        for field in ('title', 'headline', 'description', 'meta_title'):
+            self.assertIn(field, europe.translations['ar'])
+
+    def test_patched_topics_have_required_translations(self):
+        """The patched topics now have translations for the languages fixed in this change."""
+        call_command('seed_topics')
+        required = {
+            'us-china-relations': ['de', 'ar'],
+            'ukraine-conflict': ['ar'],
+            'european-politics': ['ar'],
+        }
+        for slug, langs in required.items():
+            topic = Topic.objects.get(slug=slug)
+            for lang in langs:
+                self.assertIn(
+                    lang, topic.translations,
+                    f"Topic {topic.slug} missing {lang} translation"
+                )
+                for field in ('title', 'headline', 'description', 'meta_title'):
+                    self.assertIn(
+                        field, topic.translations[lang],
+                        f"Topic {topic.slug} translation for {lang} missing {field}"
+                    )
+
+
+    def test_homepage_renders_translated_topic_cards(self):
+        """Real homepage path shows every active topic card, translated, regardless of Topic.languages."""
+        from django.core.cache import cache
+        call_command('seed_topics')
+        cases = [
+            ('ar', 'ukraine-conflict'),
+            ('ar', 'european-politics'),
+            ('ar', 'us-china-relations'),
+            ('de', 'us-china-relations'),
+        ]
+        for lang, slug in cases:
+            cache.clear()
+            topic = Topic.objects.get(slug=slug)
+            response = self.client.get('/', {'lang': lang})
+            self.assertEqual(response.status_code, 200)
+            html = response.content.decode('utf-8')
+            self.assertIn(topic.translations[lang]['title'], html, f'{slug} {lang}')
+            self.assertNotIn('>' + topic.title + '</div>', html, f'{slug} {lang} English title')
 
 
 class PollModelTests(TestCase):

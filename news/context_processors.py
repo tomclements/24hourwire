@@ -23,6 +23,7 @@ JS_UI_KEYS = (
     'error_loading',
     'stories',
     'story',
+    'load_more_stories',
 )
 
 

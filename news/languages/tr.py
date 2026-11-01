@@ -421,6 +421,7 @@ UI_STRINGS = {
     'sources_selected': '{count}/{total} kaynak',
     'ongoing_coverage': 'Devam eden haberler',
     'most_covered_heading': 'Kaynaklar arasında en çok kapsanan',
+    'load_more_stories': 'Daha fazla haber yükle ({loaded}/{total} gösteriliyor)',
     'read_coverage': 'Haberi oku →',
     'site_title': '24HourWire | Tüm Açılardan Son Haberler',
     'footer_about_title': '24HourWire Hakkında',

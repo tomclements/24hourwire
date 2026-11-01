@@ -412,6 +412,7 @@ UI_STRINGS = {
     'sources_selected': '{count}/{total} ソース',
     'ongoing_coverage': '継続的な報道',
     'most_covered_heading': '各ソースで最も報じられたニュース',
+    'load_more_stories': 'さらに読み込む ({loaded} / {total} 件表示)',
     'read_coverage': '報道を読む →',
     'site_title': '24HourWire | あらゆる角度からの最新ニュース',
     'footer_about_title': '24HourWireについて',

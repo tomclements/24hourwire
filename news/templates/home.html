@@ -300,8 +300,9 @@
             </div>
 
             {% if cat_data.has_more %}
-            <button class="load-more" data-action="load-more" data-category="{{ cat_id }}" style="width: 100%; margin-top: 24px; padding: 14px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; font-size: 0.9rem; font-weight: 500; color: var(--text-secondary); transition: all 0.2s;">
-                Load more stories ({{ cat_data.loaded }} of {{ cat_data.total_stories }} shown)
+            {% format_string t.load_more_stories loaded=cat_data.loaded total=cat_data.total_stories as load_more_label %}
+            <button class="load-more" data-action="load-more" data-category="{{ cat_id }}" data-label-template="{{ t.load_more_stories }}" style="width: 100%; margin-top: 24px; padding: 14px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; font-size: 0.9rem; font-weight: 500; color: var(--text-secondary); transition: all 0.2s;">
+                {{ load_more_label }}
             </button>
             {% endif %}
         {% else %}

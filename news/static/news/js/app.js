@@ -251,7 +251,8 @@
                 }
 
                 if (data.has_more) {
-                    btn.textContent = 'Load more stories (' + (loaded + data.stories.length) + ' of ' + data.total + ' shown)';
+                    const template = btn.getAttribute('data-label-template') || UI.load_more_stories || 'Load more stories ({loaded} of {total} shown)';
+                    btn.textContent = template.replace('{loaded}', String(loaded + data.stories.length)).replace('{total}', String(data.total));
                     btn.disabled = false;
                 } else {
                     btn.style.display = 'none';

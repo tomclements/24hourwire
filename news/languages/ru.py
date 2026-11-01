@@ -419,6 +419,7 @@ UI_STRINGS = {
     'sources_selected': '{count}/{total} источников',
     'ongoing_coverage': 'Актуальное освещение',
     'most_covered_heading': 'Самое освещаемое в источниках',
+    'load_more_stories': 'Загрузить ещё ({loaded} из {total} показано)',
     'read_coverage': 'Читать освещение →',
     'site_title': '24HourWire | Последние новости со всех сторон',
     'footer_about_title': 'О 24HourWire',
