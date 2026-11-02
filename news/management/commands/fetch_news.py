@@ -15,7 +15,7 @@ from difflib import SequenceMatcher
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 from django.db import OperationalError, connection, DataError, IntegrityError, transaction
-from news.models import Story, StoryCategory, normalize_url, title_fingerprint, clean_title
+from news.models import Story, StoryCategory, normalize_url, title_fingerprint, clean_title, clean_feed_text
 from news.sources_config import LANGUAGE_FEEDS, SUPPORTED_LANGUAGES
 from news.categorization import get_story_categories
 
@@ -60,6 +60,7 @@ GOOGLE_NEWS_URL_PATTERN = re.compile(r'<a\s+href="https?://news\.google\.com/rss
 HTML_TAG_PATTERN = re.compile(r'<[^>]+>')
 URL_PATTERN = re.compile(r'https?://\S+')
 WHITESPACE_PATTERN = re.compile(r'\s+')
+LEFTOVER_MARKUP_PATTERN = re.compile(r'</?(?:span|b|i|strong|em|a|p|br)\b[^>]*>', re.IGNORECASE)
 
 # Setup logger first
 logger = logging.getLogger('news.fetch')
@@ -319,14 +320,14 @@ class Command(BaseCommand):
                     total_dupes += 1
                     continue
 
-                # Create excerpt - clean HTML and Google News reference URLs
+                # Create excerpt - clean HTML, entities, and Google News reference URLs
                 rss_excerpt = entry.get('summary', '')[:500]  # Reduced from 800
-                
+
                 # Clean Google News RSS reference URLs immediately
                 rss_excerpt = GOOGLE_NEWS_URL_PATTERN.sub(' ', rss_excerpt)
-                # Remove all HTML tags
-                rss_excerpt = HTML_TAG_PATTERN.sub(' ', rss_excerpt)
-                # Remove leftover URLs
+                # Strip literal HTML tags once, then decode entities
+                rss_excerpt = clean_feed_text(rss_excerpt)
+                # Remove leftover bare URLs
                 rss_excerpt = URL_PATTERN.sub(' ', rss_excerpt)
                 # Clean up whitespace
                 rss_excerpt = WHITESPACE_PATTERN.sub(' ', rss_excerpt).strip()
@@ -414,6 +415,30 @@ class Command(BaseCommand):
         deleted = Story.objects.filter(published__lt=cutoff).delete()
         return deleted[0]
 
+    def scrub_leftover_markup_titles(self):
+        """Remove leftover harmless HTML tags from stored titles.
+
+        Only targets a small allowlist of inline/block tags; leaves literal
+        angle brackets and already-decoded text untouched. Returns the number
+        of titles changed.
+        """
+        try:
+            dirty_count = 0
+            for story in Story.objects.filter(title__icontains='<').iterator():
+                cleaned = LEFTOVER_MARKUP_PATTERN.sub(' ', story.title)
+                cleaned = WHITESPACE_PATTERN.sub(' ', cleaned).strip()
+                cleaned = re.sub(r'\s+([,.:;!?%])', r'\1', cleaned)
+                if cleaned and cleaned != story.title:
+                    story.title = cleaned
+                    story.title_fingerprint = title_fingerprint(cleaned)
+                    story.save(update_fields=['title', 'title_fingerprint'])
+                    dirty_count += 1
+            return dirty_count
+        except Exception as e:
+            logger.error(f'Failed to clean existing story titles: {e}')
+            self.safe_write(self.style.WARNING(f"Warning: Could not clean existing titles: {e}"))
+            return 0
+
     def check_db_connection(self, max_retries=3):
         """Check if database connection is working."""
         for attempt in range(max_retries):
@@ -455,22 +480,11 @@ class Command(BaseCommand):
             logger.error(f'Failed to clean old stories: {e}')
             self.safe_write(self.style.WARNING(f"Warning: Could not clean old stories: {e}"))
 
-        # Scrub any titles that still contain HTML tags (e.g. <span>LIVE</span>)
-        try:
-            dirty_count = 0
-            for story in Story.objects.filter(title__icontains='<').iterator():
-                new_title = clean_title(story.title)
-                if new_title and new_title != story.title:
-                    story.title = new_title
-                    story.title_fingerprint = title_fingerprint(new_title)
-                    story.save(update_fields=['title', 'title_fingerprint'])
-                    dirty_count += 1
-            if dirty_count:
-                logger.info(f'Cleaned HTML from {dirty_count} story titles')
-                self.safe_write(f"Cleaned HTML from {dirty_count} story titles")
-        except Exception as e:
-            logger.error(f'Failed to clean existing story titles: {e}')
-            self.safe_write(self.style.WARNING(f"Warning: Could not clean existing titles: {e}"))
+        # Scrub any titles that still contain leftover HTML markup (e.g. <span>LIVE</span>)
+        dirty_count = self.scrub_leftover_markup_titles()
+        if dirty_count:
+            logger.info(f'Cleaned HTML from {dirty_count} story titles')
+            self.safe_write(f"Cleaned HTML from {dirty_count} story titles")
 
         total_new = 0
         total_dupes = 0

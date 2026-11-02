@@ -38,12 +38,54 @@ def title_fingerprint(title):
     return hashlib.md5(' '.join(words).encode()).hexdigest()
 
 
+def normalize_text(s):
+    """Decode HTML entities until stable; do NOT strip tags.
+
+    Handles double-encoded entities such as &amp;#x201c; and &amp;amp;.
+    Returns a plain-text string with collapsed whitespace. Output is NOT
+    marked safe and must be escaped before rendering in HTML/JSON.
+    """
+    if s is None or s == '':
+        return ''
+    text = re.sub(r'&nbsp;', ' ', str(s), flags=re.IGNORECASE)
+    # Repeatedly unescape until stable (cap 3 passes to avoid runaway)
+    for _ in range(3):
+        decoded = html.unescape(text)
+        if decoded == text:
+            break
+        text = decoded
+    text = WHITESPACE_PATTERN.sub(' ', text).strip()
+    return text
+
+
+def clean_feed_text(raw):
+    """Clean raw feed text: strip HTML tags exactly once, then decode entities.
+
+    Use this for raw RSS excerpts/summaries that may contain literal HTML tags.
+    The tags are removed before entity decoding so encoded angle brackets such
+    as '&lt;script&gt;' are preserved as visible text.
+    """
+    if raw is None or raw == '':
+        return ''
+    text = HTML_TAG_PATTERN.sub(' ', str(raw))
+    return normalize_text(text)
+
+
 def clean_title(raw_title):
-    """Strip HTML tags and decode entities from feed titles."""
-    title = HTML_TAG_PATTERN.sub(' ', raw_title)
-    title = html.unescape(title)
-    title = WHITESPACE_PATTERN.sub(' ', title).strip()
+    """Strip HTML tags once and decode entities from raw feed titles."""
+    title = clean_feed_text(raw_title)
     # Remove stray spaces before punctuation left by tag stripping (e.g. "LIVE :")
+    title = re.sub(r'\s+([,.:;!?%])', r'\1', title)
+    return title
+
+
+def normalize_stored_title(title):
+    """Decode-only title cleanup for already-stored titles.
+
+    Keeps literal HTML tags (they will be escaped by templates) and only
+    fixes the stray-space-before-punctuation artifact left by old cleaners.
+    """
+    title = normalize_text(title)
     title = re.sub(r'\s+([,.:;!?%])', r'\1', title)
     return title
 
@@ -123,47 +165,32 @@ class Story(models.Model):
         from news.sources_config import SOURCE_ATTRIBUTION, GENERIC_TEXT
         if not self.excerpt:
             return ''
-        
+
         text = self.excerpt
-        
+
         # Remove Google News RSS reference URLs (e.g., <a href="https://news.google.com/rss/articles/CBMi2...")
         text = GOOGLE_NEWS_URL_PATTERN.sub(' ', text)
-        
-        # Remove all HTML tags more aggressively
-        text = HTML_TAG_PATTERN.sub(' ', text)
-        
-        # Remove URLs that might be left over
+
+        # Stored text is already tag-stripped at ingest (clean_feed_text). Decode-only
+        # here so the step is idempotent and 'a < b' / '<script>' stay as text,
+        # escaped on output by autoescape / esc().
+        text = normalize_text(text)
+
+        # Remove bare URLs that might be left over
         text = URL_PATTERN.sub(' ', text)
-        
+
         # Remove source attribution at end
         attribution = SOURCE_ATTRIBUTION.get(self.language, SOURCE_ATTRIBUTION['en'])
         text = re.sub(attribution, '', text, flags=re.IGNORECASE)
-        
-        # Decode HTML entities
-        text = re.sub(r'&nbsp;', ' ', text)
-        text = re.sub(r'&amp;', '&', text)
-        text = re.sub(r'&lt;', '<', text)
-        text = re.sub(r'&gt;', '>', text)
-        text = re.sub(r'&#39;', "'", text)
-        text = re.sub(r'&#8217;', "'", text)  # Right single quotation mark
-        text = re.sub(r'&#8216;', "'", text)  # Left single quotation mark
-        text = re.sub(r'&#8220;', '"', text)  # Left double quotation mark
-        text = re.sub(r'&#8221;', '"', text)  # Right double quotation mark
-        text = re.sub(r'&#8230;', '...', text)  # Ellipsis
-        text = re.sub(r'&#8211;', '-', text)  # En dash
-        text = re.sub(r'&#8212;', '--', text)  # Em dash
-        text = re.sub(r'&quot;', '"', text)
-        text = re.sub(r'&#[0-9]+;', '', text)  # Remove any remaining numeric entities
-        text = re.sub(r'&[a-zA-Z0-9]+;', '', text)  # Remove any remaining named entities
-        
-        # Clean up whitespace
+
+        # Collapse whitespace after URL/attribution removal
         text = WHITESPACE_PATTERN.sub(' ', text).strip()
-        
+
         # Filter out generic text
         generic = GENERIC_TEXT.get(self.language, GENERIC_TEXT['en'])
         if any(g in text.lower() for g in generic):
             return ''
-        
+
         # Filter out if too similar to title
         title_lower = self.title.lower()
         text_lower = text.lower()

@@ -3,7 +3,7 @@ import ssl
 import re
 import logging
 from django.core.management.base import BaseCommand
-from news.models import Story
+from news.models import Story, clean_feed_text
 
 logger = logging.getLogger('news.update')
 logger.setLevel(logging.INFO)
@@ -30,13 +30,13 @@ class Command(BaseCommand):
                     match = re.search(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+name=["\']description["\']', html, re.I)
                 
                 if match:
-                    desc = match.group(1).strip()
-                    desc = desc.replace('&amp;', '&').replace('&quot;', '"').replace('&#39;', "'").replace('&nbsp;', ' ')
+                    desc = clean_feed_text(match.group(1).strip())
                     return desc[:500]
-                
+
                 match = re.search(r'<meta[^>]+property=["\']og:description["\'][^>]+content=["\']([^"\']+)["\']', html, re.I)
                 if match:
-                    return match.group(1).strip()[:500]
+                    desc = clean_feed_text(match.group(1).strip())
+                    return desc[:500]
                     
         except Exception:
             pass

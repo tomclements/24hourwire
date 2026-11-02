@@ -196,7 +196,8 @@ class SourcePickerHomeTests(TestCase):
         filtered = self._home(excluded_sources='Reuters')
         self.assertNotContains(filtered, 'Reuters story')
         self.assertContains(filtered, 'AP story')
-        self.assertEqual(filtered.get('Cache-Control'), 'private, no-cache')
+        self.assertIn('private', filtered.get('Cache-Control', ''))
+        self.assertIn('no-cache', filtered.get('Cache-Control', ''))
 
     def test_new_source_not_in_cookie_is_selected(self):
         # We can't add a real new source to the registry in a unit test without
@@ -206,6 +207,48 @@ class SourcePickerHomeTests(TestCase):
         excluded = ','.join([n for n in self.source_names if n != 'Reuters'])
         response = self._home(excluded_sources=excluded)
         self.assertContains(response, 'Reuters story')
+
+    def test_default_all_sources_checked_and_hollywood_reporter_checked(self):
+        response = self._home()
+        self.assertEqual(response.status_code, 200)
+        body = response.content.decode()
+        total_sources = len(self.en_sources)
+        # All source checkboxes should be checked by default.
+        checked_inputs = re.findall(
+            r'<input[^>]*\sname="source"\s[^>]*\bchecked\b[^>]*>',
+            body,
+            flags=re.IGNORECASE,
+        )
+        self.assertEqual(len(checked_inputs), total_sources)
+        # Hollywood Reporter checkbox is checked and label shows no count.
+        self.assertContains(response, 'value="Hollywood Reporter" checked')
+        self.assertNotIn('(84/85)', body)
+        self.assertNotIn('Sources (', body)
+
+    def test_excluded_source_unchecked_and_label_shows_count(self):
+        response = self._home(excluded_sources='Hollywood%20Reporter')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'value="Hollywood Reporter"')
+        self.assertNotContains(response, 'value="Hollywood Reporter" checked')
+        self.assertContains(response, 'Sources (84/85)')
+
+    def test_home_cache_control_private_always(self):
+        self._create_story('Reuters', 'Reuters story', ['all'])
+        no_cookie = self._home()
+        self.assertIn('private', no_cookie.get('Cache-Control', ''))
+        self.assertIn('no-cache', no_cookie.get('Cache-Control', ''))
+
+        with_cookie = self._home(excluded_sources='Reuters')
+        self.assertIn('private', with_cookie.get('Cache-Control', ''))
+        self.assertIn('no-cache', with_cookie.get('Cache-Control', ''))
+
+    def test_cross_language_cookie_name_dropped_for_current_language(self):
+        # An es-only source name in the cookie must not affect the en picker.
+        response = self._home(excluded_sources='EFE,Hollywood%20Reporter')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'value="Hollywood Reporter"')
+        self.assertNotContains(response, 'value="Hollywood Reporter" checked')
+        self.assertContains(response, 'Sources (84/85)')
 
 
 @override_settings(CACHES={'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}})

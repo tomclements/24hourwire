@@ -356,10 +356,12 @@ def home(request):
 
     if excluded_sources:
         response = _home_impl(request)
-        response['Cache-Control'] = 'private, no-cache'
-        return response
+    else:
+        response = _home_cached(request)
 
-    return _home_cached(request)
+    # Browser must revalidate: the excluded_sources cookie changes what this page shows
+    response['Cache-Control'] = 'private, no-cache'
+    return response
 
 
 @cache_page(86400)  # 24 hours — robots.txt rarely changes

@@ -511,18 +511,38 @@
         const picker = document.getElementById('source-picker');
         if (!picker) return;
         const checkboxes = picker.querySelectorAll('input[name="source"]');
-        const allNames = [];
+        const currentNames = [];
         const unchecked = [];
         checkboxes.forEach(box => {
-            allNames.push(box.value);
+            currentNames.push(box.value);
             if (!box.checked) {
                 unchecked.push(box.value);
             }
         });
-        if (unchecked.length === 0) {
+        const currentSet = new Set(currentNames);
+
+        // Merge: preserve exclusions for sources not shown in this language's picker
+        const existing = getExcludedSourcesCookie();
+        const preserved = [];
+        if (existing) {
+            existing.split(',').forEach(segment => {
+                if (!segment) return;
+                try {
+                    const name = decodeURIComponent(segment);
+                    if (name && !currentSet.has(name)) {
+                        preserved.push(name);
+                    }
+                } catch (e) {
+                    // Ignore malformed segment
+                }
+            });
+        }
+
+        const merged = [...preserved, ...unchecked];
+        if (merged.length === 0) {
             setExcludedSourcesCookie('');
         } else {
-            const encoded = unchecked.map(name => encodeURIComponent(name)).join(',');
+            const encoded = merged.map(name => encodeURIComponent(name)).join(',');
             setExcludedSourcesCookie(encoded);
         }
         window.location.reload();
