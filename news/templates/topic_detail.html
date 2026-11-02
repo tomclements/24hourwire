@@ -112,7 +112,8 @@
                 <div class="book-cover-fallback">⚽</div>
                 {% endif %}
                 <h3 class="book-title">{{ item.name }}</h3>
-                <a href="{{ item.url }}" target="_blank" rel="nofollow sponsored noopener" class="book-link" data-action="book-click" data-asin="{{ item.name|escapejs }}">View on Amazon &rarr;</a>
+                <a href="{{ item.url|amazon_tag }}" target="_blank" rel="nofollow sponsored noopener" class="book-link" data-action="book-click" data-asin="{{ item.name|escapejs }}">View on Amazon &rarr;</a>
+                <p class="affiliate-disclosure">As an Amazon Associate I earn from qualifying purchases.</p>
             </article>
             {% endwith %}
         {% endif %}
@@ -129,7 +130,8 @@
                 <div class="book-cover-fallback">⚽</div>
                 {% endif %}
                 <h3 class="book-title">{{ item.name }}</h3>
-                <a href="{{ item.url }}" target="_blank" rel="nofollow sponsored noopener" class="book-link" data-action="book-click" data-asin="{{ item.name|escapejs }}">View on Amazon &rarr;</a>
+                <a href="{{ item.url|amazon_tag }}" target="_blank" rel="nofollow sponsored noopener" class="book-link" data-action="book-click" data-asin="{{ item.name|escapejs }}">View on Amazon &rarr;</a>
+                <p class="affiliate-disclosure">As an Amazon Associate I earn from qualifying purchases.</p>
             </article>
             {% endwith %}
         {% endif %}

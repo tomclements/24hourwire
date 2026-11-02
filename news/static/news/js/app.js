@@ -186,11 +186,22 @@
                 grid.querySelectorAll('.book-card[data-book-asin]').forEach(card => {
                     shownAsins.add(card.dataset.bookAsin);
                 });
+                const shownProductKeys = new Set();
+                grid.querySelectorAll('.product-card[data-product-key]').forEach(card => {
+                    shownProductKeys.add(card.dataset.productKey);
+                });
 
                 let bookForInsertion = null;
                 if (data.books && data.books.length > 0) {
                     for (const book of data.books) {
                         if (!shownAsins.has(book.asin)) { bookForInsertion = book; break; }
+                    }
+                }
+                let productForInsertion = null;
+                if (data.products && data.products.length > 0) {
+                    for (const product of data.products) {
+                        const key = product.search_query || product.name;
+                        if (!shownProductKeys.has(key)) { productForInsertion = product; break; }
                     }
                 }
 
@@ -199,10 +210,16 @@
                 data.stories.forEach((story, index) => {
                     const globalStoryNum = loaded + index + 1;
 
-                    if (globalStoryNum === 24 && bookForInsertion) {
-                        fragment.appendChild(createBookCard(bookForInsertion));
-                        shownAsins.add(bookForInsertion.asin);
-                        bookForInsertion = null;
+                    if (globalStoryNum === 24) {
+                        if (productForInsertion) {
+                            fragment.appendChild(createProductCard(productForInsertion));
+                            shownProductKeys.add(productForInsertion.search_query || productForInsertion.name);
+                            productForInsertion = null;
+                        } else if (bookForInsertion) {
+                            fragment.appendChild(createBookCard(bookForInsertion));
+                            shownAsins.add(bookForInsertion.asin);
+                            bookForInsertion = null;
+                        }
                     }
 
                     if (index === 1 && data.poll && !pollInserted) {
@@ -281,7 +298,30 @@
             <h3 class="book-title">${esc(book.title)}</h3>
             <p class="book-author">by ${esc(book.author)}</p>
             ${book.description ? `<p class="book-description">${esc(book.description.substring(0, 140))}${book.description.length > 140 ? '...' : ''}</p>` : ''}
-            <a href="${esc(book.amazon_url)}" target="_blank" rel="noopener" class="book-link" data-action="book-click" data-asin="${esc(book.asin)}">View on Amazon &rarr;</a>
+            <a href="${esc(book.amazon_url)}" target="_blank" rel="nofollow sponsored noopener" class="book-link" data-action="book-click" data-asin="${esc(book.asin)}">View on Amazon &rarr;</a>
+            <p class="affiliate-disclosure">As an Amazon Associate I earn from qualifying purchases.</p>
+        `;
+        return article;
+    }
+
+    function createProductCard(product) {
+        const article = document.createElement('article');
+        article.className = 'product-card';
+        const key = product.search_query || product.name;
+        article.setAttribute('data-product-key', key);
+        if (product.id) {
+            article.setAttribute('data-product-id', product.id);
+        }
+        const coverHtml = product.image_url
+            ? `<img src="${esc(product.image_url)}" alt="${esc(product.name)}" class="book-cover" loading="lazy">`
+            : `<div class="book-cover" style="display: flex; align-items: center; justify-content: center; background: #f3f4f6; color: #9ca3af; font-size: 2rem;">🛍️</div>`;
+        article.innerHTML = `
+            <span class="book-badge">Recommended Product</span>
+            ${coverHtml}
+            <h3 class="book-title">${esc(product.name)}</h3>
+            ${product.description ? `<p class="book-description">${esc(product.description.substring(0, 140))}${product.description.length > 140 ? '...' : ''}</p>` : ''}
+            <a href="${esc(product.amazon_url)}" target="_blank" rel="nofollow sponsored noopener" class="book-link" data-action="product-click" data-product-id="${esc(product.id || '')}">View on Amazon &rarr;</a>
+            <p class="affiliate-disclosure">As an Amazon Associate I earn from qualifying purchases.</p>
         `;
         return article;
     }
@@ -420,6 +460,15 @@
             data.append('csrfmiddlewaretoken', CSRF_TOKEN);
             data.append('asin', asin);
             navigator.sendBeacon('/analytics/book-click/', data);
+        }
+    }
+
+    function trackProductClick(productId) {
+        if (navigator.sendBeacon && productId) {
+            const data = new FormData();
+            data.append('csrfmiddlewaretoken', CSRF_TOKEN);
+            data.append('id', productId);
+            navigator.sendBeacon('/analytics/product-click/', data);
         }
     }
 
@@ -788,6 +837,7 @@
                 );
                 break;
             case 'book-click': trackBookClick(el.getAttribute('data-asin')); break;
+            case 'product-click': trackProductClick(el.getAttribute('data-product-id')); break;
             case 'load-more': loadMore(el, el.getAttribute('data-category')); break;
             case 'vote-poll':
                 voteInlinePoll(

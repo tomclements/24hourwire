@@ -1,6 +1,8 @@
 import re
+from urllib.parse import parse_qs, urlencode, urlparse
 
 from django import template
+from django.conf import settings
 from django.core import signing
 from django.utils import translation
 from django.utils.timesince import timesince
@@ -187,3 +189,20 @@ def local_timesince(value, language):
     strings = UI_STRINGS.get(language, UI_STRINGS['en'])
     template = strings.get('time_ago', '{delta} ago')
     return template.format(delta=delta)
+
+
+@register.filter
+def amazon_tag(url):
+    """Rewrite or add the Amazon Associates tag on amazon.com URLs.
+
+    Leaves non-Amazon URLs unchanged.
+    """
+    if not isinstance(url, str):
+        return url
+    parsed = urlparse(url)
+    host = (parsed.hostname or '').lower()
+    if not (host == 'amazon.com' or host.endswith('.amazon.com')):
+        return url
+    query = parse_qs(parsed.query, keep_blank_values=True)
+    query['tag'] = [settings.AMAZON_ASSOCIATE_TAG]
+    return parsed._replace(query=urlencode(query, doseq=True)).geturl()

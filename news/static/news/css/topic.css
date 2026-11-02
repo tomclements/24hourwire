@@ -522,7 +522,8 @@
         }
 
         /* Book / Merchandise Cards (same styling as homepage) */
-        .book-card {
+        .book-card,
+        .product-card {
             background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
             border: 2px solid #eab308;
             border-radius: var(--radius-lg);
@@ -537,7 +538,8 @@
             position: relative;
         }
 
-        .book-card:hover {
+        .book-card:hover,
+        .product-card:hover {
             box-shadow: 0 8px 16px -4px rgba(234, 179, 8, 0.3);
             transform: translateY(-2px);
             border-color: #ca8a04;
@@ -621,6 +623,13 @@
         .book-link:hover {
             background: #a16207;
             transform: translateY(-1px);
+        }
+
+        .affiliate-disclosure {
+            font-size: 0.75rem;
+            color: #92400e;
+            margin-top: 12px;
+            line-height: 1.4;
         }
 
         [data-theme="dark"] .topic-hero {

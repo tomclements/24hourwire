@@ -187,7 +187,8 @@
                         {% if book.description %}
                         <p class="book-description">{{ book.description|truncatechars:140 }}</p>
                         {% endif %}
-                        <a href="{{ book.amazon_url }}" target="_blank" rel="noopener" class="book-link" data-action="book-click" data-asin="{{ book.asin }}">View on Amazon →</a>
+                        <a href="{{ book.amazon_url }}" target="_blank" rel="nofollow sponsored noopener" class="book-link" data-action="book-click" data-asin="{{ book.asin }}">View on Amazon →</a>
+                        <p class="affiliate-disclosure">As an Amazon Associate I earn from qualifying purchases.</p>
                     </article>
                     {% endwith %}
                 {% endif %}
