@@ -226,17 +226,21 @@ def _home_impl(request):
         _annotate_representative_story(rep, cluster, lang_source_info)
         most_covered_stories.append(rep)
 
-    # Fetch active book recommendations for English categories
+    # Fetch active book and product recommendations for English categories
     recommended_books = {}
     all_books = []
+    all_active_products = []
     if language == 'en':
-        from .models import RecommendedBook
+        from .models import RecommendedBook, RecommendedProduct
         books = RecommendedBook.objects.filter(language='en', is_active=True)
         for book in books:
             if book.category not in recommended_books:
                 recommended_books[book.category] = []
             recommended_books[book.category].append(book)
             all_books.append(book)
+        all_active_products = list(RecommendedProduct.objects.filter(
+            language='en', is_active=True
+        ))
 
     # Fetch active poll for this language (at most 1, light presence)
     now = timezone.now()
@@ -248,6 +252,7 @@ def _home_impl(request):
     ).order_by('?').first()
 
     grouped = {}
+    import random
     for cat_id, cat_name in category_names.items():
         if cat_id == 'most_covered':
             cat_stories = most_covered_stories
@@ -261,16 +266,24 @@ def _home_impl(request):
             for story in cat_stories:
                 _annotate_homepage_story(story, lang_source_info, active_topics)
 
-        import random
+        # Slot 1 (story 10) = book
+        cat_books = []
         if cat_id == 'all' and all_books:
             cat_books = list(all_books)
             random.shuffle(cat_books)
-            cat_books = cat_books[:2]  # Max 2 books for "All" tab
+            cat_books = cat_books[:1]
         else:
             cat_books = recommended_books.get(cat_id, [])
             if cat_books:
                 random.shuffle(cat_books)
-                cat_books = cat_books[:2]  # Max 2 books per category
+                cat_books = cat_books[:1]
+
+        # Slot 2 (story 24 / load-more) = product; fallback to book handled client-side.
+        # Products are now one seasonal list, shown on every tab except most_covered
+        # (which has no book slot either).
+        cat_products = []
+        if cat_id != 'most_covered' and all_active_products:
+            cat_products = [random.choice(all_active_products)]
 
         # Send first 20 for initial render, include metadata for "load more"
         grouped[cat_id] = {
@@ -280,6 +293,7 @@ def _home_impl(request):
             'loaded': min(20, total_stories),
             'has_more': total_stories > 20,
             'books': cat_books,
+            'products': cat_products,
             'poll': active_poll if cat_id == 'all' else None,
         }
 
@@ -877,7 +891,7 @@ def load_more_stories(request):
     cutoff = timezone.now() - timedelta(hours=24)
     qs = _homepage_story_qs(cutoff, language, effective_sources, category_id)
     total = qs.count()
-    batch = list(qs.only(*STORY_LIST_FIELDS)[offset:offset + 50])
+    batch = list(qs.only(*STORY_LIST_FIELDS).prefetch_related('category_links')[offset:offset + 50])
     
     story_data = []
     for story in batch:
@@ -899,10 +913,13 @@ def load_more_stories(request):
             'share_token': '',  # Will be generated in template if needed
         })
     
-    # Fetch book recommendations for English categories
+    # Fetch book and product recommendations for English categories.
+    # Slot 1 (story 10) is rendered server-side; slot 2 (story 24) is product-first,
+    # falling back to a book if no product exists for the category.
     book_data = []
+    product_data = []
     if language == 'en' and category_id != 'most_covered':
-        from .models import RecommendedBook
+        from .models import RecommendedBook, RecommendedProduct
         import random
         if category_id == 'all':
             cat_books = list(RecommendedBook.objects.filter(
@@ -914,6 +931,7 @@ def load_more_stories(request):
             ))
         if cat_books:
             random.shuffle(cat_books)
+            # Up to 2 so the client can skip the book already shown at slot 1
             for book in cat_books[:2]:
                 book_data.append({
                     'title': book.title,
@@ -922,7 +940,23 @@ def load_more_stories(request):
                     'image_url': book.image_url or '',
                     'amazon_url': book.amazon_url(),
                     'asin': book.asin,
+                    'kind': 'book',
                 })
+        # Products are now one seasonal list, rotated across all tabs.
+        active_products = list(RecommendedProduct.objects.filter(
+            language='en', is_active=True
+        ))
+        if active_products:
+            product = random.choice(active_products)
+            product_data.append({
+                'id': product.id,
+                'name': product.name,
+                'description': product.description or '',
+                'image_url': product.image_url or '',
+                'amazon_url': product.amazon_url(),
+                'search_query': product.search_query,
+                'kind': 'product',
+            })
     
     # Include active poll for 'all' tab (at most one per loaded batch)
     poll_data = None
@@ -946,6 +980,7 @@ def load_more_stories(request):
     return JsonResponse({
         'stories': story_data,
         'books': book_data,
+        'products': product_data,
         'poll': poll_data,
         'total': total,
         'has_more': offset + len(batch) < total,
@@ -1041,6 +1076,31 @@ def track_book_click(request):
                     country_code=country_code[:5],
                     user_agent=user_agent,
                     is_bot=False,  # Beacon API calls are always from real users
+                )
+        except Exception:
+            pass
+    return JsonResponse({'status': 'ok'})
+
+
+def track_product_click(request):
+    """Track product recommendation clicks via beacon API.
+
+    Accepts POST form data (csrfmiddlewaretoken + id) or JSON body.
+    Increments the product's click_count using an F() expression.
+    """
+    from django.http import JsonResponse
+    from django.db.models import F
+    if request.method == 'POST':
+        try:
+            product_id = (request.POST.get('id') or '').strip()
+            if not product_id:
+                import json
+                body = json.loads(request.body.decode('utf-8') or '{}')
+                product_id = (body.get('id') or '').strip() if isinstance(body, dict) else ''
+            if product_id:
+                from .models import RecommendedProduct
+                RecommendedProduct.objects.filter(id=product_id).update(
+                    click_count=F('click_count') + 1
                 )
         except Exception:
             pass

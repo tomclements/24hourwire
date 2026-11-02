@@ -247,6 +247,10 @@ if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
 
+# Amazon Associates tracking tag for affiliate links.
+# Override via environment; default is the production associate tag.
+AMAZON_ASSOCIATE_TAG = os.environ.get('AMAZON_ASSOCIATE_TAG', '24hourwire06-20')
+
 # Email settings (for health_check command)
 # Use any SMTP provider: Gmail, SendGrid, Mailgun, etc.
 EMAIL_HOST = os.environ.get('EMAIL_HOST', '')

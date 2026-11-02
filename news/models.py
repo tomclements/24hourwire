@@ -3,6 +3,7 @@ import html
 import re
 from urllib.parse import urlparse, parse_qs, urlencode
 
+from django.conf import settings
 from django.db import IntegrityError, models, transaction
 
 
@@ -553,7 +554,47 @@ class RecommendedBook(models.Model):
     
     def amazon_url(self):
         """Generate Amazon affiliate link."""
-        return f"https://www.amazon.com/dp/{self.asin}?tag=24hourwire-20"
+        return f"https://www.amazon.com/dp/{self.asin}?tag={settings.AMAZON_ASSOCIATE_TAG}"
+
+
+class RecommendedProduct(models.Model):
+    """Curated product recommendations shown alongside news stories."""
+
+    CATEGORY_CHOICES = [
+        ('world', 'World'),
+        ('us', 'US'),
+        ('politics', 'Politics'),
+        ('business', 'Business'),
+        ('technology', 'Technology'),
+        ('science', 'Science'),
+        ('health', 'Health'),
+        ('sports', 'Sports'),
+        ('entertainment', 'Entertainment'),
+    ]
+
+    name = models.CharField(max_length=200)
+    search_query = models.CharField(max_length=200)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, null=True, blank=True)
+    language = models.CharField(max_length=5, default='en')
+    description = models.TextField(blank=True)
+    image_url = models.URLField(blank=True)
+    is_active = models.BooleanField(default=True)
+    click_count = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['category', '-created_at']
+        indexes = [
+            models.Index(fields=['category', 'language', 'is_active']),
+        ]
+
+    def __str__(self):
+        return self.name
+
+    def amazon_url(self):
+        """Generate Amazon search affiliate link."""
+        from urllib.parse import quote_plus
+        return f"https://www.amazon.com/s?k={quote_plus(self.search_query)}&tag={settings.AMAZON_ASSOCIATE_TAG}"
 
 
 class Topic(models.Model):

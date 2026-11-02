@@ -20,7 +20,11 @@ from django.http import JsonResponse
 from django.core.management import call_command
 
 from django.contrib.auth.models import User
-from news.models import Story, StoryCategory, StoryCluster, Topic, Poll, PollVote, AnalyticsEvent, title_fingerprint, normalize_url, build_clusters, clean_title
+from news.models import (
+    Story, StoryCategory, StoryCluster, Topic, Poll, PollVote, AnalyticsEvent,
+    RecommendedBook, RecommendedProduct,
+    title_fingerprint, normalize_url, build_clusters, clean_title,
+)
 from news.views import story_share, different_angle, branded_redirect
 from django.core import signing
 from django.contrib.staticfiles.finders import find
@@ -1505,12 +1509,12 @@ class TopicMerchandiseTests(TestCase):
                 'items': [
                     {
                         'name': 'Official Match Ball',
-                        'url': 'https://www.amazon.com/s?k=match+ball&tag=24hourwire-20',
+                        'url': 'https://www.amazon.com/s?k=match+ball&tag=24hourwire06-20',
                         'image': 'https://example.com/ball.jpg',
                     },
                     {
                         'name': 'Brazil Jersey',
-                        'url': 'https://www.amazon.com/s?k=brazil+jersey&tag=24hourwire-20',
+                        'url': 'https://www.amazon.com/s?k=brazil+jersey&tag=24hourwire06-20',
                     }
                 ]
             }
@@ -1542,11 +1546,12 @@ class TopicMerchandiseTests(TestCase):
         self.assertIn('World Cup 2026 Gear', content)
     
     def test_merchandise_links_use_amazon_affiliate(self):
-        """Merchandise links should include the affiliate tracking ID."""
+        """Merchandise links should include the current affiliate tracking ID."""
         response = self.client.get('/topic/world-cup-merch/')
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
-        self.assertIn('tag=24hourwire-20', content)
+        self.assertIn('tag=24hourwire06-20', content)
+        self.assertNotIn('tag=24hourwire-20', content)
     
     def test_topic_without_merchandise_no_book_cards(self):
         """Topics without merchandise should not show any book-card merch."""
@@ -1568,6 +1573,317 @@ class TopicMerchandiseTests(TestCase):
         self.assertNotContains(response, 'World Cup 2026 Gear')
         self.assertNotContains(response, 'Official Match Ball')
         self.assertNotContains(response, 'Brazil Jersey')
+
+    def test_merchandise_disclosure_renders(self):
+        """Affiliate disclosure should render under each merchandise card."""
+        response = self.client.get('/topic/world-cup-merch/')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        disclosure = 'As an Amazon Associate I earn from qualifying purchases.'
+        self.assertIn(disclosure, content)
+        # Two items -> two disclosure paragraphs
+        self.assertEqual(content.count(disclosure), 2)
+
+
+class AmazonAssociateTagTests(TestCase):
+    """Tests for Amazon Associates tag usage across books, products, and merchandise."""
+
+    def test_book_amazon_url_uses_setting_tag(self):
+        """Book.amazon_url() should use the configured associate tag."""
+        from django.conf import settings
+        book = RecommendedBook.objects.create(
+            title='Test Book',
+            author='Test Author',
+            asin='B00TESTBOOK',
+            category='world',
+            language='en',
+        )
+        self.assertIn(settings.AMAZON_ASSOCIATE_TAG, book.amazon_url())
+        self.assertIn('tag=24hourwire06-20', book.amazon_url())
+
+    def test_amazon_tag_filter_rewrites_tag(self):
+        """amazon_tag filter should replace the tag param on Amazon URLs."""
+        from news.templatetags.news_extras import amazon_tag
+        url = 'https://www.amazon.com/s?k=test&tag=old-tag-20'
+        rewritten = amazon_tag(url)
+        self.assertIn('tag=24hourwire06-20', rewritten)
+        self.assertNotIn('tag=old-tag-20', rewritten)
+
+    def test_amazon_tag_filter_adds_tag_when_missing(self):
+        """amazon_tag filter should add the tag param when absent."""
+        from news.templatetags.news_extras import amazon_tag
+        url = 'https://www.amazon.com/s?k=test'
+        rewritten = amazon_tag(url)
+        self.assertIn('tag=24hourwire06-20', rewritten)
+
+    def test_amazon_tag_filter_leaves_non_amazon_urls(self):
+        """amazon_tag filter should not modify non-Amazon URLs."""
+        from news.templatetags.news_extras import amazon_tag
+        url = 'https://example.com/s?k=test&tag=old-tag-20'
+        self.assertEqual(amazon_tag(url), url)
+
+    def test_amazon_tag_filter_leaves_subdomain_spoof_unchanged(self):
+        """amazon.com.evil.net should not be treated as Amazon."""
+        from news.templatetags.news_extras import amazon_tag
+        url = 'https://amazon.com.evil.net/x?tag=a'
+        self.assertEqual(amazon_tag(url), url)
+
+    def test_amazon_tag_filter_leaves_similar_domain_unchanged(self):
+        """notamazon.com should not be treated as Amazon."""
+        from news.templatetags.news_extras import amazon_tag
+        url = 'https://notamazon.com/x?tag=a'
+        self.assertEqual(amazon_tag(url), url)
+
+    def test_amazon_tag_filter_rewrites_with_port(self):
+        """www.amazon.com:443 should be rewritten with the configured tag."""
+        from news.templatetags.news_extras import amazon_tag
+        url = 'https://www.amazon.com:443/dp/X?tag=old'
+        rewritten = amazon_tag(url)
+        self.assertIn('tag=24hourwire06-20', rewritten)
+        self.assertNotIn('tag=old', rewritten)
+
+
+class RecommendedProductTests(TestCase):
+    """Tests for the RecommendedProduct model."""
+
+    def test_product_has_expected_fields(self):
+        """RecommendedProduct should have the required fields and no price/rating fields."""
+        product = RecommendedProduct.objects.create(
+            name='Test Gadget',
+            search_query='test gadget',
+            category='technology',
+            language='en',
+            description='A test product.',
+        )
+        self.assertEqual(product.name, 'Test Gadget')
+        self.assertEqual(product.search_query, 'test gadget')
+        self.assertTrue(product.is_active)
+
+    def test_product_has_no_price_or_rating_fields(self):
+        """RecommendedProduct should not expose price, rating, stars, or reviews fields."""
+        forbidden = {'price', 'rating', 'stars', 'reviews'}
+        fields = {f.name for f in RecommendedProduct._meta.get_fields()}
+        self.assertTrue(forbidden.isdisjoint(fields))
+
+    def test_product_amazon_url_is_search_link_with_tag(self):
+        """RecommendedProduct.amazon_url() should be a search URL with the associate tag."""
+        from django.conf import settings
+        product = RecommendedProduct.objects.create(
+            name='USB-C Charger',
+            search_query='USB-C wall charger',
+            category='technology',
+            language='en',
+        )
+        url = product.amazon_url()
+        self.assertTrue(url.startswith('https://www.amazon.com/s?'))
+        self.assertIn('k=USB-C+wall+charger', url)
+        self.assertIn(f'tag={settings.AMAZON_ASSOCIATE_TAG}', url)
+
+
+class HomeRecommendationMixTests(TestCase):
+    """Tests for the 1:1 book/product recommendation mix on home and load-more."""
+
+    def setUp(self):
+        self.client = Client()
+        from django.core.cache import cache
+        cache.clear()
+        self.now = timezone.now()
+        # Create enough stories to trigger the slot-10 card
+        for i in range(12):
+            Story.objects.create(
+                source='BBC',
+                title=f'Tech story {i}',
+                excerpt='Test',
+                url=f'https://example.com/tech{i}',
+                language='en',
+                category='technology',
+                published=self.now - timedelta(minutes=i),
+                url_hash=f'th{i}',
+                title_fingerprint=f'thf{i}',
+            )
+        self.book = RecommendedBook.objects.create(
+            title='Tech Book',
+            author='Author',
+            asin='B00TECHBOOK',
+            category='technology',
+            language='en',
+        )
+        self.product = RecommendedProduct.objects.create(
+            name='USB-C Charger',
+            search_query='USB-C wall charger',
+            category='technology',
+            language='en',
+        )
+
+    def test_home_renders_one_book_card_at_slot_ten(self):
+        """Home initial HTML should render exactly one book card at story 10."""
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn('data-book-asin="B00TECHBOOK"', content)
+        self.assertIn('Recommended Read', content)
+        self.assertEqual(content.count('data-book-asin='), 1)
+
+    def test_home_book_link_has_current_tag_and_rel(self):
+        """Book card link should carry the new tag and sponsored rel attributes."""
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn('https://www.amazon.com/dp/B00TECHBOOK?tag=24hourwire06-20', content)
+        self.assertIn('tag=24hourwire06-20', content)
+        self.assertIn('rel="nofollow sponsored noopener"', content)
+
+    def test_home_disclosure_renders_with_card(self):
+        """Affiliate disclosure should render when a recommendation card is shown."""
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn('As an Amazon Associate I earn from qualifying purchases.', content)
+
+    def test_load_more_returns_product_and_book(self):
+        """Load-more API should return one product and one book for English categories."""
+        response = self.client.get('/api/stories/?lang=en&category=technology&offset=0')
+        self.assertEqual(response.status_code, 200)
+        import json
+        data = json.loads(response.content)
+        self.assertEqual(len(data['books']), 1)
+        self.assertEqual(len(data['products']), 1)
+        self.assertEqual(data['books'][0]['kind'], 'book')
+        self.assertEqual(data['products'][0]['kind'], 'product')
+        self.assertIn('tag=24hourwire06-20', data['books'][0]['amazon_url'])
+        self.assertIn('tag=24hourwire06-20', data['products'][0]['amazon_url'])
+
+    def test_load_more_product_dict_has_no_price_or_rating(self):
+        """API product dict should not contain price or rating keys."""
+        response = self.client.get('/api/stories/?lang=en&category=technology&offset=0')
+        import json
+        data = json.loads(response.content)
+        product = data['products'][0]
+        for key in ('price', 'rating', 'stars', 'reviews'):
+            self.assertNotIn(key, product)
+
+    def test_load_more_falls_back_to_book_when_no_product(self):
+        """Categories without products should still return a book in slot 2 fallback."""
+        self.product.delete()
+        response = self.client.get('/api/stories/?lang=en&category=technology&offset=0')
+        self.assertEqual(response.status_code, 200)
+        import json
+        data = json.loads(response.content)
+        self.assertEqual(len(data['books']), 1)
+        self.assertEqual(len(data['products']), 0)
+
+
+class SeasonalProductTests(TestCase):
+    """Tests for the single seasonal product list used across all tabs."""
+
+    def setUp(self):
+        self.client = Client()
+        from django.core.cache import cache
+        cache.clear()
+
+    def test_product_appears_in_politics_load_more(self):
+        """Products rotate across all tabs, including politics."""
+        product = RecommendedProduct.objects.create(
+            name='Holiday Gadget',
+            search_query='holiday gadget',
+            language='en',
+        )
+        response = self.client.get('/api/stories/?lang=en&category=politics&offset=0')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(len(data['products']), 1)
+        self.assertEqual(data['products'][0]['id'], product.id)
+
+    def test_product_appears_in_health_load_more(self):
+        """Products rotate across all tabs, including health."""
+        product = RecommendedProduct.objects.create(
+            name='Wellness Gift',
+            search_query='wellness gift',
+            language='en',
+        )
+        response = self.client.get('/api/stories/?lang=en&category=health&offset=0')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(len(data['products']), 1)
+        self.assertEqual(data['products'][0]['id'], product.id)
+
+    def test_product_rotation_varies_across_calls(self):
+        """With several active products, repeated calls return more than one distinct pick."""
+        for i in range(5):
+            RecommendedProduct.objects.create(
+                name=f'Rotating Product {i}',
+                search_query=f'rotating product {i}',
+                language='en',
+            )
+        ids = set()
+        for i in range(40):
+            # Bypass the 60-second cache_page so each request actually rotates.
+            response = self.client.get(
+                f'/api/stories/?lang=en&category=technology&offset=0&_={i}'
+            )
+            data = json.loads(response.content)
+            self.assertEqual(len(data['products']), 1)
+            ids.add(data['products'][0]['id'])
+        self.assertGreater(len(ids), 1)
+
+    def test_seeding_twice_has_no_duplicates_and_same_count(self):
+        """Running seed_products twice is idempotent and produces no duplicate names."""
+        from io import StringIO
+        call_command('seed_products', stdout=StringIO())
+        first_count = RecommendedProduct.objects.filter(is_active=True).count()
+        first_names = set(
+            RecommendedProduct.objects.filter(is_active=True).values_list('name', flat=True)
+        )
+        call_command('seed_products', stdout=StringIO())
+        second_count = RecommendedProduct.objects.filter(is_active=True).count()
+        second_names = set(
+            RecommendedProduct.objects.filter(is_active=True).values_list('name', flat=True)
+        )
+        self.assertEqual(first_count, second_count)
+        self.assertEqual(len(second_names), second_count)
+        self.assertEqual(first_names, second_names)
+
+    def test_removed_product_gets_deactivated(self):
+        """A product dropped from the seasonal list is deactivated by the next seed run."""
+        from io import StringIO
+        from unittest.mock import patch
+        from news.data.amazon_products import PRODUCTS
+
+        call_command('seed_products', stdout=StringIO())
+        removed_name = RecommendedProduct.objects.filter(
+            is_active=True
+        ).values_list('name', flat=True).first()
+        reduced_list = [p for p in PRODUCTS if p['name'] != removed_name]
+
+        out = StringIO()
+        with patch('news.data.amazon_products.PRODUCTS', reduced_list):
+            call_command('seed_products', stdout=out)
+
+        self.assertFalse(RecommendedProduct.objects.get(name=removed_name).is_active)
+        self.assertEqual(
+            RecommendedProduct.objects.filter(is_active=True).count(),
+            len(reduced_list),
+        )
+        self.assertIn('deactivated', out.getvalue().lower())
+
+    def test_recommended_product_has_no_price_or_rating_fields(self):
+        """RecommendedProduct should not expose price, rating, stars, or reviews fields."""
+        forbidden = {'price', 'rating', 'stars', 'reviews'}
+        fields = {f.name for f in RecommendedProduct._meta.get_fields()}
+        self.assertTrue(forbidden.isdisjoint(fields))
+
+    def test_load_more_product_dict_has_no_price_or_rating(self):
+        """API product dict should not contain price or rating keys."""
+        RecommendedProduct.objects.create(
+            name='API Gadget',
+            search_query='api gadget',
+            language='en',
+        )
+        response = self.client.get('/api/stories/?lang=en&category=world&offset=0')
+        data = json.loads(response.content)
+        self.assertEqual(len(data['products']), 1)
+        for key in ('price', 'rating', 'stars', 'reviews'):
+            self.assertNotIn(key, data['products'][0])
 
 
 class TopicThemeToggleTests(TestCase):
@@ -3272,6 +3588,71 @@ class BookClickTrackingTests(TestCase):
         )
 
 
+class ProductClickTrackingTests(TestCase):
+    """sendBeacon product-click tracking increments RecommendedProduct.click_count."""
+
+    def setUp(self):
+        self.product = RecommendedProduct.objects.create(
+            name='USB-C Charger',
+            search_query='USB-C wall charger',
+            category='technology',
+            language='en',
+        )
+        self.book = RecommendedBook.objects.create(
+            title='Tech Book',
+            author='Author',
+            asin='B00TECHBOOK',
+            category='technology',
+            language='en',
+        )
+
+    def test_post_without_csrf_is_forbidden(self):
+        client = Client(enforce_csrf_checks=True)
+        response = client.post('/analytics/product-click/', {'id': self.product.id})
+        self.assertEqual(response.status_code, 403)
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.click_count, 0)
+
+    def test_post_with_csrf_increments_product_click_count(self):
+        client = Client(enforce_csrf_checks=True)
+        home = client.get('/')
+        self.assertEqual(home.status_code, 200)
+        self.assertIn('csrftoken', client.cookies)
+        token = client.cookies['csrftoken'].value
+        response = client.post('/analytics/product-click/', {
+            'csrfmiddlewaretoken': token,
+            'id': self.product.id,
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {'status': 'ok'})
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.click_count, 1)
+
+    def test_product_click_does_not_change_book_click_count(self):
+        client = Client(enforce_csrf_checks=True)
+        home = client.get('/')
+        token = client.cookies['csrftoken'].value
+        client.post('/analytics/product-click/', {
+            'csrfmiddlewaretoken': token,
+            'id': self.product.id,
+        })
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.click_count, 0)
+
+    def test_book_click_still_works(self):
+        client = Client(enforce_csrf_checks=True)
+        home = client.get('/')
+        token = client.cookies['csrftoken'].value
+        response = client.post('/analytics/book-click/', {
+            'csrfmiddlewaretoken': token,
+            'asin': self.book.asin,
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {'status': 'ok'})
+        events = AnalyticsEvent.objects.filter(event_type='book_click')
+        self.assertEqual(events.count(), 1)
+
+
 class PostToTwitterSelectionTests(TestCase):
     """Tweet picks use StoryCluster.source_count, not a fake Story field."""
 
@@ -4168,6 +4549,8 @@ class RefreshScrollTopTests(TestCase):
     """Tests that a full reload scrolls back to the top of the homepage."""
 
     def setUp(self):
+        from django.core.cache import cache
+        cache.clear()  # homepage is cache_page'd; avoid a stale page from earlier tests
         self.client = Client()
 
     def test_app_js_has_reload_scroll_handling(self):
