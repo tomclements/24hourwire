@@ -13,6 +13,15 @@ HTML_TAG_PATTERN = re.compile(r'<[^>]+>')
 URL_PATTERN = re.compile(r'https?://\S+')
 WHITESPACE_PATTERN = re.compile(r'\s+')
 
+# Allowed hosts for Amazon Associates SiteStripe product images. Product
+# image_url values must be copied from SiteStripe while signed in with the
+# 24hourwire06-20 tag; any other host is rejected by display_image_url().
+ALLOWED_IMAGE_HOSTS = {
+    'm.media-amazon.com',
+    'images-na.ssl-images-amazon.com',
+    'ws-na.amazon-adsystem.com',
+}
+
 
 def normalize_url(url):
     """Normalize URL for dedup comparison - strips tracking params, normalizes scheme."""
@@ -620,13 +629,21 @@ class RecommendedProduct(models.Model):
         return self.name
 
     def display_image_url(self):
-        """Return the static image URL if a self-hosted file exists, else image_url."""
+        """Return the static image URL if a self-hosted file exists, else image_url.
+
+        The image_url is only returned when its host is in ALLOWED_IMAGE_HOSTS
+        so that accidental or malicious URLs cannot be rendered.
+        """
         if self.image:
             from django.contrib.staticfiles.finders import find
             from django.templatetags.static import static
             if find('news/img/' + self.image):
                 return static('news/img/' + self.image)
-        return self.image_url or ''
+        if self.image_url:
+            parsed = urlparse(self.image_url)
+            if parsed.scheme == 'https' and parsed.hostname in ALLOWED_IMAGE_HOSTS:
+                return self.image_url
+        return ''
 
     def amazon_url(self):
         """Generate Amazon search affiliate link."""

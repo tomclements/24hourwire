@@ -267,12 +267,12 @@ def _home_impl(request):
                 _annotate_homepage_story(story, lang_source_info, active_topics)
 
         # Build a shuffled recommendation pool for JS to place responsively.
-        # English tabs (except most_covered) get up to 6 products + up to 3 books.
+        # English tabs (except most_covered) get up to 8 products + up to 3 books.
         rec_pool = []
         if language == 'en' and cat_id != 'most_covered':
             prods = list(all_active_products)
             random.shuffle(prods)
-            for product in prods[:6]:
+            for product in prods[:8]:
                 rec_pool.append({
                     'kind': 'product',
                     'id': product.id,
@@ -929,7 +929,7 @@ def load_more_stories(request):
         })
     
     # Fetch recommendation pools for English categories. The client places cards
-    # responsively; we just supply up to 6 shuffled products + up to 3 books.
+    # responsively; we just supply up to 8 shuffled products + up to 3 books.
     book_data = []
     product_data = []
     if language == 'en' and category_id != 'most_covered':
@@ -958,7 +958,7 @@ def load_more_stories(request):
             language='en', is_active=True
         ))
         random.shuffle(active_products)
-        for product in active_products[:6]:
+        for product in active_products[:8]:
             product_data.append({
                 'id': product.id,
                 'name': product.name,
