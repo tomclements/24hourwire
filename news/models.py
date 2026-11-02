@@ -605,6 +605,7 @@ class RecommendedProduct(models.Model):
     language = models.CharField(max_length=5, default='en')
     description = models.TextField(blank=True)
     image_url = models.URLField(blank=True)
+    image = models.CharField(max_length=200, blank=True, default='')
     is_active = models.BooleanField(default=True)
     click_count = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -617,6 +618,15 @@ class RecommendedProduct(models.Model):
 
     def __str__(self):
         return self.name
+
+    def display_image_url(self):
+        """Return the static image URL if a self-hosted file exists, else image_url."""
+        if self.image:
+            from django.contrib.staticfiles.finders import find
+            from django.templatetags.static import static
+            if find('news/img/' + self.image):
+                return static('news/img/' + self.image)
+        return self.image_url or ''
 
     def amazon_url(self):
         """Generate Amazon search affiliate link."""

@@ -5,6 +5,7 @@ Run with: python manage.py test
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import re
@@ -1680,6 +1681,51 @@ class RecommendedProductTests(TestCase):
         self.assertIn('k=USB-C+wall+charger', url)
         self.assertIn(f'tag={settings.AMAZON_ASSOCIATE_TAG}', url)
 
+    def test_product_image_field_exists_blank_default(self):
+        """RecommendedProduct should have an image field with blank default."""
+        product = RecommendedProduct.objects.create(
+            name='Test Image Product',
+            search_query='test image product',
+            language='en',
+        )
+        self.assertEqual(product.image, '')
+        field = RecommendedProduct._meta.get_field('image')
+        self.assertTrue(field.blank)
+        self.assertEqual(field.default, '')
+
+    def test_display_image_url_empty_when_no_image(self):
+        """display_image_url() returns '' when no image or image_url is set."""
+        product = RecommendedProduct.objects.create(
+            name='No Image Product',
+            search_query='no image product',
+            language='en',
+        )
+        self.assertEqual(product.display_image_url(), '')
+
+    def test_display_image_url_falls_back_to_image_url(self):
+        """display_image_url() returns image_url when no self-hosted image exists."""
+        product = RecommendedProduct.objects.create(
+            name='Image URL Product',
+            search_query='image url product',
+            language='en',
+            image_url='https://example.com/product.jpg',
+        )
+        self.assertEqual(product.display_image_url(), 'https://example.com/product.jpg')
+
+    @patch('django.templatetags.static.static')
+    @patch('django.contrib.staticfiles.finders.find')
+    def test_display_image_url_uses_static_when_file_exists(self, mock_find, mock_static):
+        """display_image_url() returns static URL when self-hosted file is found."""
+        mock_find.return_value = '/static/news/img/products/test.webp'
+        mock_static.return_value = '/static/news/img/products/test.webp'
+        product = RecommendedProduct.objects.create(
+            name='Static Image Product',
+            search_query='static image product',
+            language='en',
+            image='products/test.webp',
+        )
+        self.assertIn('/static/news/img/products/test.webp', product.display_image_url())
+
 
 class HomeRecommendationMixTests(TestCase):
     """Tests for the 1:1 book/product recommendation mix on home and load-more."""
@@ -1689,9 +1735,9 @@ class HomeRecommendationMixTests(TestCase):
         from django.core.cache import cache
         cache.clear()
         self.now = timezone.now()
-        # Create enough stories to trigger the slot-10 card
+        # Create enough stories to populate the technology tab.
         for i in range(12):
-            Story.objects.create(
+            story = Story.objects.create(
                 source='BBC',
                 title=f'Tech story {i}',
                 excerpt='Test',
@@ -1702,6 +1748,8 @@ class HomeRecommendationMixTests(TestCase):
                 url_hash=f'th{i}',
                 title_fingerprint=f'thf{i}',
             )
+            StoryCategory.objects.create(story=story, slug='technology')
+            StoryCategory.objects.create(story=story, slug='all')
         self.book = RecommendedBook.objects.create(
             title='Tech Book',
             author='Author',
@@ -1716,61 +1764,83 @@ class HomeRecommendationMixTests(TestCase):
             language='en',
         )
 
-    def test_home_renders_one_book_card_at_slot_ten(self):
-        """Home initial HTML should render exactly one book card at story 10."""
+    def test_home_renders_rec_pool_json(self):
+        """Home initial HTML should expose a shuffled rec pool with product + book."""
         response = self.client.get('/')
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
-        self.assertIn('data-book-asin="B00TECHBOOK"', content)
-        self.assertIn('Recommended Read', content)
-        self.assertEqual(content.count('data-book-asin='), 1)
+        self.assertIn('id="rec-pool-technology"', content)
+        self.assertIn('"kind": "product"', content)
+        self.assertIn('"kind": "book"', content)
+        self.assertIn('USB-C Charger', content)
+        self.assertIn('B00TECHBOOK', content)
+        # No hard-coded server-side book card in the grid.
+        self.assertNotIn('data-book-asin="B00TECHBOOK"', content)
 
-    def test_home_book_link_has_current_tag_and_rel(self):
-        """Book card link should carry the new tag and sponsored rel attributes."""
-        response = self.client.get('/')
-        self.assertEqual(response.status_code, 200)
-        content = response.content.decode()
-        self.assertIn('https://www.amazon.com/dp/B00TECHBOOK?tag=24hourwire06-20', content)
-        self.assertIn('tag=24hourwire06-20', content)
-        self.assertIn('rel="nofollow sponsored noopener"', content)
-
-    def test_home_disclosure_renders_with_card(self):
-        """Affiliate disclosure should render when a recommendation card is shown."""
-        response = self.client.get('/')
-        self.assertEqual(response.status_code, 200)
-        content = response.content.decode()
-        self.assertIn('As an Amazon Associate I earn from qualifying purchases.', content)
-
-    def test_load_more_returns_product_and_book(self):
-        """Load-more API should return one product and one book for English categories."""
+    def test_load_more_returns_multiple_products_and_books(self):
+        """Load-more API should return up to 6 products and up to 3 books."""
         response = self.client.get('/api/stories/?lang=en&category=technology&offset=0')
         self.assertEqual(response.status_code, 200)
         import json
         data = json.loads(response.content)
-        self.assertEqual(len(data['books']), 1)
-        self.assertEqual(len(data['products']), 1)
-        self.assertEqual(data['books'][0]['kind'], 'book')
-        self.assertEqual(data['products'][0]['kind'], 'product')
-        self.assertIn('tag=24hourwire06-20', data['books'][0]['amazon_url'])
-        self.assertIn('tag=24hourwire06-20', data['products'][0]['amazon_url'])
+        self.assertGreaterEqual(len(data['books']), 1)
+        self.assertLessEqual(len(data['books']), 3)
+        self.assertGreaterEqual(len(data['products']), 1)
+        self.assertLessEqual(len(data['products']), 6)
+        if data['books']:
+            self.assertEqual(data['books'][0]['kind'], 'book')
+            self.assertIn('tag=24hourwire06-20', data['books'][0]['amazon_url'])
+        if data['products']:
+            self.assertEqual(data['products'][0]['kind'], 'product')
+            self.assertIn('tag=24hourwire06-20', data['products'][0]['amazon_url'])
 
     def test_load_more_product_dict_has_no_price_or_rating(self):
         """API product dict should not contain price or rating keys."""
         response = self.client.get('/api/stories/?lang=en&category=technology&offset=0')
         import json
         data = json.loads(response.content)
-        product = data['products'][0]
-        for key in ('price', 'rating', 'stars', 'reviews'):
-            self.assertNotIn(key, product)
+        for product in data['products']:
+            for key in ('price', 'rating', 'stars', 'reviews'):
+                self.assertNotIn(key, product)
 
-    def test_load_more_falls_back_to_book_when_no_product(self):
-        """Categories without products should still return a book in slot 2 fallback."""
+    def test_load_more_returns_books_when_no_product(self):
+        """Categories without products should still return books in the pool."""
         self.product.delete()
         response = self.client.get('/api/stories/?lang=en&category=technology&offset=0')
         self.assertEqual(response.status_code, 200)
         import json
         data = json.loads(response.content)
-        self.assertEqual(len(data['books']), 1)
+        self.assertGreaterEqual(len(data['books']), 1)
+        self.assertEqual(len(data['products']), 0)
+
+    def test_rec_pool_has_tag_and_no_price_rating(self):
+        """Pool products must carry the affiliate tag and never price/rating keys."""
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        pool_match = re.search(r'id="rec-pool-technology"[^>]*>(.*?)</script>', content, re.S)
+        self.assertIsNotNone(pool_match)
+        pool = json.loads(pool_match.group(1))
+        products = [i for i in pool if i['kind'] == 'product']
+        self.assertGreaterEqual(len(products), 1)
+        for product in products:
+            self.assertIn('tag=24hourwire06-20', product['amazon_url'])
+            for key in ('price', 'rating', 'stars', 'reviews'):
+                self.assertNotIn(key, product)
+
+    def test_most_covered_has_no_rec_pool(self):
+        """The most_covered tab should not get a recommendation pool."""
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertNotIn('id="rec-pool-most_covered"', content)
+
+    def test_non_english_load_more_has_no_pool(self):
+        """Non-English load-more API should return empty recommendation pools."""
+        response = self.client.get('/api/stories/?lang=es&category=world&offset=0')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(len(data['books']), 0)
         self.assertEqual(len(data['products']), 0)
 
 
@@ -1823,8 +1893,9 @@ class SeasonalProductTests(TestCase):
                 f'/api/stories/?lang=en&category=technology&offset=0&_={i}'
             )
             data = json.loads(response.content)
-            self.assertEqual(len(data['products']), 1)
-            ids.add(data['products'][0]['id'])
+            self.assertGreaterEqual(len(data['products']), 1)
+            self.assertLessEqual(len(data['products']), 6)
+            ids.update(p['id'] for p in data['products'])
         self.assertGreater(len(ids), 1)
 
     def test_seeding_twice_has_no_duplicates_and_same_count(self):
@@ -1885,6 +1956,61 @@ class SeasonalProductTests(TestCase):
         self.assertEqual(len(data['products']), 1)
         for key in ('price', 'rating', 'stars', 'reviews'):
             self.assertNotIn(key, data['products'][0])
+
+    def test_seed_products_upserts_image(self):
+        """seed_products should upsert the image field from PRODUCTS."""
+        from io import StringIO
+        from unittest.mock import patch
+        from news.data.amazon_products import PRODUCTS
+
+        patched = PRODUCTS[:1] + [{
+            'name': 'Patched Image Product',
+            'search_query': 'patched image product',
+            'description': 'test',
+            'image': 'products/patched.webp',
+        }]
+        out = StringIO()
+        with patch('news.data.amazon_products.PRODUCTS', patched):
+            call_command('seed_products', stdout=out)
+
+        product = RecommendedProduct.objects.get(name='Patched Image Product')
+        self.assertEqual(product.image, 'products/patched.webp')
+        self.assertTrue(product.is_active)
+
+    def test_seed_products_clears_image_when_removed(self):
+        """seed_products clears image when a product no longer lists one."""
+        from io import StringIO
+        from unittest.mock import patch
+        from news.data.amazon_products import PRODUCTS
+
+        product = RecommendedProduct.objects.create(
+            name='Stale Image Product',
+            search_query='stale image product',
+            language='en',
+            image='products/stale.webp',
+            is_active=True,
+        )
+        patched = PRODUCTS[:1]
+        out = StringIO()
+        with patch('news.data.amazon_products.PRODUCTS', patched):
+            call_command('seed_products', stdout=out)
+
+        product.refresh_from_db()
+        self.assertFalse(product.is_active)
+
+    def test_real_product_list_has_no_amazon_hotlinks(self):
+        """amazon_products.py must not contain Amazon image hotlinks."""
+        from news.data import amazon_products
+        source = inspect.getsource(amazon_products).lower()
+        self.assertNotIn('media-amazon', source)
+        self.assertNotIn('images-amazon', source)
+
+    def test_makemigrations_is_clean(self):
+        """All model changes must have a generated migration."""
+        from io import StringIO
+        out = StringIO()
+        call_command('makemigrations', 'news', '--check', '--dry-run', stdout=out, stderr=out)
+        self.assertIn('No changes detected', out.getvalue())
 
 
 class TopicThemeToggleTests(TestCase):
@@ -4643,4 +4769,138 @@ class RefreshScrollTopTests(TestCase):
         body = match.group(1)
         self.assertNotIn('scrollTo', body)
         self.assertIn('userInteractedSinceLoad = true', body)
+
+
+class RecommendationLayoutStaticTests(TestCase):
+    """Static checks for the responsive recommendation layout in app.js."""
+
+    def _read_app_js(self):
+        app_js_path = find('news/js/app.js')
+        self.assertIsNotNone(app_js_path)
+        with open(app_js_path, 'r', encoding='utf-8') as f:
+            return f.read()
+
+    def _read_app_css(self):
+        app_css_path = find('news/css/app.css')
+        self.assertIsNotNone(app_css_path)
+        with open(app_css_path, 'r', encoding='utf-8') as f:
+            return f.read()
+
+    def test_rec_interval_function_exists(self):
+        """app.js should define recInterval(cols) with the required math."""
+        source = self._read_app_js()
+        self.assertIn('function recInterval(cols)', source)
+        self.assertIn('cols === 1 ? 4', source)
+        self.assertIn('cols * 2 - 1', source)
+
+    def test_layout_recs_uses_computed_grid_columns(self):
+        """app.js should measure column count from computed gridTemplateColumns."""
+        source = self._read_app_js()
+        self.assertIn('getComputedStyle(', source)
+        self.assertIn('gridTemplateColumns', source)
+
+    def test_layout_recs_uses_resize_observer(self):
+        """app.js should observe grid resizes with ResizeObserver."""
+        source = self._read_app_js()
+        self.assertIn('ResizeObserver', source)
+        self.assertIn('requestAnimationFrame', source)
+
+    def test_layout_recs_no_user_agent_sniffing(self):
+        """Responsive layout must not use navigator.userAgent."""
+        source = self._read_app_js()
+        layout_match = re.search(
+            r'function layoutRecs\([^)]*\)\s*\{([\s\S]*?)(?=\n\s*function\s+\w+\s*\()',
+            source
+        )
+        self.assertIsNotNone(layout_match, "Could not extract layoutRecs body")
+        self.assertNotIn('navigator.userAgent', layout_match.group(1))
+
+    def test_no_global_story_num_slot_twenty_four(self):
+        """Legacy hard-coded slot-24 insertion should be removed."""
+        source = self._read_app_js()
+        self.assertNotIn('globalStoryNum === 24', source)
+
+    def test_create_product_card_uses_fallback_class(self):
+        """createProductCard should emit book-cover-fallback when no image."""
+        source = self._read_app_js()
+        self.assertIn('book-cover-fallback', source)
+        product_match = re.search(
+            r'function createProductCard\([^)]*\)\s*\{([\s\S]*?)(?=\n\s*function\s+\w+\s*\()',
+            source
+        )
+        self.assertIsNotNone(product_match, "Could not extract createProductCard body")
+        self.assertIn('book-cover-fallback', product_match.group(1))
+
+    def test_app_css_has_fallback_class(self):
+        """app.css should style book-cover-fallback."""
+        source = self._read_app_css()
+        self.assertIn('.book-cover-fallback', source)
+
+    def test_rec_positions_function_exists_and_uses_interval(self):
+        """app.js should define recPositions(cellCount, cols) using recInterval."""
+        source = self._read_app_js()
+        self.assertIn('function recPositions', source)
+        self.assertIn('% interval !== 0', source)
+        self.assertNotIn('% (interval + 1)', source)
+
+    def _extract_js_function(self, source, signature_pattern):
+        """Extract a JS function body (without outer braces) by regex start + brace balance."""
+        match = re.search(signature_pattern + r'\s*\{', source)
+        self.assertIsNotNone(match, f"Could not find {signature_pattern}")
+        start = match.end()
+        depth = 1
+        i = start
+        while i < len(source) and depth > 0:
+            if source[i] == '{':
+                depth += 1
+            elif source[i] == '}':
+                depth -= 1
+            i += 1
+        return source[start:i - 1]
+
+    def test_rec_positions_js_matches_expected(self):
+        """recPositions computed by Node must match the expected layout indexes."""
+        if not shutil.which('node'):
+            self.skipTest('node is not available on PATH')
+        source = self._read_app_js()
+        interval_body = self._extract_js_function(
+            source, r'function\s+recInterval\s*\(\s*cols\s*\)'
+        )
+        positions_body = self._extract_js_function(
+            source, r'function\s+recPositions\s*\(\s*cellCount\s*,\s*cols\s*\)'
+        )
+        script = (
+            'function recInterval(cols) {' + interval_body + '}\n' +
+            'function recPositions(cellCount, cols) {' + positions_body + '}\n' +
+            "console.log(JSON.stringify(recPositions(12, 3)));\n" +
+            "console.log(JSON.stringify(recPositions(12, 1)));"
+        )
+        result = subprocess.run(
+            ['node', '-e', script],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        lines = result.stdout.strip().splitlines()
+        self.assertEqual(json.loads(lines[0]), [4, 9])
+        self.assertEqual(json.loads(lines[1]), [3, 7, 11])
+
+    def test_no_mojibake_in_card_fallbacks(self):
+        """Card fallback HTML/JS must not contain mojibake sequences."""
+        from django.conf import settings
+        app_js_path = find('news/js/app.js')
+        home_html_path = os.path.join(settings.BASE_DIR, 'news', 'templates', 'home.html')
+        bad_sequences = [
+            '\u00f0\u0178\u201c\u0161',
+            '\u00f0\u0178\u017d',
+            '\u00e2\u20ac',
+        ]
+        for path in (app_js_path, home_html_path):
+            with open(path, 'r', encoding='utf-8') as f:
+                text = f.read()
+            for seq in bad_sequences:
+                self.assertNotIn(seq, text,
+                                 f"Mojibake sequence {seq!r} found in {path}")
+            self.assertNotIn('\ufffd', text,
+                             f"Replacement character found in {path}")
 

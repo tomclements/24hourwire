@@ -760,6 +760,15 @@
             background: #f3f4f6;
         }
 
+        .book-cover-fallback {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f3f4f6;
+            color: #9ca3af;
+            font-size: 2rem;
+        }
+
         .book-title {
             font-size: 1.05rem;
             font-weight: 700;

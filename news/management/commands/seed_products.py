@@ -24,6 +24,7 @@ class Command(BaseCommand):
             defaults = {
                 'search_query': product_data['search_query'],
                 'description': product_data['description'],
+                'image': product_data.get('image', ''),
                 'is_active': True,
                 'language': 'en',
                 'category': None,
