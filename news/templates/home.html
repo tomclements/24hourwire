@@ -169,29 +169,8 @@
                 <button type="button" class="source-picker-apply" data-action="select-all-sources-apply">{{ t.select_all|default:"Select all sources" }}</button>
             </div>
         {% elif cat_data.stories %}
-            <div class="stories-grid" data-category="{{ cat_id }}" data-loaded="{{ cat_data.stories|length }}" data-total="{{ cat_data.total_stories }}">
+            <div class="stories-grid" data-category="{{ cat_id }}" data-loaded="{{ cat_data.stories|length }}" data-total="{{ cat_data.total_stories }}" data-rec-pool="rec-pool-{{ cat_id }}">
                 {% for story in cat_data.stories %}
-
-                {# Insert book recommendation after 10th story #}
-                {% if forloop.counter == 10 and cat_data.books %}
-                    {% with book=cat_data.books.0 %}
-                    <article class="book-card" data-book-asin="{{ book.asin }}">
-                        <span class="book-badge">Recommended Read</span>
-                        {% if book.image_url %}
-                        <img src="{{ book.image_url }}" alt="{{ book.title }}" class="book-cover" loading="lazy">
-                        {% else %}
-                        <div class="book-cover" style="display: flex; align-items: center; justify-content: center; background: #f3f4f6; color: #9ca3af; font-size: 2rem;">📚</div>
-                        {% endif %}
-                        <h3 class="book-title">{{ book.title }}</h3>
-                        <p class="book-author">by {{ book.author }}</p>
-                        {% if book.description %}
-                        <p class="book-description">{{ book.description|truncatechars:140 }}</p>
-                        {% endif %}
-                        <a href="{{ book.amazon_url }}" target="_blank" rel="nofollow sponsored noopener" class="book-link" data-action="book-click" data-asin="{{ book.asin }}">View on Amazon →</a>
-                        <p class="affiliate-disclosure">As an Amazon Associate I earn from qualifying purchases.</p>
-                    </article>
-                    {% endwith %}
-                {% endif %}
 
                 <article class="story-card" data-title="{{ story.title|lower }}" data-source="{{ story.source|lower }}" data-bias="{{ story.bias_label|lower|cut:' ' }}" itemscope itemtype="https://schema.org/NewsArticle">
                     <script type="application/ld+json">
@@ -299,6 +278,12 @@
 
                 {% endfor %}
             </div>
+
+            {% if cat_data.rec_pool %}
+            {% with pool_id="rec-pool-"|add:cat_id %}
+            {{ cat_data.rec_pool|json_script:pool_id }}
+            {% endwith %}
+            {% endif %}
 
             {% if cat_data.has_more %}
             {% format_string t.load_more_stories loaded=cat_data.loaded total=cat_data.total_stories as load_more_label %}

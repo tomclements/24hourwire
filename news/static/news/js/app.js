@@ -129,6 +129,8 @@
             btn.setAttribute('aria-label', 'Expand coverage');
             btn.setAttribute('aria-expanded', 'false');
         });
+        const grid = section ? section.querySelector('.stories-grid[data-rec-pool]') : null;
+        if (grid) layoutRecs(grid);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -182,46 +184,18 @@
 
             if (data.stories && data.stories.length > 0) {
                 const fragment = document.createDocumentFragment();
-                const shownAsins = new Set();
-                grid.querySelectorAll('.book-card[data-book-asin]').forEach(card => {
-                    shownAsins.add(card.dataset.bookAsin);
-                });
-                const shownProductKeys = new Set();
-                grid.querySelectorAll('.product-card[data-product-key]').forEach(card => {
-                    shownProductKeys.add(card.dataset.productKey);
-                });
-
-                let bookForInsertion = null;
-                if (data.books && data.books.length > 0) {
-                    for (const book of data.books) {
-                        if (!shownAsins.has(book.asin)) { bookForInsertion = book; break; }
-                    }
-                }
-                let productForInsertion = null;
-                if (data.products && data.products.length > 0) {
-                    for (const product of data.products) {
-                        const key = product.search_query || product.name;
-                        if (!shownProductKeys.has(key)) { productForInsertion = product; break; }
-                    }
-                }
-
                 let pollInserted = false;
 
-                data.stories.forEach((story, index) => {
-                    const globalStoryNum = loaded + index + 1;
-
-                    if (globalStoryNum === 24) {
-                        if (productForInsertion) {
-                            fragment.appendChild(createProductCard(productForInsertion));
-                            shownProductKeys.add(productForInsertion.search_query || productForInsertion.name);
-                            productForInsertion = null;
-                        } else if (bookForInsertion) {
-                            fragment.appendChild(createBookCard(bookForInsertion));
-                            shownAsins.add(bookForInsertion.asin);
-                            bookForInsertion = null;
-                        }
+                // Count visible non-rec cells before appending so re-layout can
+                // continue from the same global cell index.
+                let cellCountBefore = 0;
+                Array.from(grid.children).forEach(function (child) {
+                    if (!child.classList.contains('rec-card') && child.style.display !== 'none') {
+                        cellCountBefore++;
                     }
+                });
 
+                data.stories.forEach((story, index) => {
                     if (index === 1 && data.poll && !pollInserted) {
                         fragment.appendChild(createPollCard(data.poll));
                         pollInserted = true;
@@ -259,6 +233,9 @@
                 grid.appendChild(fragment);
                 grid.dataset.loaded = loaded + data.stories.length;
 
+                mergeRecPool(grid, (data.products || []).concat(data.books || []));
+                layoutRecs(grid, { append: true, minCellIndex: cellCountBefore });
+
                 const countEl = document.getElementById('count-' + category);
                 if (countEl) countEl.textContent = data.total + ' ' + (data.total === 1 ? (UI.story || 'story') : (UI.stories || 'stories'));
 
@@ -285,13 +262,160 @@
         }
     }
 
+    function recInterval(cols) {
+        return cols === 1 ? 4 : cols * 2 - 1;
+    }
+
+    function recPositions(cellCount, cols) {
+        const interval = recInterval(cols);
+        const positions = [];
+        for (let i = 0; i < cellCount; i++) {
+            if ((i + 1) % interval !== 0) continue;
+            positions.push(i);
+        }
+        return positions;
+    }
+
+    function recKey(item) {
+        return item.kind + ':' + (item.kind === 'product'
+            ? (item.search_query || item.name)
+            : item.asin);
+    }
+
+    function pickNextRec(pool, shownKeys, slotIndex) {
+        const products = pool.filter(function (i) { return i.kind === 'product'; });
+        const books = pool.filter(function (i) { return i.kind === 'book'; });
+        const preferProduct = slotIndex % 2 === 0;
+        const primary = preferProduct ? products : books;
+        const secondary = preferProduct ? books : products;
+
+        function pickFrom(list) {
+            for (let i = 0; i < list.length; i++) {
+                const item = list[i];
+                if (!shownKeys.has(recKey(item))) return item;
+            }
+            if (list.length > 0) return list[0];
+            return null;
+        }
+
+        const item = pickFrom(primary) || pickFrom(secondary);
+        if (item) shownKeys.add(recKey(item));
+        return item;
+    }
+
+    function buildRecCard(item) {
+        const card = item.kind === 'product' ? createProductCard(item) : createBookCard(item);
+        card.classList.add('rec-card');
+        card.setAttribute('data-rec-key', recKey(item));
+        return card;
+    }
+
+    function mergeRecPool(grid, items) {
+        if (!grid.recPool) grid.recPool = [];
+        const existingKeys = new Set(grid.recPool.map(recKey));
+        items.forEach(function (item) {
+            const key = recKey(item);
+            if (!existingKeys.has(key)) {
+                grid.recPool.push(item);
+                existingKeys.add(key);
+            }
+        });
+    }
+
+    function layoutRecs(grid, options) {
+        options = options || {};
+        const gridColumns = getComputedStyle(grid).gridTemplateColumns;
+        if (gridColumns === 'none') return;
+        const cols = gridColumns.split(' ').filter(Boolean).length || 1;
+        if (!cols) return;
+        grid.dataset.cols = String(cols);
+        const interval = recInterval(cols);
+        const isAppend = options.append === true;
+        const minCellIndex = options.minCellIndex || 0;
+
+        let anchorY = null;
+        if (!isAppend && options.anchor !== false) {
+            const first = grid.querySelector('.story-card');
+            if (first) anchorY = first.getBoundingClientRect().top;
+        }
+
+        if (!grid.recPool) {
+            const scriptId = grid.getAttribute('data-rec-pool');
+            const script = scriptId ? document.getElementById(scriptId) : null;
+            try {
+                grid.recPool = script ? JSON.parse(script.textContent || '[]') : [];
+            } catch (e) {
+                grid.recPool = [];
+            }
+        }
+        const pool = grid.recPool || [];
+        if (pool.length === 0) return;
+
+        const cache = {};
+        if (!isAppend) {
+            grid.querySelectorAll('.rec-card').forEach(function (card) {
+                const key = card.getAttribute('data-rec-key');
+                if (key) cache[key] = card;
+                card.remove();
+            });
+        }
+
+        const shownKeys = new Set();
+        let slotIndex = 0;
+        if (isAppend) {
+            grid.querySelectorAll('.rec-card').forEach(function (card) {
+                const key = card.getAttribute('data-rec-key');
+                if (key) shownKeys.add(key);
+                slotIndex++;
+            });
+        }
+
+        let cellIndex = -1;
+        const cells = Array.from(grid.children);
+        for (let i = 0; i < cells.length; i++) {
+            const cell = cells[i];
+            if (cell.classList.contains('rec-card')) continue;
+            if (cell.style.display === 'none') continue;
+            cellIndex++;
+            if (cellIndex < minCellIndex) continue;
+            if ((cellIndex + 1) % interval !== 0) continue;
+            if (cell.nextElementSibling && cell.nextElementSibling.classList.contains('rec-card')) continue;
+
+            const item = pickNextRec(pool, shownKeys, slotIndex);
+            if (item) {
+                const key = recKey(item);
+                let card = cache[key];
+                if (card) {
+                    delete cache[key];
+                } else {
+                    card = buildRecCard(item);
+                }
+                grid.insertBefore(card, cell.nextSibling);
+                slotIndex++;
+            }
+        }
+
+        if (!isAppend) {
+            grid._recCache = {};
+            if (anchorY !== null) {
+                const first = grid.querySelector('.story-card');
+                if (first) {
+                    const delta = first.getBoundingClientRect().top - anchorY;
+                    if (Math.abs(delta) > 1) window.scrollBy(0, delta);
+                }
+            }
+        } else {
+            grid._recCache = cache;
+        }
+    }
+
     function createBookCard(book) {
         const article = document.createElement('article');
         article.className = 'book-card';
         article.setAttribute('data-book-asin', book.asin);
         const coverHtml = book.image_url
             ? `<img src="${esc(book.image_url)}" alt="${esc(book.title)}" class="book-cover" loading="lazy">`
-            : `<div class="book-cover" style="display: flex; align-items: center; justify-content: center; background: #f3f4f6; color: #9ca3af; font-size: 2rem;">📚</div>`;
+            : `<div class="book-cover book-cover-fallback" aria-hidden="true">📚</div>`;
         article.innerHTML = `
             <span class="book-badge">Recommended Read</span>
             ${coverHtml}
@@ -313,8 +437,8 @@
             article.setAttribute('data-product-id', product.id);
         }
         const coverHtml = product.image_url
-            ? `<img src="${esc(product.image_url)}" alt="${esc(product.name)}" class="book-cover" loading="lazy">`
-            : `<div class="book-cover" style="display: flex; align-items: center; justify-content: center; background: #f3f4f6; color: #9ca3af; font-size: 2rem;">🛍️</div>`;
+            ? `<img src="${esc(product.image_url)}" alt="${esc(product.name)}" class="book-cover product-image" loading="lazy">`
+            : `<div class="book-cover book-cover-fallback" aria-hidden="true">🎁</div>`;
         article.innerHTML = `
             <span class="book-badge">Recommended Product</span>
             ${coverHtml}
@@ -359,6 +483,8 @@
                 const source = card.getAttribute('data-source') || '';
                 card.style.display = (title.includes(query) || source.includes(query)) ? 'flex' : 'none';
             });
+            const grid = visibleSection.querySelector('.stories-grid[data-rec-pool]');
+            if (grid) layoutRecs(grid);
         });
         searchInput.addEventListener('keydown', function (e) {
             if (e.key === 'Enter' && this.value.trim().length >= 2) {
@@ -820,6 +946,20 @@
         container.querySelectorAll('.poll-option-btn-inline').forEach(b => b.disabled = false);
     }
 
+    /* ---------- Delegated image error handling ---------- */
+    document.addEventListener('error', function (e) {
+        const img = e.target;
+        if (!(img instanceof HTMLImageElement)) return;
+        if (!img.classList.contains('product-image') && !img.classList.contains('book-cover')) return;
+        const card = img.closest('.product-card, .book-card');
+        if (!card) return;
+        const fallback = document.createElement('div');
+        fallback.className = 'book-cover book-cover-fallback';
+        fallback.setAttribute('aria-hidden', 'true');
+        fallback.textContent = card.classList.contains('product-card') ? '🎁' : '📚';
+        img.replaceWith(fallback);
+    }, true);
+
     /* ---------- Delegated click handling ---------- */
     function titleFromCard(el) {
         const card = el.closest('.story-card, .most-covered-card');
@@ -946,6 +1086,31 @@
 
     initBiasFilters();
     loadTheme();
+
+    /* ---------- Responsive recommendation layout ---------- */
+    function initRecLayouts() {
+        document.querySelectorAll('.stories-grid[data-rec-pool]').forEach(function (grid) {
+            layoutRecs(grid);
+
+            let rafId = null;
+            const observer = new ResizeObserver(function () {
+                if (rafId) cancelAnimationFrame(rafId);
+                rafId = requestAnimationFrame(function () {
+                    const cols = getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length || 1;
+                    if (String(cols) !== grid.dataset.cols) {
+                        layoutRecs(grid);
+                    }
+                });
+            });
+            observer.observe(grid);
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initRecLayouts);
+    } else {
+        initRecLayouts();
+    }
 
     const sourcePicker = document.getElementById('source-picker');
     if (sourcePicker) {

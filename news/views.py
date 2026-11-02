@@ -266,24 +266,38 @@ def _home_impl(request):
             for story in cat_stories:
                 _annotate_homepage_story(story, lang_source_info, active_topics)
 
-        # Slot 1 (story 10) = book
-        cat_books = []
-        if cat_id == 'all' and all_books:
-            cat_books = list(all_books)
+        # Build a shuffled recommendation pool for JS to place responsively.
+        # English tabs (except most_covered) get up to 6 products + up to 3 books.
+        rec_pool = []
+        if language == 'en' and cat_id != 'most_covered':
+            prods = list(all_active_products)
+            random.shuffle(prods)
+            for product in prods[:6]:
+                rec_pool.append({
+                    'kind': 'product',
+                    'id': product.id,
+                    'name': product.name,
+                    'description': product.description or '',
+                    'image_url': product.display_image_url(),
+                    'amazon_url': product.amazon_url(),
+                    'search_query': product.search_query,
+                })
+            if cat_id == 'all':
+                cat_books = list(all_books)
+            else:
+                cat_books = recommended_books.get(cat_id, [])
             random.shuffle(cat_books)
-            cat_books = cat_books[:1]
-        else:
-            cat_books = recommended_books.get(cat_id, [])
-            if cat_books:
-                random.shuffle(cat_books)
-                cat_books = cat_books[:1]
-
-        # Slot 2 (story 24 / load-more) = product; fallback to book handled client-side.
-        # Products are now one seasonal list, shown on every tab except most_covered
-        # (which has no book slot either).
-        cat_products = []
-        if cat_id != 'most_covered' and all_active_products:
-            cat_products = [random.choice(all_active_products)]
+            for book in cat_books[:3]:
+                rec_pool.append({
+                    'kind': 'book',
+                    'title': book.title,
+                    'author': book.author,
+                    'description': book.description or '',
+                    'image_url': book.image_url or '',
+                    'amazon_url': book.amazon_url(),
+                    'asin': book.asin,
+                })
+            random.shuffle(rec_pool)
 
         # Send first 20 for initial render, include metadata for "load more"
         grouped[cat_id] = {
@@ -292,8 +306,7 @@ def _home_impl(request):
             'total_stories': total_stories,
             'loaded': min(20, total_stories),
             'has_more': total_stories > 20,
-            'books': cat_books,
-            'products': cat_products,
+            'rec_pool': rec_pool,
             'poll': active_poll if cat_id == 'all' else None,
         }
 
@@ -915,9 +928,8 @@ def load_more_stories(request):
             'share_token': '',  # Will be generated in template if needed
         })
     
-    # Fetch book and product recommendations for English categories.
-    # Slot 1 (story 10) is rendered server-side; slot 2 (story 24) is product-first,
-    # falling back to a book if no product exists for the category.
+    # Fetch recommendation pools for English categories. The client places cards
+    # responsively; we just supply up to 6 shuffled products + up to 3 books.
     book_data = []
     product_data = []
     if language == 'en' and category_id != 'most_covered':
@@ -931,30 +943,27 @@ def load_more_stories(request):
             cat_books = list(RecommendedBook.objects.filter(
                 language='en', is_active=True, category=category_id
             ))
-        if cat_books:
-            random.shuffle(cat_books)
-            # Up to 2 so the client can skip the book already shown at slot 1
-            for book in cat_books[:2]:
-                book_data.append({
-                    'title': book.title,
-                    'author': book.author,
-                    'description': book.description or '',
-                    'image_url': book.image_url or '',
-                    'amazon_url': book.amazon_url(),
-                    'asin': book.asin,
-                    'kind': 'book',
-                })
-        # Products are now one seasonal list, rotated across all tabs.
+        random.shuffle(cat_books)
+        for book in cat_books[:3]:
+            book_data.append({
+                'title': book.title,
+                'author': book.author,
+                'description': book.description or '',
+                'image_url': book.image_url or '',
+                'amazon_url': book.amazon_url(),
+                'asin': book.asin,
+                'kind': 'book',
+            })
         active_products = list(RecommendedProduct.objects.filter(
             language='en', is_active=True
         ))
-        if active_products:
-            product = random.choice(active_products)
+        random.shuffle(active_products)
+        for product in active_products[:6]:
             product_data.append({
                 'id': product.id,
                 'name': product.name,
                 'description': product.description or '',
-                'image_url': product.image_url or '',
+                'image_url': product.display_image_url(),
                 'amazon_url': product.amazon_url(),
                 'search_query': product.search_query,
                 'kind': 'product',

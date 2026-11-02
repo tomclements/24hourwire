@@ -2,6 +2,17 @@
 # This is the single seasonal product list used across every English tab
 # and load-more slot. Each entry uses a generic Amazon search query only;
 # no prices, ratings, images, or ASINs are stored here.
+#
+# Images must be self-hosted files Tom supplied/approved, stored in
+# news/static/news/img/products/. Do NOT hotlink Amazon product images from
+# Amazon's CDN domains; the Associates Operating Agreement only permits Amazon
+# images obtained via PA-API (which requires qualifying sales) or SiteStripe
+# image/link HTML. SiteStripe image links are an allowed alternative if Tom
+# pastes them; then use image_url in the data instead of image.
+#
+# When using self-hosted images, set 'image' to a path like 'products/x.jpg'
+# (relative to news/static/news/img/); display_image_url() resolves it through
+# Django's static files.
 SEASON = 'holiday-2026'
 
 PRODUCTS = [
