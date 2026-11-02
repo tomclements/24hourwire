@@ -23,6 +23,7 @@ from django.contrib.auth.models import User
 from news.models import Story, StoryCategory, StoryCluster, Topic, Poll, PollVote, AnalyticsEvent, title_fingerprint, normalize_url, build_clusters, clean_title
 from news.views import story_share, different_angle, branded_redirect
 from django.core import signing
+from django.contrib.staticfiles.finders import find
 from news.templatetags.news_extras import sign_share_data
 from news.languages import LANGUAGE_MODULES
 
@@ -4161,4 +4162,101 @@ class FetchNewsCommandTests(TestCase):
         output = out.getvalue()
         self.assertTrue(Story.objects.filter(url='https://example.com/good').exists())
         self.assertIn('Failed feeds', output)
+
+
+class RefreshScrollTopTests(TestCase):
+    """Tests that a full reload scrolls back to the top of the homepage."""
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_app_js_has_reload_scroll_handling(self):
+        """app.js must detect reloads, disable scroll restoration, and scroll to top."""
+        app_js_path = find('news/js/app.js')
+        self.assertIsNotNone(app_js_path)
+        with open(app_js_path, 'r', encoding='utf-8') as f:
+            source = f.read()
+        self.assertIn('scrollRestoration', source)
+        self.assertIn("'reload'", source)
+        self.assertIn('scrollTo(0, 0)', source)
+        self.assertIn('pagehide', source)
+        self.assertIn("'auto'", source)
+
+    def test_homepage_hides_all_but_first_category_section(self):
+        """Only the first .category-section is rendered visible; others are hidden."""
+        Story.objects.create(
+            source='Reuters',
+            title='World Story',
+            excerpt='World excerpt',
+            url='https://example.com/world',
+            language='en',
+            category='world',
+            published=timezone.now(),
+            url_hash='world123',
+            title_fingerprint='world456'
+        )
+        Story.objects.create(
+            source='Reuters',
+            title='Tech Story',
+            excerpt='Tech excerpt',
+            url='https://example.com/tech',
+            language='en',
+            category='technology',
+            published=timezone.now(),
+            url_hash='tech123',
+            title_fingerprint='tech456'
+        )
+        # Homepage tabs filter by persisted StoryCategory links, not Story.category.
+        for story in Story.objects.filter(url_hash__in=['world123', 'tech123']):
+            StoryCategory.objects.create(story=story, slug=story.category)
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode('utf-8')
+        sections = re.findall(
+            r'<section[^>]*class="category-section"[^>]*>',
+            content
+        )
+        self.assertGreaterEqual(len(sections), 2)
+        first = sections[0]
+        self.assertNotIn('display: none', first)
+        self.assertNotIn('display:none', first)
+        for section in sections[1:]:
+            self.assertIn('display: none', section)
+
+    def test_homepage_includes_deferred_app_js(self):
+        """Homepage must still load the shared app.js with defer."""
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode('utf-8')
+        match = re.search(r'<script[^>]*src="([^"]*static/news/js/app[^"]*)"[^>]*>', content)
+        self.assertIsNotNone(match)
+        self.assertIn('defer', match.group(0))
+
+    def test_app_js_uses_interaction_guard(self):
+        """app.js must track user interaction and only snap to top on load if none occurred."""
+        app_js_path = find('news/js/app.js')
+        self.assertIsNotNone(app_js_path)
+        with open(app_js_path, 'r', encoding='utf-8') as f:
+            source = f.read()
+        self.assertIn('userInteractedSinceLoad', source)
+        self.assertIn("'wheel'", source)
+        self.assertIn("'touchstart'", source)
+        self.assertIn("'keydown'", source)
+        self.assertIn('removeEventListener', source)
+        self.assertIn('{ once: true, passive: true }', source)
+
+    def test_load_more_does_not_scroll_and_sets_interaction_flag(self):
+        """loadMore must set the interaction flag and must not call scrollTo."""
+        app_js_path = find('news/js/app.js')
+        self.assertIsNotNone(app_js_path)
+        with open(app_js_path, 'r', encoding='utf-8') as f:
+            source = f.read()
+        match = re.search(
+            r'async function loadMore\([^)]*\)\s*\{([\s\S]*?)(?=\n\s*(?:async )?function\s+\w+\s*\()',
+            source
+        )
+        self.assertIsNotNone(match, "Could not extract loadMore body")
+        body = match.group(1)
+        self.assertNotIn('scrollTo', body)
+        self.assertIn('userInteractedSinceLoad = true', body)
 
