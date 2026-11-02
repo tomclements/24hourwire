@@ -282,12 +282,25 @@
             : item.asin);
     }
 
+    function recKindSequence(n, hasProducts, hasBooks) {
+        // Repeating product/product/book pattern (~66% products).
+        const preferred = ['product', 'product', 'book'][n % 3];
+        if (preferred === 'product') {
+            if (hasProducts) return 'product';
+            if (hasBooks) return 'book';
+            return null;
+        }
+        if (hasBooks) return 'book';
+        if (hasProducts) return 'product';
+        return null;
+    }
+
     function pickNextRec(pool, shownKeys, slotIndex) {
         const products = pool.filter(function (i) { return i.kind === 'product'; });
         const books = pool.filter(function (i) { return i.kind === 'book'; });
-        const preferProduct = slotIndex % 2 === 0;
-        const primary = preferProduct ? products : books;
-        const secondary = preferProduct ? books : products;
+        const kind = recKindSequence(slotIndex, products.length > 0, books.length > 0);
+        if (!kind) return null;
+        const lists = kind === 'book' ? [books, products] : [products, books];
 
         function pickFrom(list) {
             for (let i = 0; i < list.length; i++) {
@@ -298,7 +311,7 @@
             return null;
         }
 
-        const item = pickFrom(primary) || pickFrom(secondary);
+        const item = pickFrom(lists[0]) || pickFrom(lists[1]);
         if (item) shownKeys.add(recKey(item));
         return item;
     }
@@ -329,7 +342,6 @@
         const cols = gridColumns.split(' ').filter(Boolean).length || 1;
         if (!cols) return;
         grid.dataset.cols = String(cols);
-        const interval = recInterval(cols);
         const isAppend = options.append === true;
         const minCellIndex = options.minCellIndex || 0;
 
@@ -370,15 +382,18 @@
             });
         }
 
-        let cellIndex = -1;
-        const cells = Array.from(grid.children);
-        for (let i = 0; i < cells.length; i++) {
-            const cell = cells[i];
-            if (cell.classList.contains('rec-card')) continue;
-            if (cell.style.display === 'none') continue;
-            cellIndex++;
+        const cells = [];
+        Array.from(grid.children).forEach(function (child) {
+            if (child.classList.contains('rec-card')) return;
+            if (child.style.display === 'none') return;
+            cells.push(child);
+        });
+        const positions = recPositions(cells.length, cols);
+
+        for (let i = 0; i < positions.length; i++) {
+            const cellIndex = positions[i];
             if (cellIndex < minCellIndex) continue;
-            if ((cellIndex + 1) % interval !== 0) continue;
+            const cell = cells[cellIndex];
             if (cell.nextElementSibling && cell.nextElementSibling.classList.contains('rec-card')) continue;
 
             const item = pickNextRec(pool, shownKeys, slotIndex);
@@ -414,7 +429,7 @@
         article.className = 'book-card';
         article.setAttribute('data-book-asin', book.asin);
         const coverHtml = book.image_url
-            ? `<img src="${esc(book.image_url)}" alt="${esc(book.title)}" class="book-cover" loading="lazy">`
+            ? `<img src="${esc(book.image_url)}" alt="${esc(book.title)}" class="book-cover" loading="lazy" referrerpolicy="no-referrer-when-downgrade">`
             : `<div class="book-cover book-cover-fallback" aria-hidden="true">📚</div>`;
         article.innerHTML = `
             <span class="book-badge">Recommended Read</span>
@@ -437,7 +452,7 @@
             article.setAttribute('data-product-id', product.id);
         }
         const coverHtml = product.image_url
-            ? `<img src="${esc(product.image_url)}" alt="${esc(product.name)}" class="book-cover product-image" loading="lazy">`
+            ? `<img src="${esc(product.image_url)}" alt="${esc(product.name)}" class="book-cover product-image" loading="lazy" referrerpolicy="no-referrer-when-downgrade">`
             : `<div class="book-cover book-cover-fallback" aria-hidden="true">🎁</div>`;
         article.innerHTML = `
             <span class="book-badge">Recommended Product</span>

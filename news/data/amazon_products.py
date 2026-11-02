@@ -1,14 +1,21 @@
 # Amazon seasonal product recommendations for 24HourWire affiliate links.
 # This is the single seasonal product list used across every English tab
 # and load-more slot. Each entry uses a generic Amazon search query only;
-# no prices, ratings, images, or ASINs are stored here.
+# no prices, ratings, or ASINs are stored here; images are optional (see below).
 #
-# Images must be self-hosted files Tom supplied/approved, stored in
-# news/static/news/img/products/. Do NOT hotlink Amazon product images from
-# Amazon's CDN domains; the Associates Operating Agreement only permits Amazon
-# images obtained via PA-API (which requires qualifying sales) or SiteStripe
-# image/link HTML. SiteStripe image links are an allowed alternative if Tom
-# pastes them; then use image_url in the data instead of image.
+# Images may be either a self-hosted static file ('image': 'products/x.jpg',
+# under news/static/news/img/) or a SiteStripe-issued https 'image_url'; if
+# both are set, the local file wins. Only SiteStripe-issued Amazon image URLs are
+# allowed; copy them from SiteStripe's Image tab while signed in with tag
+# 24hourwire06-20.
+#
+# When an entry carries an optional 'image_url', it MUST be copied from the
+# Amazon Associates SiteStripe "Image" tab while signed in with the
+# 24hourwire06-20 tag. Never paste other Amazon image URLs or hotlink images
+# that were not obtained through SiteStripe for this associate account.
+# If a SiteStripe image URL is used, set 'image_url' in the entry and leave
+# 'image' empty; display_image_url() will serve it only if its host is in the
+# allowlist.
 #
 # When using self-hosted images, set 'image' to a path like 'products/x.jpg'
 # (relative to news/static/news/img/); display_image_url() resolves it through

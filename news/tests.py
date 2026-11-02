@@ -206,7 +206,6 @@ class HomeViewTests(TestCase):
         response = self.client.get('/')
         self.assertTemplateUsed(response, 'home.html')
 
-
 class ExcerptCleaningTests(TestCase):
     """Tests for excerpt cleaning functionality."""
     
@@ -1708,9 +1707,9 @@ class RecommendedProductTests(TestCase):
             name='Image URL Product',
             search_query='image url product',
             language='en',
-            image_url='https://example.com/product.jpg',
+            image_url='https://m.media-amazon.com/product.jpg',
         )
-        self.assertEqual(product.display_image_url(), 'https://example.com/product.jpg')
+        self.assertEqual(product.display_image_url(), 'https://m.media-amazon.com/product.jpg')
 
     @patch('django.templatetags.static.static')
     @patch('django.contrib.staticfiles.finders.find')
@@ -1725,6 +1724,54 @@ class RecommendedProductTests(TestCase):
             image='products/test.webp',
         )
         self.assertIn('/static/news/img/products/test.webp', product.display_image_url())
+
+    def test_display_image_url_allowlist_accepts_allowed_hosts(self):
+        """display_image_url() accepts the three allowed Amazon image hosts."""
+        from news.models import ALLOWED_IMAGE_HOSTS
+        for host in ALLOWED_IMAGE_HOSTS:
+            product = RecommendedProduct.objects.create(
+                name=f'Allowed {host}',
+                search_query=f'allowed {host}',
+                language='en',
+                image_url=f'https://{host}/x.jpg',
+            )
+            self.assertEqual(product.display_image_url(), f'https://{host}/x.jpg')
+
+    def test_display_image_url_allowlist_rejects_other_hosts(self):
+        """display_image_url() rejects non-allowed hosts, including lookalikes."""
+        urls = [
+            'https://evil.example.com/x.jpg',
+            'http://m.media-amazon.com.evil.com/x.jpg',
+            'javascript:alert(1)',
+            'https://not-amazon.com/x.jpg',
+            'http://m.media-amazon.com/x.jpg',
+            'http://images-na.ssl-images-amazon.com/x.jpg',
+            'http://ws-na.amazon-adsystem.com/x.jpg',
+        ]
+        for url in urls:
+            product = RecommendedProduct.objects.create(
+                name=f'Rejected {url[:20]}',
+                search_query=f'rejected {url[:20]}',
+                language='en',
+                image_url=url,
+            )
+            self.assertEqual(product.display_image_url(), '', f'URL should be rejected: {url}')
+
+    @patch('django.contrib.staticfiles.finders.find')
+    def test_display_image_url_local_static_beats_image_url(self, mock_find):
+        """A found self-hosted image takes precedence over a valid image_url."""
+        mock_find.return_value = '/static/news/img/products/local.webp'
+        product = RecommendedProduct.objects.create(
+            name='Local Beats Remote',
+            search_query='local beats remote',
+            language='en',
+            image='products/local.webp',
+            image_url='https://m.media-amazon.com/remote.jpg',
+        )
+        from unittest.mock import patch
+        with patch('django.templatetags.static.static', return_value='/static/news/img/products/local.webp'):
+            url = product.display_image_url()
+        self.assertEqual(url, '/static/news/img/products/local.webp')
 
 
 class HomeRecommendationMixTests(TestCase):
@@ -1786,7 +1833,7 @@ class HomeRecommendationMixTests(TestCase):
         self.assertGreaterEqual(len(data['books']), 1)
         self.assertLessEqual(len(data['books']), 3)
         self.assertGreaterEqual(len(data['products']), 1)
-        self.assertLessEqual(len(data['products']), 6)
+        self.assertLessEqual(len(data['products']), 8)
         if data['books']:
             self.assertEqual(data['books'][0]['kind'], 'book')
             self.assertIn('tag=24hourwire06-20', data['books'][0]['amazon_url'])
@@ -1894,7 +1941,7 @@ class SeasonalProductTests(TestCase):
             )
             data = json.loads(response.content)
             self.assertGreaterEqual(len(data['products']), 1)
-            self.assertLessEqual(len(data['products']), 6)
+            self.assertLessEqual(len(data['products']), 8)
             ids.update(p['id'] for p in data['products'])
         self.assertGreater(len(ids), 1)
 
@@ -1998,12 +2045,64 @@ class SeasonalProductTests(TestCase):
         product.refresh_from_db()
         self.assertFalse(product.is_active)
 
+    def test_seed_products_upserts_image_url(self):
+        """seed_products should upsert the image_url field from PRODUCTS."""
+        from io import StringIO
+        from unittest.mock import patch
+        from news.data.amazon_products import PRODUCTS
+
+        patched = PRODUCTS[:1] + [{
+            'name': 'Patched SiteStripe Product',
+            'search_query': 'patched sitestripe product',
+            'description': 'test',
+            'image_url': 'https://m.media-amazon.com/images/patched.jpg',
+        }]
+        out = StringIO()
+        with patch('news.data.amazon_products.PRODUCTS', patched):
+            call_command('seed_products', stdout=out)
+
+        product = RecommendedProduct.objects.get(name='Patched SiteStripe Product')
+        self.assertEqual(product.image_url, 'https://m.media-amazon.com/images/patched.jpg')
+        self.assertTrue(product.is_active)
+
+    def test_seed_products_clears_image_url_when_removed(self):
+        """seed_products clears image_url when a product entry drops it."""
+        from io import StringIO
+        from unittest.mock import patch
+        from news.data.amazon_products import PRODUCTS
+
+        product = RecommendedProduct.objects.create(
+            name='Stale URL Product',
+            search_query='stale url product',
+            language='en',
+            image_url='https://m.media-amazon.com/stale.jpg',
+            is_active=True,
+        )
+        # Same product still listed, but its entry no longer carries image_url.
+        patched = PRODUCTS[:1] + [{'name': 'Stale URL Product', 'search_query': 'stale url product', 'description': 'Stale.'}]
+        out = StringIO()
+        with patch('news.data.amazon_products.PRODUCTS', patched):
+            call_command('seed_products', stdout=out)
+
+        product.refresh_from_db()
+        self.assertTrue(product.is_active)
+        self.assertEqual(product.image_url, '')
+
     def test_real_product_list_has_no_amazon_hotlinks(self):
-        """amazon_products.py must not contain Amazon image hotlinks."""
+        """No PRODUCTS entry should contain an Amazon image hotlink."""
         from news.data import amazon_products
-        source = inspect.getsource(amazon_products).lower()
-        self.assertNotIn('media-amazon', source)
-        self.assertNotIn('images-amazon', source)
+        for entry in amazon_products.PRODUCTS:
+            image_url = entry.get('image_url', '')
+            self.assertNotIn('media-amazon', image_url.lower())
+            self.assertNotIn('images-amazon', image_url.lower())
+            self.assertNotIn('amazon-adsystem', image_url.lower())
+
+    def test_real_product_list_has_no_http_image_url_values(self):
+        """No PRODUCTS entry should carry an image_url containing 'http'."""
+        from news.data import amazon_products
+        for entry in amazon_products.PRODUCTS:
+            image_url = entry.get('image_url', '')
+            self.assertNotIn('http', image_url, f"{entry['name']} has a hotlinked image_url")
 
     def test_makemigrations_is_clean(self):
         """All model changes must have a generated migration."""
@@ -4884,6 +4983,55 @@ class RecommendationLayoutStaticTests(TestCase):
         lines = result.stdout.strip().splitlines()
         self.assertEqual(json.loads(lines[0]), [4, 9])
         self.assertEqual(json.loads(lines[1]), [3, 7, 11])
+
+    def test_rec_kind_sequence_js_matches_expected(self):
+        """recKindSequence must follow product, product, book with fallbacks."""
+        if not shutil.which('node'):
+            self.skipTest('node is not available on PATH')
+        source = self._read_app_js()
+        body = self._extract_js_function(
+            source, r'function\s+recKindSequence\s*\(\s*n\s*,\s*hasProducts\s*,\s*hasBooks\s*\)'
+        )
+        script = (
+            'function recKindSequence(n, hasProducts, hasBooks) {' + body + '}\n' +
+            "console.log(JSON.stringify([0,1,2,3,4,5].map(i => recKindSequence(i, true, true))));\n" +
+            "console.log(JSON.stringify([0,1,2,3,4,5].map(i => recKindSequence(i, true, false))));\n" +
+            "console.log(JSON.stringify([0,1,2,3,4,5].map(i => recKindSequence(i, false, true))));"
+        )
+        result = subprocess.run(
+            ['node', '-e', script],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        lines = result.stdout.strip().splitlines()
+        self.assertEqual(json.loads(lines[0]), ['product', 'product', 'book', 'product', 'product', 'book'])
+        self.assertEqual(json.loads(lines[1]), ['product', 'product', 'product', 'product', 'product', 'product'])
+        self.assertEqual(json.loads(lines[2]), ['book', 'book', 'book', 'book', 'book', 'book'])
+
+    def test_create_product_card_image_has_lazy_and_referrerpolicy(self):
+        """createProductCard img must use loading=lazy and referrerpolicy."""
+        source = self._read_app_js()
+        product_match = re.search(
+            r'function createProductCard\([^)]*\)\s*\{([\s\S]*?)(?=\n\s*function\s+\w+\s*\()',
+            source
+        )
+        self.assertIsNotNone(product_match, "Could not extract createProductCard body")
+        body = product_match.group(1)
+        self.assertIn('loading="lazy"', body)
+        self.assertIn('referrerpolicy="no-referrer-when-downgrade"', body)
+
+    def test_create_book_card_image_has_lazy_and_referrerpolicy(self):
+        """createBookCard img must use loading=lazy and referrerpolicy."""
+        source = self._read_app_js()
+        book_match = re.search(
+            r'function createBookCard\([^)]*\)\s*\{([\s\S]*?)(?=\n\s*function\s+\w+\s*\()',
+            source
+        )
+        self.assertIsNotNone(book_match, "Could not extract createBookCard body")
+        body = book_match.group(1)
+        self.assertIn('loading="lazy"', body)
+        self.assertIn('referrerpolicy="no-referrer-when-downgrade"', body)
 
     def test_no_mojibake_in_card_fallbacks(self):
         """Card fallback HTML/JS must not contain mojibake sequences."""
