@@ -164,6 +164,7 @@
     }
 
     async function loadMore(btn, category) {
+        userInteractedSinceLoad = true;
         const section = btn.closest('.category-section');
         const grid = section.querySelector('.stories-grid');
         const loaded = parseInt(grid.dataset.loaded || '0', 10);
@@ -827,6 +828,51 @@
     const firstTab = document.querySelector('.tab');
     if (firstSection) firstSection.style.display = 'block';
     if (firstTab) { firstTab.classList.add('active'); firstTab.setAttribute('aria-selected', 'true'); }
+
+    // Track whether the user has interacted with the page so that late
+    // scroll-to-top on load does not yank them away from where they are.
+    let userInteractedSinceLoad = false;
+
+    function markUserInteracted() {
+        userInteractedSinceLoad = true;
+        window.removeEventListener('load', snapToTopOnLoad);
+        window.removeEventListener('wheel', markUserInteracted, { once: true, passive: true });
+        window.removeEventListener('touchstart', markUserInteracted, { once: true, passive: true });
+        window.removeEventListener('keydown', markUserInteracted, { once: true, passive: true });
+        window.removeEventListener('click', markUserInteracted, { once: true, passive: true });
+        window.removeEventListener('pointerdown', markUserInteracted, { once: true, passive: true });
+    }
+
+    function snapToTopOnLoad() {
+        if (!userInteractedSinceLoad) {
+            window.scrollTo(0, 0);
+        }
+        markUserInteracted();
+    }
+
+    // On full reload, force scroll to top so the browser does not restore a
+    // stale scroll position from the much taller pre-JS rendered page.
+    const navEntry = (performance.getEntriesByType && performance.getEntriesByType('navigation')[0]) || null;
+    const isReload = navEntry ? navEntry.type === 'reload' : (performance.navigation && performance.navigation.type === 1);
+    if (isReload && !location.hash) {
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+        window.scrollTo(0, 0);
+        window.addEventListener('wheel', markUserInteracted, { once: true, passive: true });
+        window.addEventListener('touchstart', markUserInteracted, { once: true, passive: true });
+        window.addEventListener('keydown', markUserInteracted, { once: true, passive: true });
+        window.addEventListener('click', markUserInteracted, { once: true, passive: true });
+        // No 'scroll' trigger: the browser's own restore on reload fires scroll events too.
+        // pointerdown covers scrollbar drags; wheel/touch/keys cover other user scrolling.
+        window.addEventListener('pointerdown', markUserInteracted, { once: true, passive: true });
+        window.addEventListener('load', snapToTopOnLoad);
+        window.addEventListener('pagehide', function () {
+            if ('scrollRestoration' in history) {
+                history.scrollRestoration = 'auto';
+            }
+        });
+    }
 
     initBiasFilters();
     loadTheme();

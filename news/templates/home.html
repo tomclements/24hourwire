@@ -157,7 +157,7 @@
 
     {% for cat_id, cat_data in grouped.items %}
     {% if cat_id != 'most_covered' and cat_data.stories|length > 0 or effective_empty %}
-    <section id="{{ cat_id }}" class="category-section" data-count="{{ cat_data.total_stories }}">
+    <section id="{{ cat_id }}" class="category-section" data-count="{{ cat_data.total_stories }}"{% if not forloop.first %} style="display: none;"{% endif %}>
         <div class="category-header">
             <h2 class="category-title">{{ cat_data.name }}</h2>
             <span class="category-count" id="count-{{ cat_id }}">{{ cat_data.total_stories }} {% if cat_data.total_stories == 1 %}{{ t.story|default:"story" }}{% else %}{{ t.stories|default:"stories" }}{% endif %}</span>
