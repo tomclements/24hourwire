@@ -72,8 +72,9 @@ class StoryModelTests(TestCase):
         self.assertEqual(norm1, norm2)
     
     def test_get_clean_excerpt_removes_html(self):
-        """Test that HTML tags are removed from excerpts."""
-        clean = self.story.get_clean_excerpt()
+        """Raw feed HTML is stripped once at ingest (clean_feed_text), before decoding."""
+        from news.models import clean_feed_text
+        clean = clean_feed_text(self.story.excerpt)
         self.assertNotIn('<p>', clean)
         self.assertNotIn('</p>', clean)
         self.assertNotIn('<a', clean)
