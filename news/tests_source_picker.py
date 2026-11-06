@@ -333,3 +333,86 @@ class SourcePickerCssGuardTests(TestCase):
         media_match = re.search(media_pattern, self.css, re.DOTALL)
         self.assertIsNotNone(media_match, 'Could not find desktop .source-options media rule')
         self.assertRegex(media_match.group(0), r'minmax\s*\(\s*220px')
+
+
+class SourcePickerHtmlGuardTests(TestCase):
+    """Static guard tests for source-picker HTML rendering."""
+
+    def setUp(self):
+        cache.clear()
+        self.client = Client()
+
+    def test_source_checkboxes_have_autocomplete_off(self):
+        response = self.client.get('/?lang=en')
+        self.assertEqual(response.status_code, 200)
+        body = response.content.decode()
+        inputs = re.findall(
+            r'<input[^>]*\sname="source"\s[^>]*>',
+            body,
+            flags=re.IGNORECASE,
+        )
+        self.assertGreater(len(inputs), 0, 'Expected at least one source checkbox')
+        for inp in inputs:
+            self.assertRegex(
+                inp,
+                r'\bautocomplete\s*=\s*["\']?off["\']?',
+                f'Missing autocomplete="off" on source checkbox: {inp}',
+            )
+
+    def test_source_picker_has_data_excluded(self):
+        response = self.client.get('/?lang=en')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="source-picker"')
+        self.assertContains(response, 'data-excluded=')
+
+    def test_data_excluded_is_raw_cookie_including_other_languages(self):
+        # Rendered value must match what the JS wrote (incl. other-language
+        # exclusions kept by the PR #19 merge) so back/forward does not reload.
+        raw = 'Zz%20Other%20Lang%20Source,Aa%20Unknown'
+        self.client.cookies['excluded_sources'] = raw
+        response = self.client.get('/?lang=en')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, f'data-excluded="{raw}"')
+
+
+class SourcePickerJsGuardTests(TestCase):
+    """Static guard tests for source-picker JavaScript behaviour."""
+
+    def setUp(self):
+        self.js_path = Path(__file__).resolve().parent / 'static' / 'news' / 'js' / 'app.js'
+        self.js = self.js_path.read_text(encoding='utf-8')
+
+    def test_save_sources_cookie_is_defined(self):
+        self.assertIn('function saveSourcesCookie()', self.js)
+
+    def test_change_listener_delegates_and_saves(self):
+        # Delegated change listener on #source-picker that calls saveSourcesCookie
+        # and updateSourceFilterUI when the target is an input[name=source].
+        pattern = (
+            r'sourcePicker\.addEventListener\s*\(\s*["\']change["\']\s*,\s*function\s*\(\s*e\s*\)\s*\{'
+            r'[\s\S]*?closest\s*\(\s*["\']input\[name=["\']source["\']\]["\']\s*\)'
+            r'[\s\S]*?saveSourcesCookie\s*\(\s*\)'
+            r'[\s\S]*?updateSourceFilterUI\s*\(\s*\)'
+            r'[\s\S]*?\}'
+        )
+        self.assertRegex(
+            self.js,
+            pattern,
+            'Expected delegated change listener on #source-picker that calls saveSourcesCookie() and updateSourceFilterUI()',
+        )
+
+    def test_pageshow_compares_parsed_sets(self):
+        pattern = (
+            r'addEventListener\s*\(\s*["\']pageshow["\'][\s\S]*?'
+            r'sameExcludedSources\s*\(\s*rendered\s*,\s*getExcludedSourcesCookie\s*\(\s*\)\s*\)'
+        )
+        self.assertRegex(self.js, pattern)
+        self.assertRegex(self.js, r'function sameExcludedSources\s*\([\s\S]*?\.sort\(\)')
+
+    def test_select_all_saves_cookie(self):
+        pattern = r'function selectAllSources\s*\(\s*\)\s*\{[\s\S]*?saveSourcesCookie\s*\(\s*\)'
+        self.assertRegex(self.js, pattern)
+
+    def test_clear_all_saves_cookie(self):
+        pattern = r'function clearAllSources\s*\(\s*\)\s*\{[\s\S]*?saveSourcesCookie\s*\(\s*\)'
+        self.assertRegex(self.js, pattern)

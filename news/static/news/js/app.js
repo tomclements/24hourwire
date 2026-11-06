@@ -614,6 +614,15 @@
     }
 
     /* ---------- Source picker ---------- */
+    let sourcePickerCookieAtOpen = null;
+
+    function maybeReloadAfterPickerClose() {
+        if (sourcePickerCookieAtOpen !== null && sourcePickerCookieAtOpen !== getExcludedSourcesCookie()) {
+            window.location.reload();
+        }
+        sourcePickerCookieAtOpen = null;
+    }
+
     function toggleSourcePicker() {
         const picker = document.getElementById('source-picker');
         const btn = document.getElementById('source-picker-label');
@@ -623,16 +632,26 @@
         if (btn) {
             btn.setAttribute('aria-expanded', String(hidden));
         }
+        if (hidden) {
+            sourcePickerCookieAtOpen = getExcludedSourcesCookie();
+        } else {
+            maybeReloadAfterPickerClose();
+        }
     }
 
     function closeSourcePicker() {
         const picker = document.getElementById('source-picker');
         const btn = document.getElementById('source-picker-label');
+        let wasOpen = false;
         if (picker) {
+            wasOpen = !picker.hidden;
             picker.hidden = true;
         }
         if (btn) {
             btn.setAttribute('aria-expanded', 'false');
+        }
+        if (wasOpen) {
+            maybeReloadAfterPickerClose();
         }
     }
 
@@ -648,7 +667,7 @@
         return getCookie(EXCLUDED_SOURCES_COOKIE) || '';
     }
 
-    function applySources() {
+    function saveSourcesCookie() {
         const picker = document.getElementById('source-picker');
         if (!picker) return;
         const checkboxes = picker.querySelectorAll('input[name="source"]');
@@ -686,13 +705,48 @@
             const encoded = merged.map(name => encodeURIComponent(name)).join(',');
             setExcludedSourcesCookie(encoded);
         }
+    }
+
+    function applySources() {
+        saveSourcesCookie();
         window.location.reload();
+    }
+
+    function parseExcludedSourceNames(value) {
+        const excluded = new Set();
+        (value || '').split(',').forEach(segment => {
+            if (!segment) return;
+            try {
+                const name = decodeURIComponent(segment);
+                if (name) excluded.add(name);
+            } catch (e) {
+                // Ignore malformed segment
+            }
+        });
+        return excluded;
+    }
+
+    function sameExcludedSources(a, b) {
+        const left = Array.from(parseExcludedSourceNames(a)).sort().join('\n');
+        const right = Array.from(parseExcludedSourceNames(b)).sort().join('\n');
+        return left === right;
+    }
+
+    function syncSourceCheckboxesFromCookie() {
+        const picker = document.getElementById('source-picker');
+        if (!picker) return;
+        const excluded = parseExcludedSourceNames(getExcludedSourcesCookie());
+        picker.querySelectorAll('input[name="source"]').forEach(box => {
+            box.checked = !excluded.has(box.value);
+        });
+        updateSourceFilterUI();
     }
 
     function selectAllSources() {
         const picker = document.getElementById('source-picker');
         if (!picker) return;
         picker.querySelectorAll('input[name="source"]').forEach(box => { box.checked = true; });
+        saveSourcesCookie();
         updateSourceFilterUI();
     }
 
@@ -700,6 +754,7 @@
         const picker = document.getElementById('source-picker');
         if (!picker) return;
         picker.querySelectorAll('input[name="source"]').forEach(box => { box.checked = false; });
+        saveSourcesCookie();
         updateSourceFilterUI();
     }
 
@@ -1129,10 +1184,25 @@
 
     const sourcePicker = document.getElementById('source-picker');
     if (sourcePicker) {
-        sourcePicker.querySelectorAll('input[name="source"]').forEach(box => {
-            box.addEventListener('change', updateSourceFilterUI);
+        sourcePicker.addEventListener('change', function (e) {
+            const box = e.target.closest('input[name="source"]');
+            if (!box) return;
+            saveSourcesCookie();
+            updateSourceFilterUI();
         });
+        syncSourceCheckboxesFromCookie();
     }
+
+    window.addEventListener('pageshow', function (e) {
+        syncSourceCheckboxesFromCookie();
+        if (e.persisted) {
+            const picker = document.getElementById('source-picker');
+            const rendered = picker ? picker.getAttribute('data-excluded') || '' : '';
+            if (!sameExcludedSources(rendered, getExcludedSourcesCookie())) {
+                window.location.reload();
+            }
+        }
+    });
 
     const modal = document.getElementById('different-angle-modal');
     if (modal) {
