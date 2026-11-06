@@ -345,6 +345,7 @@ def _home_impl(request):
         'total_sources': total_sources,
         'has_source_exclusions': has_source_exclusions,
         'excluded_sources': sorted(excluded_sources),
+        'excluded_sources_cookie': request.COOKIES.get(EXCLUDED_SOURCES_COOKIE, ''),
         'effective_empty': effective_empty,
         'filter_label_text': filter_label_text,
     })

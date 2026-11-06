@@ -40,7 +40,7 @@
         </button>
     </div>
 
-    <div id="source-picker" class="source-picker" role="region" aria-labelledby="source-picker-label" hidden>
+    <div id="source-picker" class="source-picker" role="region" aria-labelledby="source-picker-label" data-excluded="{{ excluded_sources_cookie }}" hidden>
         <div class="source-picker-header">
             <button type="button" class="source-picker-action" data-action="select-all-sources">{{ t.select_all|default:"Select all" }}</button>
             <button type="button" class="source-picker-action" data-action="clear-all-sources">{{ t.clear_all|default:"Clear all" }}</button>
@@ -48,7 +48,7 @@
         <div class="source-options">
             {% for name, bias, checked in source_choices %}
             <label class="source-option">
-                <input type="checkbox" name="source" value="{{ name }}" {% if checked %}checked{% endif %}>
+                <input type="checkbox" name="source" value="{{ name }}" {% if checked %}checked{% endif %} autocomplete="off">
                 <span class="source-option-name">{{ name }}</span>
                 <span class="bias-badge {{ bias|lower|cut:' ' }}">{{ bias|bias_label:language }}</span>
             </label>

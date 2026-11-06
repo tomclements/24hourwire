@@ -206,6 +206,43 @@ class HomeViewTests(TestCase):
         response = self.client.get('/')
         self.assertTemplateUsed(response, 'home.html')
 
+
+class DoctypeTests(TestCase):
+    """HTML responses must start with a doctype to avoid Quirks Mode."""
+
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+
+    def _assert_doctype(self, response):
+        content_type = response.get('Content-Type', '')
+        if 'text/html' not in content_type:
+            return
+        body = response.content
+        if not body:
+            return
+        stripped = body.lstrip()
+        self.assertTrue(
+            stripped[:15].lower().startswith(b'<!doctype html>'),
+            'HTML response must start with <!DOCTYPE html> (no leading BOM/whitespace)',
+        )
+
+    def test_home_has_doctype(self):
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        self._assert_doctype(response)
+
+    def test_load_more_html_has_doctype(self):
+        response = self.client.get('/api/stories/?lang=en&category=all&offset=0')
+        self.assertIn(response.status_code, (200, 404))
+        self._assert_doctype(response)
+
+    def test_404_has_doctype(self):
+        response = self.client.get('/this-page-does-not-exist/')
+        self.assertEqual(response.status_code, 404)
+        self._assert_doctype(response)
+
+
 class ExcerptCleaningTests(TestCase):
     """Tests for excerpt cleaning functionality."""
     
