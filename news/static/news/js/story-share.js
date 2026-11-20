@@ -11,7 +11,7 @@
 
     var shareUrl = cfg.url || '';
     var shareTitle = cfg.title || '';
-    var shareText = shareTitle + '\n\nCurated by @24HourWire';
+    var shareText = shareTitle + '\n\nVia @24HourWire';
 
     var seconds = 3;
     var countdownEl = document.getElementById('countdown');
@@ -37,7 +37,7 @@
     }
 
     function copyLink() {
-        var fullText = shareTitle + '\n' + shareUrl + '\n\nCurated by @24HourWire';
+        var fullText = shareTitle + '\n' + shareUrl + '\n\nVia @24HourWire';
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(fullText).then(function () {
                 alert('Link copied to clipboard!');

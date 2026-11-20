@@ -8,7 +8,7 @@
     {% if is_poll %}
     <meta name="description" content="Vote on this poll and see what the 24HourWire community thinks.">
     {% else %}
-    <meta name="description" content="Curated by 24HourWire - news from all angles. Read the full story at {{ source }}.">
+    <meta name="description" content="Via 24HourWire - news from all angles. Read the full story at {{ source }}.">
     {% endif %}
     
     <!-- Prevent indexing of redirect wrapper pages - OG tags still read by social crawlers -->
@@ -21,7 +21,7 @@
     {% if is_poll %}
     <meta property="og:description" content="Vote on this poll and see what the 24HourWire community thinks.">
     {% else %}
-    <meta property="og:description" content="Curated by 24HourWire - news from all angles. Read the full story at {{ source }}.">
+    <meta property="og:description" content="Via 24HourWire - news from all angles. Read the full story at {{ source }}.">
     {% endif %}
     <meta property="og:site_name" content="24HourWire">
     <meta property="og:locale" content="en_US">
@@ -45,7 +45,7 @@
     {% if is_poll %}
     <meta name="twitter:description" content="Vote on this poll and see what the 24HourWire community thinks.">
     {% else %}
-    <meta name="twitter:description" content="Curated by 24HourWire - news from all angles. Read the full story at {{ source }}.">
+    <meta name="twitter:description" content="Via 24HourWire - news from all angles. Read the full story at {{ source }}.">
     {% endif %}
     {% if image_url %}
     <meta name="twitter:image" content="{{ image_url }}">

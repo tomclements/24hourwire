@@ -50,8 +50,8 @@ class GlobalFeed(Feed):
     def item_description(self, item):
         excerpt = item.get_clean_excerpt()
         if excerpt:
-            return f"{excerpt}\n\nSource: {item.source} | Curated by 24HourWire"
-        return f"Source: {item.source} | Curated by 24HourWire"
+            return f"{excerpt}\n\nSource: {item.source} | Via 24HourWire"
+        return f"Source: {item.source} | Via 24HourWire"
     
     def item_link(self, item):
         # Link to original article
@@ -114,8 +114,8 @@ class LanguageFeed(Feed):
     def item_description(self, item):
         excerpt = item.get_clean_excerpt()
         if excerpt:
-            return f"{excerpt}\n\nSource: {item.source} | Curated by 24HourWire"
-        return f"Source: {item.source} | Curated by 24HourWire"
+            return f"{excerpt}\n\nSource: {item.source} | Via 24HourWire"
+        return f"Source: {item.source} | Via 24HourWire"
     
     def item_link(self, item):
         return item.url
@@ -178,8 +178,8 @@ class CategoryFeed(Feed):
     def item_description(self, item):
         excerpt = item.get_clean_excerpt()
         if excerpt:
-            return f"{excerpt}\n\nSource: {item.source} | Curated by 24HourWire"
-        return f"Source: {item.source} | Curated by 24HourWire"
+            return f"{excerpt}\n\nSource: {item.source} | Via 24HourWire"
+        return f"Source: {item.source} | Via 24HourWire"
     
     def item_link(self, item):
         return item.url

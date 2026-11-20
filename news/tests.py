@@ -31,6 +31,10 @@ from django.core import signing
 from django.contrib.staticfiles.finders import find
 from news.templatetags.news_extras import sign_share_data
 from news.languages import LANGUAGE_MODULES
+from news.feeds import GlobalFeed, LanguageFeed, CategoryFeed
+
+# Old attribution phrase, split so it does not appear literally in source.
+_OLD_ATTRIBUTION = 'C' + 'urated by'
 
 
 class StoryModelTests(TestCase):
@@ -773,6 +777,109 @@ class ShareFunctionalityTests(TestCase):
         self.assertIn('No', content)
         # Should have redirect to poll detail page
         self.assertIn(f'/poll/{poll.id}/', content)
+
+    def test_branded_redirect_via_attribution(self):
+        """Story token meta descriptions should use Via 24HourWire."""
+        data = {
+            'url': self.story.url,
+            'title': self.story.title,
+            'source': self.story.source,
+            'image_url': self.story.image_url,
+        }
+        signer = signing.Signer()
+        payload = signing.dumps(data)
+        token = signer.sign(payload)
+
+        response = self.client.get(f'/go/{token}/')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+
+        self.assertIn('Via 24HourWire', content)
+        self.assertIn(self.story.source, content)
+        self.assertNotIn(_OLD_ATTRIBUTION, content)
+        # Ensure all three meta description variants use Via
+        self.assertIn('<meta name="description" content="Via 24HourWire', content)
+        self.assertIn('<meta property="og:description" content="Via 24HourWire', content)
+        self.assertIn('<meta name="twitter:description" content="Via 24HourWire', content)
+
+    def test_branded_redirect_poll_token_not_via(self):
+        """Poll token page should keep the poll description, not Via 24HourWire."""
+        from news.templatetags.news_extras import sign_poll_data
+        poll = Poll.objects.create(
+            language='en',
+            question='Via or not?',
+            options=['Yes', 'No'],
+            poll_type='opinion',
+            status='active',
+            is_active=True,
+            ends_at=timezone.now() + timedelta(days=7),
+        )
+
+        token = sign_poll_data(poll)
+        response = self.client.get(f'/go/{token}/')
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+
+        self.assertIn('Vote on this poll', content)
+        self.assertNotIn('Via 24HourWire', content)
+        self.assertNotIn(_OLD_ATTRIBUTION, content)
+
+
+class FeedAttributionTests(TestCase):
+    """Tests that RSS feed item descriptions use Via 24HourWire."""
+
+    def setUp(self):
+        self.story = Story.objects.create(
+            source='Test Source',
+            title='Test Story Title',
+            excerpt='Test excerpt',
+            url='https://example.com/story',
+            language='en',
+            category='world',
+            published=timezone.now(),
+            url_hash='feed123',
+            title_fingerprint='ffp123',
+            image_url='https://example.com/image.jpg',
+        )
+
+    def _assert_via_attribution(self, description):
+        self.assertIn('Via 24HourWire', description)
+        self.assertIn('Source: Test Source', description)
+        self.assertNotIn(_OLD_ATTRIBUTION, description)
+
+    def test_global_feed_item_description_uses_via(self):
+        feed = GlobalFeed()
+        description = feed.item_description(self.story)
+        self._assert_via_attribution(description)
+
+    def test_language_feed_item_description_uses_via(self):
+        feed = LanguageFeed()
+        description = feed.item_description(self.story)
+        self._assert_via_attribution(description)
+
+    def test_category_feed_item_description_uses_via(self):
+        feed = CategoryFeed()
+        description = feed.item_description(self.story)
+        self._assert_via_attribution(description)
+
+
+class AttributionStringGuardTests(TestCase):
+    """Guard that checked source-attribution files no longer contain the old phrase."""
+
+    def test_checked_files_do_not_contain_curated_by(self):
+        news_dir = os.path.dirname(__file__)
+        checked_files = [
+            os.path.join(news_dir, 'feeds.py'),
+            os.path.join(news_dir, 'static', 'news', 'js', 'app.js'),
+            os.path.join(news_dir, 'static', 'news', 'js', 'story-share.js'),
+            os.path.join(news_dir, 'templates', 'branded_redirect.html'),
+        ]
+        for path in checked_files:
+            with self.subTest(path=path):
+                with open(path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                self.assertNotIn(_OLD_ATTRIBUTION, content)
+                self.assertNotIn(_OLD_ATTRIBUTION.lower(), content)
 
 
 class BiasFilterRegressionTests(TestCase):
@@ -5089,3 +5196,85 @@ class RecommendationLayoutStaticTests(TestCase):
             self.assertNotIn('\ufffd', text,
                              f"Replacement character found in {path}")
 
+class FilterRowLanguageOverlapTests(TestCase):
+    """Phone header must not let the language control cover the filter chevron."""
+
+    def _read_app_css(self):
+        app_css_path = find('news/css/app.css')
+        self.assertIsNotNone(app_css_path)
+        with open(app_css_path, 'r', encoding='utf-8') as f:
+            return f.read()
+
+    def _media_blocks(self, source, query_needle):
+        """Return bodies of @media blocks whose prelude contains needle."""
+        blocks = []
+        i = 0
+        while True:
+            start = source.find('@media', i)
+            if start == -1:
+                break
+            brace = source.find('{', start)
+            if brace == -1:
+                break
+            prelude = source[start:brace]
+            depth = 0
+            j = brace
+            while j < len(source):
+                if source[j] == '{':
+                    depth += 1
+                elif source[j] == '}':
+                    depth -= 1
+                    if depth == 0:
+                        j += 1
+                        break
+                j += 1
+            if query_needle in prelude:
+                blocks.append(source[brace + 1:j - 1])
+            i = j
+        return blocks
+
+    def test_phone_css_keeps_language_off_filter_chevron(self):
+        """At 640px, language controls leave the search row and the chevron is >= 44px."""
+        source = self._read_app_css()
+        phone = '\n'.join(self._media_blocks(source, 'max-width: 640px'))
+        self.assertTrue(phone, 'Expected at least one max-width: 640px media query in app.css')
+        self.assertRegex(
+            phone,
+            r'\.header-actions\s*\{[^}]*display:\s*contents',
+            'header-actions should be display:contents on phones so language can move to the logo row',
+        )
+        self.assertRegex(
+            phone,
+            r'\.header-controls\s*\{[^}]*order:\s*2',
+            'header-controls should sit on the logo row (order 2) on phones',
+        )
+        self.assertRegex(
+            phone,
+            r'\.search-container\s*\{[^}]*order:\s*3',
+            'search should wrap to its own row (order 3) on phones',
+        )
+        self.assertRegex(
+            phone,
+            r'\.scroll-btn\s*\{[^}]*width:\s*44px',
+            'filter/topic scroll chevrons should be at least 44px on phones',
+        )
+        self.assertRegex(
+            phone,
+            r'\.scroll-btn\s*\{[^}]*min-width:\s*44px',
+            'scroll chevrons should declare min-width 44px on phones',
+        )
+
+    def test_desktop_scroll_btn_width_unchanged(self):
+        """Desktop chevron size stays 40px; the 44px rule is phone-only."""
+        source = self._read_app_css()
+        self.assertRegex(
+            source,
+            r'\.scroll-btn\s*\{[^}]*width:\s*40px',
+            'Desktop .scroll-btn width should remain 40px',
+        )
+        desktop_and_wide = '\n'.join(self._media_blocks(source, 'min-width:'))
+        self.assertNotRegex(
+            desktop_and_wide,
+            r'\.scroll-btn\s*\{[^}]*width:\s*44px',
+            'min-width media queries should not change scroll-btn to 44px',
+        )
