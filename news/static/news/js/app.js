@@ -585,7 +585,7 @@
     }
 
     function copyShareLink(title, wireUrl, source) {
-        const text = title + '\n' + wireUrl + '\n\nSource: ' + source + ' | Curated by @24HourWire';
+        const text = title + '\n' + wireUrl + '\n\nSource: ' + source + ' | Via @24HourWire';
         navigator.clipboard.writeText(text).then(() => {
             const btn = document.querySelector('.share-option.copy');
             if (btn) {

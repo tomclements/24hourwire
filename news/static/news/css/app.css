@@ -265,6 +265,52 @@
                 min-width: 0;
             }
         }
+
+        /* Phones: move language + theme onto the logo row so they cannot
+           sit over the political-filter scroll chevron (QA finding 35).
+           Desktop rules above are unchanged. */
+        @media (max-width: 640px) {
+            .header-actions {
+                display: contents;
+            }
+
+            .header-logo {
+                order: 1;
+                flex: 1 1 auto;
+                min-width: 0;
+            }
+
+            .header-controls {
+                order: 2;
+                flex: 0 0 auto;
+                position: relative;
+                z-index: 1;
+            }
+
+            .search-container {
+                order: 3;
+                flex: 1 1 100%;
+                width: auto;
+                max-width: none;
+                min-width: 0;
+            }
+
+            #lang-select {
+                position: relative;
+                z-index: 1;
+                max-width: 42vw;
+            }
+
+            .scroll-btn {
+                width: 44px;
+                min-width: 44px;
+                z-index: 20;
+            }
+
+            .tabs-container {
+                padding: 0 44px;
+            }
+        }
         
         .search-icon svg {
             width: 18px;
