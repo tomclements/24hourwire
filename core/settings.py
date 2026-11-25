@@ -71,6 +71,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'core.healthz.HealthzMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.middleware.gzip.GZipMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -117,12 +118,18 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 DATABASE_URL = os.environ.get('DATABASE_URL', '')
 
+
+def _conn_max_age():
+    """Return the persistent connection lifetime from DB_CONN_MAX_AGE."""
+    return int(os.environ.get('DB_CONN_MAX_AGE', '60'))
+
+
 if DATABASE_URL:
     # Parse DATABASE_URL (format: postgresql://user:pass@host:port/dbname)
     # Optimized for Render.com managed PostgreSQL with SSL and connection pooling
     from urllib.parse import urlparse
     _parsed = urlparse(DATABASE_URL)
-    
+
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -131,9 +138,12 @@ if DATABASE_URL:
             'PASSWORD': _parsed.password or '',
             'HOST': _parsed.hostname or '',
             'PORT': _parsed.port or '5432',
-            # Connection pooling - keep connections alive longer (10 minutes)
-            # Reduces connection overhead and prevents SSL handshake issues
-            'CONN_MAX_AGE': 600,
+            # Each gthread thread holds its own persistent connection.
+            # With 2 workers x 8 threads this can keep up to 16 connections
+            # open plus short-lived analytics daemon threads, so keep the
+            # lifetime modest to avoid exhausting the database plan.
+            'CONN_MAX_AGE': _conn_max_age(),
+            'CONN_HEALTH_CHECKS': True,
             # SSL configuration for Render
             'OPTIONS': {
                 'sslmode': 'require',
