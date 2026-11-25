@@ -418,14 +418,13 @@ Sitemap: https://24hourwire.news/news-sitemap.xml
 
 
 def healthz(request):
-    """Lightweight health check for Render. Verifies DB connectivity so a
-    hung/unhealthy worker is detected, not just an open port."""
-    from django.db import connection
-    try:
-        connection.ensure_connection()
-    except Exception:
-        return HttpResponse('db-error', status=503)
-    return HttpResponse('ok', status=200)
+    """Lightweight health check for Render.
+
+    The HealthzMiddleware answers /healthz before the request reaches the view,
+    but the view is kept as a fallback. It returns a plain-text "ok" without
+    touching the database.
+    """
+    return HttpResponse('ok', content_type='text/plain')
 
 
 @cache_page(3600)  # Cache static pages for 1 hour

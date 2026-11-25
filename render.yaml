@@ -17,7 +17,7 @@ services:
       python manage.py seed_topics &&
       python manage.py seed_products &&
       python manage.py collectstatic --no-input
-    startCommand: gunicorn core.wsgi:application --timeout 120 --workers 1 --max-requests 1000 --max-requests-jitter 100
+    startCommand: gunicorn core.wsgi:application -c gunicorn.conf.py
     healthCheckPath: /healthz
     buildFilter:
       ignoredPaths:
@@ -46,7 +46,7 @@ services:
       - key: ALLOWED_HOSTS
         value: 24hourwire.news,www.24hourwire.news,two4hourwire.onrender.com
       - key: WEB_CONCURRENCY
-        value: 1
+        value: 2
       # LLM keys for staff generate_now (detached manage.py generate_polls).
       # Same sync:false pattern as 24hourwire-polls cron — set values in Dashboard.
       - key: OPENAI_API_KEY

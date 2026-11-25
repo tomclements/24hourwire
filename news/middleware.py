@@ -12,7 +12,7 @@ No IP addresses, cookies, or session data stored.
 
 import threading
 
-from django.db import close_old_connections
+from django.db import close_old_connections, connection
 
 from .models import AnalyticsEvent
 
@@ -27,7 +27,11 @@ def _write_analytics_event(payload, close_connections=False):
         pass
     finally:
         if close_connections:
+            # close_old_connections() only closes connections whose lifetime
+            # exceeds CONN_MAX_AGE, so a freshly opened connection in a daemon
+            # thread would stay open until garbage collection. Close it now.
             close_old_connections()
+            connection.close()
 
 
 def _schedule_analytics_write(payload):
